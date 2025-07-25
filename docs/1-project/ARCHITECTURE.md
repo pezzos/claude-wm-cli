@@ -2,21 +2,27 @@
 
 ## Overview
 
-Claude WM CLI is an intelligent command-line interface that acts as a wrapper for Claude commands located in `$HOME/.claude/commands`. The application provides both interactive (manual terminal) and headless (VSCode extension integration) operational modes.
+Claude WM CLI is an intelligent command-line interface built in **Go** that acts as a wrapper around `claude -p "/command"` execution. The primary objective is to orchestrate Claude Code commands intelligently by providing context-aware suggestions and guided interaction. The application provides both interactive (guided terminal interface) and headless (VSCode extension integration) operational modes, targeting solo developers who need streamlined project workflow management.
 
 ## Core Architecture
 
 ### Application Entry Points
 
-- **Interactive Mode**: Manual terminal usage for direct user interaction
-- **Headless Mode**: Designed for VSCode extension integration and automated workflows
+- **Interactive Mode**: Guided terminal interface where users are presented with contextual options based on project state. Users never need to memorize complex command names. Progressive guidance with next-step suggestions.
+- **Headless Mode**: JSON API mode designed for VSCode extension integration, providing structured input/output for programmatic access. Never runs concurrently with interactive mode.
 
 ### State Management
 
-#### Project State File
-- **Location**: `${PROJECT}/.claude-wm/state.json`
-- **Purpose**: Tracks project initialization, command history, metadata, and execution state
-- **Structure**:
+#### Simplified JSON-Based State
+- **Design Philosophy**: Simple JSON files for fast parsing and solo-developer usage (sequential workflow, no parallel updates)
+- **Recovery Strategy**: Git versioning for state files - rollback to previous version if corruption occurs
+- **Core State Files**:
+  - `${PROJECT}/.claude-wm/state.json` - Project initialization and metadata
+  - `${PROJECT}/.claude-wm/epics.json` - Epic definitions and status (archived when completed)
+  - `${PROJECT}/.claude-wm/stories.json` - Story breakdowns and progress
+  - `${PROJECT}/.claude-wm/tickets.json` - Individual ticket tracking
+
+#### State Structure Example
 ```json
 {
   "isInitialized": true,
@@ -102,9 +108,10 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 ### External System Interfaces
 
 #### Git Integration
-- **Branch Management**: Automatic feature/{epic-name} and story/{epic-name}/{story-id} branches
+- **Branch Management**: One branch per User Story - all tickets within a story use the same branch
 - **Commit Strategy**: Structured commits with epic/story/task traceability
 - **Repository Health**: State validation and consistency checking
+- **Interruption Handling**: Emergency fixes and GitHub issues become tickets within the current story branch
 
 #### GitHub Integration
 - **Issue Processing**: gh CLI integration for issue-driven development
@@ -112,11 +119,14 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 - **Project Synchronization**: Issue-to-ticket conversion
 
 #### MCP (Model Context Protocol) Integration
-- **consult7**: Full codebase analysis and pattern recognition
-- **sequential-thinking**: Complex feature decomposition
-- **mem0**: Historical context and pattern storage
-- **context7**: Documentation retrieval and best practices
-- **IDE diagnostics**: Real-time validation and feedback
+- **Design Philosophy**: Optional enhancements, not critical dependencies
+- **Graceful Degradation**: CLI functions fully without MCP tools available
+- **Available Integrations**:
+  - **consult7**: Full codebase analysis and pattern recognition (optional)
+  - **sequential-thinking**: Complex feature decomposition (optional) 
+  - **mem0**: Historical context and pattern storage (optional)
+  - **context7**: Documentation retrieval and best practices (optional)
+- **Fallback Strategy**: Continue operation without MCP tools for core workflow functionality
 
 ## Quality Assurance Architecture
 
@@ -135,9 +145,12 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 ## Scalability Considerations
 
 ### Modular Design
-- **Command Isolation**: Each command operates independently
-- **Context Boundaries**: Clear separation between workflow levels
-- **State Encapsulation**: Isolated state management per project
+- **Command Isolation**: Each command operates independently via `claude -p "/command"` execution
+- **Context Boundaries**: Clear separation between workflow levels (Project → Epic → Story → Ticket)
+- **State Encapsulation**: Isolated JSON state files per project for solo-developer usage
+- **No Concurrency Issues**: Single-user model eliminates race condition concerns
+- **Performance Optimization**: Only current epic/story loaded, archived data not in memory
+- **Future Migration Path**: Database migration considered for extreme scaling needs
 
 ### Extension Points
 - **Custom Commands**: Plugin architecture for domain-specific workflows
@@ -153,10 +166,14 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 - **Template Method**: Consistent command execution framework
 
 ### Technology Choices
-- **State Persistence**: JSON-based state files for simplicity and portability
+- **Implementation Language**: **Go** for portability, performance, and single binary deployment
+- **CLI Framework**: Cobra for command structure and Bubble Tea for interactive interface
+- **State Persistence**: Simple JSON files for fast parsing and solo-developer usage
 - **Documentation Format**: Markdown for human-readable project artifacts
-- **Version Control**: Git-centric workflow with branch-per-feature strategy
-- **AI Integration**: MCP protocol for standardized AI tool interaction
+- **Version Control**: Git-centric workflow with branch-per-story strategy (one branch per User Story)
+- **AI Integration**: Optional MCP protocol enhancements (non-critical dependencies)
+- **Error Handling**: Timeout-based command execution with graceful failure recovery
+- **Concurrent Access**: File locking mechanism for multi-terminal protection (if needed)
 
 ## Security Architecture
 
@@ -173,13 +190,47 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 ## Performance Characteristics
 
 ### Efficiency Optimizations
+- **Fast JSON Parsing**: Simple state files for rapid project context loading  
+- **Single Binary**: Go compilation produces portable executable with no dependencies
 - **Lazy Loading**: On-demand documentation and context loading
-- **Caching Strategy**: State and context caching for rapid access
-- **Parallel Processing**: Concurrent MCP tool execution where possible
+- **Minimal Dependencies**: Core functionality works without external MCP tools
 - **Resource Management**: Cleanup and optimization of temporary artifacts
 
 ### Monitoring and Metrics
-- **Velocity Tracking**: Development speed and throughput analysis
-- **Quality Metrics**: Success rates and error pattern analysis
-- **Resource Usage**: System resource consumption monitoring
-- **User Experience**: Command execution time and responsiveness tracking
+- **Structured Logging**: JSON logs for debugging and analysis
+- **Command Execution Tracking**: Response times and success rates
+- **State Change Auditing**: All project state modifications logged
+- **User Experience**: Interactive interface responsiveness optimization
+
+## Development Philosophy
+
+### MVP-First Approach
+- **Pragmatic Development**: Optimized for rapid solo-developer iteration
+- **Graceful Failure**: If implementation fails, rollback and retry with versioned state
+- **Simplicity Over Complexity**: Intelligent wrapper around Claude Code, not a complex system
+- **Personal Tool First**: Built for immediate personal use, then generalized
+
+### Workflow Automation Vision
+- **Progressive Guidance**: Users guided step-by-step with next-action suggestions
+- **Automated Implementation Mode**: Future "implement everything" mode for full epic/story automation
+- **Strict Workflow Enforcement**: No implementation without proper planning breakdown
+- **Contextual Intelligence**: Always show current position and suggest next steps
+
+## Implementation Strategy
+
+### Phase 1: Interactive CLI Core
+- Go-based CLI with Cobra/Bubble Tea interface
+- JSON state parser (state.json, epics.json, stories.json, tickets.json)
+- Claude Code command wrapper with timeout-based error handling
+- Interactive navigation through workflow options with step-by-step guidance
+
+### Phase 2: Headless Mode
+- JSON API mode for VSCode extension integration (never runs concurrently with interactive CLI)
+- Structured input/output for programmatic access with intermediate status guides
+- Command execution with structured logging
+- Extension-CLI separation: extension calls CLI in headless mode and displays JSON output
+
+### Phase 3: VSCode Extension Integration
+- Extension uses CLI in headless mode
+- Real-time project state synchronization
+- Visual workflow representation and control
