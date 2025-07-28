@@ -8,6 +8,7 @@ import (
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
+	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/navigation"
 	"claude-wm-cli/internal/workflow"
 
@@ -228,8 +229,8 @@ func runInteractiveNavigation(
 	}
 }
 
-// createMainMenu builds the main navigation menu based on context and suggestions
-func createMainMenu(ctx *navigation.ProjectContext, suggestions []*navigation.Suggestion) *navigation.Menu {
+// createMainMenu builds the main navigation menu based on context
+func createMainMenu(ctx *navigation.ProjectContext, _ []*navigation.Suggestion) *navigation.Menu {
 	menu := &navigation.Menu{
 		Title:       "🧭 Claude WM CLI Navigation",
 		Options:     []navigation.MenuOption{},
@@ -276,8 +277,6 @@ func createMainMenu(ctx *navigation.ProjectContext, suggestions []*navigation.Su
 		})
 		addOption("project-plan-epics", "📝 Plan Epics", "Plan and manage epic roadmap (create/update epics.json)", "project-plan-epics")
 		addOption("epic-list", "📋 List Epics", "List all available epics", "epic-list")
-		addOption("epic-create", "➕ Create Epic", "Create a new epic", "epic-create")
-		addOption("epic-select", "🎯 Select Epic", "Select and start an epic", "epic-select")
 	}
 
 	// === CURRENT EPIC === (only if we have an active epic)
@@ -289,15 +288,10 @@ func createMainMenu(ctx *navigation.ProjectContext, suggestions []*navigation.Su
 			Action:      "",
 			Enabled:     false, // Explicitly disabled
 		})
-		addOption("epic-dashboard", "📊 Epic Dashboard", "View current epic progress and metrics", "epic-dashboard")
-		addOption("story-create", "📖 Create Story", "Create a new story in current epic", "story-create")
-		addOption("story-list", "📋 List Stories", "List stories in current epic", "story-list")
-		
-		// If we have a current story
-		if ctx.CurrentStory != nil {
-			addOption("story-continue", "▶️ Continue Story", "Continue working on current story", "story-continue")
-			addOption("task-create", "✅ Create Task", "Create a new task in current story", "task-create")
-		}
+		addOption("epic-select-stories", "🎯 Select Stories", "Select the most important story to work on", "/2-epic:1-start:1-Select-Stories")
+		addOption("epic-plan-stories", "📋 Plan Stories", "Plan and organize stories for the epic", "/2-epic:1-start:2-Plan-stories")
+		addOption("epic-complete", "✅ Complete Epic", "Mark epic as complete and archive", "/2-epic:2-manage:1-Complete-Epic")
+		addOption("epic-status", "📊 Epic Status", "View current epic progress and status", "/2-epic:2-manage:2-Status-Epic")
 	}
 
 	// === TICKETS/INTERRUPTIONS === (always available)
@@ -349,21 +343,16 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	// Epic Management
 	case "epic-list":
 		return executeEpicCommand([]string{"list"}, menuDisplay)
-	case "epic-create":
-		return executeCreateEpic(ctx, menuDisplay)
-	case "epic-select":
-		return executeStartEpic(ctx, menuDisplay)
-	case "epic-dashboard":
-		return executeEpicCommand([]string{"dashboard"}, menuDisplay)
 
-	// Story Management
-	case "story-create":
-		return executeStoryCommand([]string{"create"}, menuDisplay)
-	case "story-list":
-		return executeStoryCommand([]string{"list"}, menuDisplay)
-	case "story-continue":
-		menuDisplay.ShowMessage("Continue current story functionality")
-		return nil
+	// Current Epic Management - Claude Commands
+	case "/2-epic:1-start:1-Select-Stories":
+		return executeClaudeCommandInteractive("/2-epic:1-start:1-Select-Stories", menuDisplay)
+	case "/2-epic:1-start:2-Plan-stories":
+		return executeClaudeCommandInteractive("/2-epic:1-start:2-Plan-stories", menuDisplay)
+	case "/2-epic:2-manage:1-Complete-Epic":
+		return executeClaudeCommandInteractive("/2-epic:2-manage:1-Complete-Epic", menuDisplay)
+	case "/2-epic:2-manage:2-Status-Epic":
+		return executeClaudeCommandInteractive("/2-epic:2-manage:2-Status-Epic", menuDisplay)
 
 	// Task Management
 	case "task-create":
@@ -381,10 +370,6 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	// Legacy actions
 	case "init-project":
 		return executeInitProject(ctx, menuDisplay)
-	case "create-epic":
-		return executeCreateEpic(ctx, menuDisplay)
-	case "start-epic":
-		return executeStartEpic(ctx, menuDisplay)
 
 	default:
 		menuDisplay.ShowWarning(fmt.Sprintf("Action '%s' not yet implemented", action))
@@ -426,76 +411,6 @@ func executeInitProject(ctx *navigation.ProjectContext, menuDisplay *navigation.
 	return nil
 }
 
-// executeCreateEpic handles epic creation
-func executeCreateEpic(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	epicTitle, err := menuDisplay.PromptString("Enter epic title")
-	if err != nil {
-		return err
-	}
-
-	if epicTitle == "" {
-		menuDisplay.ShowWarning("Epic title cannot be empty")
-		return nil
-	}
-
-	description, err := menuDisplay.PromptString("Enter epic description (optional)")
-	if err != nil {
-		return err
-	}
-
-	// Call the actual epic create command
-	createCmd := epicCreateCmd
-	
-	// Set up the arguments
-	createCmd.SetArgs([]string{epicTitle})
-	if description != "" {
-		createCmd.Flags().Set("description", description)
-	}
-
-	// Execute the command
-	if err := createCmd.Execute(); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to create epic: %v", err))
-		return err
-	}
-
-	menuDisplay.ShowSuccess(fmt.Sprintf("Epic '%s' created successfully!", epicTitle))
-	return nil
-}
-
-// executeStartEpic handles epic selection and start
-func executeStartEpic(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	// First list available epics
-	listCmd := epicListCmd
-
-	menuDisplay.ShowMessage("Available epics:")
-	if err := listCmd.Execute(); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to list epics: %v", err))
-		return err
-	}
-
-	// Prompt for epic selection
-	epicID, err := menuDisplay.PromptString("Enter epic ID to select")
-	if err != nil {
-		return err
-	}
-
-	if epicID == "" {
-		menuDisplay.ShowWarning("Epic ID cannot be empty")
-		return nil
-	}
-
-	// Call the epic select command
-	selectCmd := epicSelectCmd
-	selectCmd.SetArgs([]string{epicID})
-
-	if err := selectCmd.Execute(); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to select epic: %v", err))
-		return err
-	}
-
-	menuDisplay.ShowSuccess(fmt.Sprintf("Epic '%s' selected and started!", epicID))
-	return nil
-}
 
 // Helper functions to execute CLI commands
 
@@ -568,33 +483,6 @@ func executeEpicCommand(args []string, menuDisplay *navigation.MenuDisplay) erro
 	return nil
 }
 
-// executeStoryCommand executes a story subcommand  
-func executeStoryCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
-	cmdArgs := append([]string{"story"}, args...)
-	
-	execPath, err := os.Executable()
-	if err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
-		return err
-	}
-	
-	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
-	if _, err := os.Stat(buildPath); err == nil {
-		execPath = buildPath
-	}
-	
-	cmd := exec.Command(execPath, cmdArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	
-	if err := cmd.Run(); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to execute story %s: %v", args[0], err))
-		return err
-	}
-	
-	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Story %s completed successfully", args[0]))
-	return nil
-}
 
 // executeTicketCommand executes a ticket subcommand  
 func executeTicketCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
@@ -621,6 +509,31 @@ func executeTicketCommand(args []string, menuDisplay *navigation.MenuDisplay) er
 	}
 	
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Ticket %s completed successfully", args[0]))
+	return nil
+}
+
+// executeClaudeCommandInteractive executes a Claude slash command from interactive menu
+func executeClaudeCommandInteractive(command string, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage(fmt.Sprintf("🚀 Executing Claude command: %s", command))
+	
+	// Create Claude executor
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Claude CLI not available: %v", err))
+		menuDisplay.ShowMessage("💡 Please install Claude CLI to use this functionality")
+		return err
+	}
+	
+	// Execute the slash command
+	description := fmt.Sprintf("Interactive menu command: %s", command)
+	if err := claudeExecutor.ExecuteSlashCommand(command, description); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to execute Claude command: %v", err))
+		return err
+	}
+	
+	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Claude command %s completed successfully", command))
 	return nil
 }
 
