@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
+	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/navigation"
 	"claude-wm-cli/internal/workflow"
@@ -79,6 +79,11 @@ func init() {
 
 // runInteractive executes the interactive command
 func runInteractive(cmd *cobra.Command, args []string) error {
+	// Enable debug mode if flag is set
+	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+	
+	debug.LogExecution("INTERACTIVE", "start navigation", "Initialize interactive menu system")
+	
 	// Get current working directory
 	workDir, err := os.Getwd()
 	if err != nil {
@@ -512,18 +517,25 @@ func executeProjectCommand(args []string, menuDisplay *navigation.MenuDisplay) e
 		execPath = buildPath
 	}
 	
-	// Debug: Show what command is being executed
-	fmt.Printf("🔍 DEBUG: Executing command: %s %s\n", execPath, strings.Join(cmdArgs, " "))
+	// Debug logging
+	debug.LogCommandWithArgs("PROJECT", fmt.Sprintf("Execute project command: %s", args[0]), execPath, cmdArgs)
+	
+	// Add debug flag to subprocess if enabled
+	if debugMode || viper.GetBool("debug") {
+		cmdArgs = append(cmdArgs, "--debug")
+	}
 	
 	cmd := exec.Command(execPath, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	
 	if err := cmd.Run(); err != nil {
+		debug.LogResult("PROJECT", fmt.Sprintf("project %s", args[0]), fmt.Sprintf("Command failed: %v", err), false)
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute project %s: %v", args[0], err))
 		return err
 	}
 	
+	debug.LogResult("PROJECT", fmt.Sprintf("project %s", args[0]), "Command completed successfully", true)
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Project %s completed successfully", args[0]))
 	return nil
 }

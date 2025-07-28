@@ -10,9 +10,12 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/epic"
+	"claude-wm-cli/internal/executor"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // epicCmd represents the epic command
@@ -73,6 +76,9 @@ Examples:
   claude-wm-cli epic list --priority high   # List only high priority epics
   claude-wm-cli epic list --all             # Show all epics including completed`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		listEpics(cmd)
 	},
 }
@@ -180,6 +186,9 @@ The dashboard provides:
 Examples:
   claude-wm-cli epic dashboard`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		showEpicDashboard()
 	},
 }
@@ -301,7 +310,30 @@ func listEpics(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create epic manager
+	// Create Claude executor for enhanced epic listing
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("EPIC", "listEpics", "List epics with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic epic listing...")
+	} else {
+		// Execute Claude command for enhanced epic listing
+		prompt := "/2-current-epic:1-epics:ListEpics"
+		description := "List epics with AI-powered analysis and recommendations"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("EPIC", "listEpics", fmt.Sprintf("Enhanced epic listing failed: %v", err))
+			fmt.Printf("⚠️  Enhanced listing failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic epic listing...")
+		} else {
+			fmt.Println("✅ Enhanced epic listing complete")
+			return
+		}
+	}
+
+	// Create epic manager for fallback
 	manager := epic.NewManager(wd)
 
 	// Parse filter options
@@ -836,7 +868,30 @@ func showEpicDashboard() {
 		os.Exit(1)
 	}
 
-	// Create epic manager and dashboard
+	// Create Claude executor for enhanced dashboard
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("EPIC", "showEpicDashboard", "Show epic dashboard with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic epic dashboard...")
+	} else {
+		// Execute Claude command for enhanced dashboard
+		prompt := "/2-current-epic:1-epics:Dashboard"
+		description := "Display epic dashboard with AI-powered analysis and insights"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("EPIC", "showEpicDashboard", fmt.Sprintf("Enhanced dashboard failed: %v", err))
+			fmt.Printf("⚠️  Enhanced dashboard failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic epic dashboard...")
+		} else {
+			fmt.Println("✅ Enhanced epic dashboard complete")
+			return
+		}
+	}
+
+	// Create epic manager and dashboard for fallback
 	manager := epic.NewManager(wd)
 	dashboard := epic.NewDashboard(manager)
 

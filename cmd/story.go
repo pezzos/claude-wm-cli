@@ -9,10 +9,13 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/epic"
+	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/story"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // storyCmd represents the story command
@@ -53,6 +56,9 @@ Examples:
   claude-wm-cli story create "UI Component" --story-points 5 --criteria "Component renders,Component is responsive"`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		createStory(args[0], cmd)
 	},
 }
@@ -71,6 +77,9 @@ Examples:
   claude-wm-cli story list --epic EPIC-001     # List stories from specific epic
   claude-wm-cli story list --status planned    # List only planned stories`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		listStories(cmd)
 	},
 }
@@ -184,7 +193,30 @@ func createStory(title string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create story generator
+	// Create Claude executor for enhanced story creation
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("STORY", "createStory", "Create story with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic story creation...")
+	} else {
+		// Execute Claude command for enhanced story creation
+		prompt := "/2-current-epic:2-stories:CreateStory"
+		description := "Create story with AI-powered analysis and task breakdown"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("STORY", "createStory", fmt.Sprintf("Enhanced story creation failed: %v", err))
+			fmt.Printf("⚠️  Enhanced story creation failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic story creation...")
+		} else {
+			fmt.Println("✅ Enhanced story creation complete")
+			return
+		}
+	}
+
+	// Create story generator for fallback
 	generator := story.NewGenerator(wd)
 
 	// Parse priority
@@ -247,6 +279,29 @@ func listStories(cmd *cobra.Command) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Create Claude executor for enhanced story listing
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("STORY", "listStories", "List stories with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic story listing...")
+	} else {
+		// Execute Claude command for enhanced story listing
+		prompt := "/2-current-epic:2-stories:ListStories"
+		description := "List stories with AI-powered analysis and progress insights"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("STORY", "listStories", fmt.Sprintf("Enhanced story listing failed: %v", err))
+			fmt.Printf("⚠️  Enhanced story listing failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic story listing...")
+		} else {
+			fmt.Println("✅ Enhanced story listing complete")
+			return
+		}
 	}
 
 	// Create story generator

@@ -23,8 +23,9 @@ var (
 
 // Global configuration variables
 var (
-	cfgFile string
-	verbose bool
+	cfgFile   string
+	verbose   bool
+	debugMode bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -79,9 +80,11 @@ func init() {
 	// Global persistent flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.claude-wm-cli.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVar(&debugMode, "debug", false, "debug output - shows all commands executed including Claude calls")
 
 	// Bind flags to viper
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
 
 // initConfig reads in config file and ENV variables.

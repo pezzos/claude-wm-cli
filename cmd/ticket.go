@@ -10,9 +10,12 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"claude-wm-cli/internal/debug"
+	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/ticket"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // ticketCmd represents the ticket command
@@ -56,6 +59,9 @@ Examples:
   claude-wm-cli ticket create "Review PR #123" --description "Code review for authentication feature" --estimated-hours 2`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		createTicket(args[0], cmd)
 	},
 }
@@ -76,6 +82,9 @@ Examples:
   claude-wm-cli ticket list --type bug        # List bug tickets
   claude-wm-cli ticket list --all             # Include closed tickets`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		listTickets(cmd)
 	},
 }
@@ -135,7 +144,7 @@ Examples:
 	},
 }
 
-// ticketCurrentCmd represents the ticket current command
+// ticketCurrentCmd represents the ticket current command  
 var ticketCurrentCmd = &cobra.Command{
 	Use:   "current [ticket-id]",
 	Short: "Set or show the current active ticket",
@@ -150,6 +159,9 @@ Examples:
   claude-wm-cli ticket current --clear        # Clear current ticket`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Enable debug mode if flag is set
+		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+		
 		manageCurrentTicket(args, cmd)
 	},
 }
@@ -257,7 +269,30 @@ func createTicket(title string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create ticket manager
+	// Create Claude executor for enhanced ticket creation
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("TICKET", "createTicket", "Create ticket with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic ticket creation...")
+	} else {
+		// Execute Claude command for enhanced ticket creation
+		prompt := "/3-current-task:1-tickets:CreateTicket"
+		description := "Create ticket with AI-powered analysis and categorization"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("TICKET", "createTicket", fmt.Sprintf("Enhanced ticket creation failed: %v", err))
+			fmt.Printf("⚠️  Enhanced ticket creation failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic ticket creation...")
+		} else {
+			fmt.Println("✅ Enhanced ticket creation complete")
+			return
+		}
+	}
+
+	// Create ticket manager for fallback
 	manager := ticket.NewManager(wd)
 
 	// Parse priority
@@ -352,7 +387,30 @@ func listTickets(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create ticket manager
+	// Create Claude executor for enhanced ticket listing
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("TICKET", "listTickets", "List tickets with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic ticket listing...")
+	} else {
+		// Execute Claude command for enhanced ticket listing
+		prompt := "/3-current-task:1-tickets:ListTickets"
+		description := "List tickets with AI-powered analysis and prioritization"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("TICKET", "listTickets", fmt.Sprintf("Enhanced ticket listing failed: %v", err))
+			fmt.Printf("⚠️  Enhanced ticket listing failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic ticket listing...")
+		} else {
+			fmt.Println("✅ Enhanced ticket listing complete")
+			return
+		}
+	}
+
+	// Create ticket manager for fallback
 	manager := ticket.NewManager(wd)
 
 	// Parse filter options
@@ -755,7 +813,30 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create ticket manager
+	// Create Claude executor for enhanced current ticket management
+	claudeExecutor := executor.NewClaudeExecutor()
+	
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		debug.LogStub("TICKET", "manageCurrentTicket", "Manage current ticket with Claude analysis but Claude CLI not available")
+		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
+		fmt.Println("📋 Falling back to basic current ticket management...")
+	} else {
+		// Execute Claude command for enhanced current ticket management
+		prompt := "/3-current-task:1-tickets:CurrentTicket"
+		description := "Manage current ticket with AI-powered context switching and focus"
+		
+		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
+			debug.LogStub("TICKET", "manageCurrentTicket", fmt.Sprintf("Enhanced current ticket management failed: %v", err))
+			fmt.Printf("⚠️  Enhanced current ticket management failed: %v\n", err)
+			fmt.Println("📋 Falling back to basic current ticket management...")
+		} else {
+			fmt.Println("✅ Enhanced current ticket management complete")
+			return
+		}
+	}
+
+	// Create ticket manager for fallback
 	manager := ticket.NewManager(wd)
 
 	// Handle clear flag
