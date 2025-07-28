@@ -14,18 +14,18 @@ type Priority = epic.Priority
 
 // Story represents an individual user story
 type Story struct {
-	ID                 string    `json:"id"`
-	Title              string    `json:"title"`
-	Description        string    `json:"description"`
-	EpicID             string    `json:"epic_id"`
-	Status             Status    `json:"status"`
-	Priority           Priority  `json:"priority"`
-	StoryPoints        int       `json:"story_points"`
-	AcceptanceCriteria []string  `json:"acceptance_criteria"`
-	Tasks              []Task    `json:"tasks"`
-	Dependencies       []string  `json:"dependencies,omitempty"`
-	CreatedAt          time.Time `json:"created_at"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	ID                 string     `json:"id"`
+	Title              string     `json:"title"`
+	Description        string     `json:"description"`
+	EpicID             string     `json:"epic_id"`
+	Status             Status     `json:"status"`
+	Priority           Priority   `json:"priority"`
+	StoryPoints        int        `json:"story_points"`
+	AcceptanceCriteria []string   `json:"acceptance_criteria"`
+	Tasks              []Task     `json:"tasks"`
+	Dependencies       []string   `json:"dependencies,omitempty"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 	StartedAt          *time.Time `json:"started_at,omitempty"`
 	CompletedAt        *time.Time `json:"completed_at,omitempty"`
 }
@@ -43,8 +43,8 @@ type Task struct {
 
 // StoryCollection represents the collection of all stories
 type StoryCollection struct {
-	Stories      map[string]*Story `json:"stories"`
-	CurrentStory string            `json:"current_story,omitempty"`
+	Stories      map[string]*Story  `json:"stories"`
+	CurrentStory string             `json:"current_story,omitempty"`
 	Metadata     CollectionMetadata `json:"metadata"`
 }
 
@@ -152,14 +152,14 @@ func (s *Story) CanComplete() bool {
 	if s.Status != epic.StatusInProgress {
 		return false
 	}
-	
+
 	// Check if all tasks are completed
 	for _, task := range s.Tasks {
 		if task.Status != epic.StatusCompleted {
 			return false
 		}
 	}
-	
+
 	return true
 }
 

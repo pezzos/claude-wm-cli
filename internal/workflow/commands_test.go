@@ -13,7 +13,7 @@ import (
 func TestNewCommandGenerator(t *testing.T) {
 	rootPath := "/test/path"
 	generator := NewCommandGenerator(rootPath)
-	
+
 	assert.NotNil(t, generator)
 	assert.NotNil(t, generator.actionRegistry)
 	assert.NotNil(t, generator.analyzer)
@@ -25,9 +25,9 @@ func TestGenerateContextualCommands_NotInitialized(t *testing.T) {
 
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, commands)
-	
+
 	// Should have init-project as top priority command
 	assert.Equal(t, "init-project", commands[0].Action.ID)
 	assert.Equal(t, PriorityP0, commands[0].Priority)
@@ -37,13 +37,13 @@ func TestGenerateContextualCommands_NotInitialized(t *testing.T) {
 func TestGenerateContextualCommands_ProjectLevel(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, commands)
-	
+
 	// Should have create-epic as primary command when no epics exist
 	foundCreateEpic := false
 	for _, cmd := range commands {
@@ -60,13 +60,13 @@ func TestGenerateContextualCommands_EpicLevel(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, commands)
-	
+
 	// Should suggest creating stories when epic has no stories
 	foundCreateStory := false
 	for _, cmd := range commands {
@@ -84,13 +84,13 @@ func TestGenerateContextualCommands_StoryLevel(t *testing.T) {
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, commands)
-	
+
 	// Should suggest creating tasks when story has no tasks
 	foundCreateTask := false
 	for _, cmd := range commands {
@@ -109,13 +109,13 @@ func TestGenerateContextualCommands_TaskLevel(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupCurrentTasks(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, commands)
-	
+
 	// Should suggest continuing tasks when tasks exist
 	foundContinueTask := false
 	for _, cmd := range commands {
@@ -134,11 +134,11 @@ func TestGenerateContextualCommands_WithBlockers(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupBlockedTasks(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	// Should have warnings about blocked tasks
 	foundBlockedWarning := false
 	for _, cmd := range commands {
@@ -160,11 +160,11 @@ func TestGenerateContextualCommands_CompletionScenarios(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	// Don't set up any current tasks to simulate all tasks being completed
-	
+
 	generator := NewCommandGenerator(tempDir)
 	commands, err := generator.GenerateContextualCommands()
 	require.NoError(t, err)
-	
+
 	// Should suggest creating tasks when story has no active tasks
 	foundCreateTask := false
 	for _, cmd := range commands {
@@ -180,11 +180,11 @@ func TestGenerateContextualCommands_CompletionScenarios(t *testing.T) {
 func TestGetRecommendedAction(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	recommended, err := generator.GetRecommendedAction()
 	require.NoError(t, err)
-	
+
 	assert.NotNil(t, recommended)
 	assert.Equal(t, "create-epic", recommended.Action.ID)
 	assert.Equal(t, PriorityP0, recommended.Priority)
@@ -194,17 +194,17 @@ func TestGetCommandsByPriority(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	grouped, err := generator.GetCommandsByPriority()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, grouped)
-	
+
 	// Should have commands in different priority levels
 	assert.Contains(t, grouped, PriorityP0)
 	assert.Contains(t, grouped, PriorityP2) // Utility commands
-	
+
 	// P0 commands should be more specific to current state
 	p0Commands := grouped[PriorityP0]
 	assert.NotEmpty(t, p0Commands)
@@ -213,11 +213,11 @@ func TestGetCommandsByPriority(t *testing.T) {
 func TestValidateCommand_ValidCommand(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	generator := NewCommandGenerator(tempDir)
 	cmd, issues, err := generator.ValidateCommand("create-epic")
 	require.NoError(t, err)
-	
+
 	assert.NotNil(t, cmd)
 	assert.Equal(t, "create-epic", cmd.Action.ID)
 	assert.Empty(t, issues, "create-epic should be valid in initialized project")
@@ -226,11 +226,11 @@ func TestValidateCommand_ValidCommand(t *testing.T) {
 func TestValidateCommand_InvalidCommand(t *testing.T) {
 	tempDir := t.TempDir()
 	// Don't initialize project
-	
+
 	generator := NewCommandGenerator(tempDir)
 	cmd, issues, err := generator.ValidateCommand("create-epic")
 	require.NoError(t, err)
-	
+
 	assert.NotNil(t, cmd)
 	assert.NotEmpty(t, issues)
 	assert.Contains(t, issues[0], "Prerequisites not met")
@@ -239,10 +239,10 @@ func TestValidateCommand_InvalidCommand(t *testing.T) {
 func TestValidateCommand_NonExistentCommand(t *testing.T) {
 	tempDir := t.TempDir()
 	generator := NewCommandGenerator(tempDir)
-	
+
 	cmd, issues, err := generator.ValidateCommand("non-existent-command")
 	require.NoError(t, err)
-	
+
 	assert.NotNil(t, cmd)
 	assert.NotEmpty(t, issues)
 	// Should have at least one issue about the action not being found
@@ -258,10 +258,10 @@ func TestValidateCommand_NonExistentCommand(t *testing.T) {
 
 func TestValidateSpecificAction_InitProject(t *testing.T) {
 	tests := []struct {
-		name                string
-		projectInit         bool
-		expectedMinIssues   int
-		shouldContainText   string
+		name              string
+		projectInit       bool
+		expectedMinIssues int
+		shouldContainText string
 	}{
 		{
 			name:              "not initialized",
@@ -283,14 +283,14 @@ func TestValidateSpecificAction_InitProject(t *testing.T) {
 			if tt.projectInit {
 				setupCompleteProjectStructure(t, tempDir)
 			}
-			
+
 			generator := NewCommandGenerator(tempDir)
 			cmd, issues, err := generator.ValidateCommand("init-project")
 			require.NoError(t, err)
-			
+
 			assert.NotNil(t, cmd)
 			assert.GreaterOrEqual(t, len(issues), tt.expectedMinIssues)
-			
+
 			if tt.shouldContainText != "" {
 				foundExpectedText := false
 				for _, issue := range issues {
@@ -330,11 +330,11 @@ func TestValidateSpecificAction_CreateStory(t *testing.T) {
 			if tt.setupEpic {
 				setupCurrentEpic(t, tempDir)
 			}
-			
+
 			generator := NewCommandGenerator(tempDir)
 			cmd, issues, err := generator.ValidateCommand("create-story")
 			require.NoError(t, err)
-			
+
 			assert.NotNil(t, cmd)
 			assert.Len(t, issues, tt.expectedIssues)
 		})
@@ -343,7 +343,7 @@ func TestValidateSpecificAction_CreateStory(t *testing.T) {
 
 func TestSortCommands(t *testing.T) {
 	generator := NewCommandGenerator("/test")
-	
+
 	commands := []*ContextualCommand{
 		{
 			Action:   &WorkflowAction{ID: "action-p1", Name: "Z Action"},
@@ -362,15 +362,15 @@ func TestSortCommands(t *testing.T) {
 			Priority: PriorityP0,
 		},
 	}
-	
+
 	generator.sortCommands(commands)
-	
+
 	// Should be sorted by priority first (P0 > P1 > P2)
 	assert.Equal(t, PriorityP0, commands[0].Priority)
 	assert.Equal(t, PriorityP0, commands[1].Priority)
 	assert.Equal(t, PriorityP1, commands[2].Priority)
 	assert.Equal(t, PriorityP2, commands[3].Priority)
-	
+
 	// Within same priority, should be sorted alphabetically
 	assert.Equal(t, "A Action", commands[0].Action.Name)
 	assert.Equal(t, "B Action", commands[1].Action.Name)
@@ -397,7 +397,7 @@ func TestPriorityValue(t *testing.T) {
 
 func TestIsPrerequisiteMet(t *testing.T) {
 	generator := NewCommandGenerator("/test")
-	
+
 	// Test with not initialized project
 	notInitAnalysis := &WorkflowAnalysis{
 		ProjectInitialized: false,
@@ -407,7 +407,7 @@ func TestIsPrerequisiteMet(t *testing.T) {
 			TotalTasks:   0,
 		},
 	}
-	
+
 	tests := []struct {
 		prerequisite string
 		analysis     *WorkflowAnalysis
@@ -429,22 +429,22 @@ func TestIsPrerequisiteMet(t *testing.T) {
 
 func TestIsCommandBlocked(t *testing.T) {
 	generator := NewCommandGenerator("/test")
-	
+
 	analysis := &WorkflowAnalysis{
 		Blockers: []WorkflowBlocker{
 			{Type: BlockerMissingDefinition},
 			{Type: BlockerMissingDependency},
 		},
 	}
-	
+
 	tests := []struct {
 		actionID string
 		expected bool
 	}{
-		{"continue-epic", true},   // Blocked by missing definition
-		{"continue-task", true},   // Blocked by missing dependency
-		{"help", false},           // Not blocked
-		{"status", false},         // Not blocked
+		{"continue-epic", true}, // Blocked by missing definition
+		{"continue-task", true}, // Blocked by missing dependency
+		{"help", false},         // Not blocked
+		{"status", false},       // Not blocked
 	}
 
 	for _, tt := range tests {
@@ -467,13 +467,13 @@ func setupCompletedTasks(t *testing.T, tempDir string) {
 			{
 				"id":       "TASK-001",
 				"title":    "Completed Task 1",
-				"status":   "todo",  // Use 'todo' so it gets loaded for analysis
+				"status":   "todo", // Use 'todo' so it gets loaded for analysis
 				"priority": "P0",
 			},
 			{
 				"id":       "TASK-002",
-				"title":    "Completed Task 2", 
-				"status":   "todo",  // Use 'todo' so it gets loaded for analysis
+				"title":    "Completed Task 2",
+				"status":   "todo", // Use 'todo' so it gets loaded for analysis
 				"priority": "P1",
 			},
 		},
@@ -488,15 +488,15 @@ func setupCompletedTasks(t *testing.T, tempDir string) {
 		"stories": []interface{}{
 			map[string]interface{}{
 				"metadata": map[string]interface{}{
-					"id": "STORY-001",
+					"id":             "STORY-001",
 					"schema_version": "1.0.0",
 				},
 				"epic_id": "EPIC-001",
-				"title": "Test Story",
-				"status": "in_progress",
+				"title":   "Test Story",
+				"status":  "in_progress",
 				"metrics": map[string]interface{}{
-					"total_tasks": 2,
-					"completed_tasks": 2,  // All tasks completed
+					"total_tasks":      2,
+					"completed_tasks":  2, // All tasks completed
 					"progress_percent": 100.0,
 				},
 			},
@@ -516,10 +516,10 @@ func setupCompletedTasks(t *testing.T, tempDir string) {
 
 // Helper function to check if string contains substring (case insensitive)
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || 
-		len(s) > len(substr) && (s[:len(substr)] == substr || 
-		s[len(s)-len(substr):] == substr ||
-		findInString(s, substr)))
+	return len(s) >= len(substr) && (s == substr ||
+		len(s) > len(substr) && (s[:len(substr)] == substr ||
+			s[len(s)-len(substr):] == substr ||
+			findInString(s, substr)))
 }
 
 func findInString(s, substr string) bool {

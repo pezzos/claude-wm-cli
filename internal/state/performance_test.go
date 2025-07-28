@@ -9,9 +9,9 @@ import (
 
 // Test data structures for performance testing
 type SmallTestData struct {
-	ID      int      `json:"id"`
-	Name    string   `json:"name"`
-	Tags    []string `json:"tags"`
+	ID      int       `json:"id"`
+	Name    string    `json:"name"`
+	Tags    []string  `json:"tags"`
 	Created time.Time `json:"created"`
 }
 
@@ -48,8 +48,8 @@ type MetaData struct {
 }
 
 type StatsData struct {
-	TotalProjects int64 `json:"total_projects"`
-	TotalTasks    int64 `json:"total_tasks"`
+	TotalProjects  int64 `json:"total_projects"`
+	TotalTasks     int64 `json:"total_tasks"`
 	CompletedTasks int64 `json:"completed_tasks"`
 }
 
@@ -342,7 +342,7 @@ func TestMemoryUsageMonitoring(t *testing.T) {
 		t.Error("Memory monitoring should have tracked operations")
 	}
 
-	t.Logf("Memory stats - Operations: %d, Peak usage: %d bytes", 
+	t.Logf("Memory stats - Operations: %d, Peak usage: %d bytes",
 		stats.OperationCount, stats.PeakUsage)
 }
 
@@ -490,13 +490,13 @@ func TestBenchmarkReadPerformance(t *testing.T) {
 // Test file size thresholds
 func TestFileSizeThresholds(t *testing.T) {
 	tests := []struct {
-		name      string
-		size      int64
-		expected  string
+		name     string
+		size     int64
+		expected string
 	}{
-		{"Small file", 500 * 1024, "small"},          // 500KB
-		{"Medium file", 5 * 1024 * 1024, "medium"},   // 5MB
-		{"Large file", 50 * 1024 * 1024, "large"},    // 50MB
+		{"Small file", 500 * 1024, "small"},        // 500KB
+		{"Medium file", 5 * 1024 * 1024, "medium"}, // 5MB
+		{"Large file", 50 * 1024 * 1024, "large"},  // 50MB
 	}
 
 	for _, tt := range tests {
@@ -512,7 +512,7 @@ func TestFileSizeThresholds(t *testing.T) {
 			}
 
 			if strategy != tt.expected {
-				t.Errorf("Expected strategy %s for size %d, got %s", 
+				t.Errorf("Expected strategy %s for size %d, got %s",
 					tt.expected, tt.size, strategy)
 			}
 		})

@@ -8,15 +8,16 @@ import (
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/navigation"
 	"claude-wm-cli/internal/workflow"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// navigateCmd represents the navigate command
-var navigateCmd = &cobra.Command{
-	Use:   "navigate",
+// InteractiveCmd represents the interactive command
+var InteractiveCmd = &cobra.Command{
+	Use:   "interactive",
 	Short: "Interactive navigation through project workflow",
-	Long: `Navigate provides an interactive menu system to guide you through
+	Long: `Interactive provides an interactive menu system to guide you through
 the Claude WM project workflow based on your current project state.
 
 The navigation system automatically detects your current workflow position
@@ -37,45 +38,45 @@ SHORTCUTS:
   • h, help     - Show help information
 
 EXAMPLES:
-  claude-wm-cli navigate              # Start interactive navigation
-  claude-wm-cli navigate --status     # Show status and exit
-  claude-wm-cli navigate --suggest    # Show suggestions and exit`,
+  claude-wm-cli interactive              # Start interactive navigation
+  claude-wm-cli interactive --status     # Show status and exit
+  claude-wm-cli interactive --suggest    # Show suggestions and exit`,
 	Aliases: []string{"nav", "menu"},
-	RunE:    runNavigate,
+	RunE:    runInteractive,
 }
 
 // Navigation command flags
 var (
-	showStatusOnly    bool
-	showSuggestOnly   bool
-	showQuickStatus   bool
-	noInteractive     bool
-	displayWidth      int
-	maxSuggestions    int
+	showStatusOnly  bool
+	showSuggestOnly bool
+	showQuickStatus bool
+	noInteractive   bool
+	displayWidth    int
+	maxSuggestions  int
 )
 
 func init() {
-	rootCmd.AddCommand(navigateCmd)
+	rootCmd.AddCommand(InteractiveCmd)
 
 	// Add flags for navigation command
-	navigateCmd.Flags().BoolVar(&showStatusOnly, "status", false, "show project status and exit")
-	navigateCmd.Flags().BoolVar(&showSuggestOnly, "suggest", false, "show suggestions and exit")
-	navigateCmd.Flags().BoolVar(&showQuickStatus, "quick", false, "show quick one-line status")
-	navigateCmd.Flags().BoolVar(&noInteractive, "no-interactive", false, "disable interactive mode")
-	navigateCmd.Flags().IntVar(&displayWidth, "width", 80, "display width for formatting")
-	navigateCmd.Flags().IntVar(&maxSuggestions, "max-suggestions", 5, "maximum number of suggestions to show")
+	InteractiveCmd.Flags().BoolVar(&showStatusOnly, "status", false, "show project status and exit")
+	InteractiveCmd.Flags().BoolVar(&showSuggestOnly, "suggest", false, "show suggestions and exit")
+	InteractiveCmd.Flags().BoolVar(&showQuickStatus, "quick", false, "show quick one-line status")
+	InteractiveCmd.Flags().BoolVar(&noInteractive, "no-interactive", false, "disable interactive mode")
+	InteractiveCmd.Flags().IntVar(&displayWidth, "width", 80, "display width for formatting")
+	InteractiveCmd.Flags().IntVar(&maxSuggestions, "max-suggestions", 5, "maximum number of suggestions to show")
 
 	// Bind flags to viper
-	viper.BindPFlag("navigate.status", navigateCmd.Flags().Lookup("status"))
-	viper.BindPFlag("navigate.suggest", navigateCmd.Flags().Lookup("suggest"))
-	viper.BindPFlag("navigate.quick", navigateCmd.Flags().Lookup("quick"))
-	viper.BindPFlag("navigate.no-interactive", navigateCmd.Flags().Lookup("no-interactive"))
-	viper.BindPFlag("navigate.width", navigateCmd.Flags().Lookup("width"))
-	viper.BindPFlag("navigate.max-suggestions", navigateCmd.Flags().Lookup("max-suggestions"))
+	viper.BindPFlag("interactive.status", InteractiveCmd.Flags().Lookup("status"))
+	viper.BindPFlag("interactive.suggest", InteractiveCmd.Flags().Lookup("suggest"))
+	viper.BindPFlag("interactive.quick", InteractiveCmd.Flags().Lookup("quick"))
+	viper.BindPFlag("interactive.no-interactive", InteractiveCmd.Flags().Lookup("no-interactive"))
+	viper.BindPFlag("interactive.width", InteractiveCmd.Flags().Lookup("width"))
+	viper.BindPFlag("interactive.max-suggestions", InteractiveCmd.Flags().Lookup("max-suggestions"))
 }
 
-// runNavigate executes the navigate command
-func runNavigate(cmd *cobra.Command, args []string) error {
+// runInteractive executes the interactive command
+func runInteractive(cmd *cobra.Command, args []string) error {
 	// Get current working directory
 	workDir, err := os.Getwd()
 	if err != nil {

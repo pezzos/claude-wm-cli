@@ -16,12 +16,12 @@ func (p Priority) String() string {
 
 // WorkflowAction represents an action that can be performed in the workflow
 type WorkflowAction struct {
-	ID          string
-	Name        string
-	Description string
-	Priority    Priority
+	ID            string
+	Name          string
+	Description   string
+	Priority      Priority
 	Prerequisites []string // List of required conditions/states
-	Blocks      []string   // List of actions this blocks
+	Blocks        []string // List of actions this blocks
 }
 
 // ActionRegistry contains all available workflow actions
@@ -34,7 +34,7 @@ func NewActionRegistry() *ActionRegistry {
 	registry := &ActionRegistry{
 		actions: make(map[string]*WorkflowAction),
 	}
-	
+
 	// Register default workflow actions
 	registry.registerDefaultActions()
 	return registry
@@ -44,119 +44,119 @@ func NewActionRegistry() *ActionRegistry {
 func (ar *ActionRegistry) registerDefaultActions() {
 	defaultActions := []*WorkflowAction{
 		{
-			ID:          "init-project",
-			Name:        "Initialize Project",
-			Description: "Set up the project structure and initialize the workflow system",
-			Priority:    PriorityP0,
+			ID:            "init-project",
+			Name:          "Initialize Project",
+			Description:   "Set up the project structure and initialize the workflow system",
+			Priority:      PriorityP0,
 			Prerequisites: []string{"empty_directory"},
 		},
 		{
-			ID:          "create-epic",
-			Name:        "Create Epic",
-			Description: "Create a new epic to organize work",
-			Priority:    PriorityP0,
+			ID:            "create-epic",
+			Name:          "Create Epic",
+			Description:   "Create a new epic to organize work",
+			Priority:      PriorityP0,
 			Prerequisites: []string{"project_initialized"},
 		},
 		{
-			ID:          "start-epic",
-			Name:        "Start Epic",
-			Description: "Begin work on an existing epic",
-			Priority:    PriorityP0,
+			ID:            "start-epic",
+			Name:          "Start Epic",
+			Description:   "Begin work on an existing epic",
+			Priority:      PriorityP0,
 			Prerequisites: []string{"has_epics", "no_active_epic"},
 		},
 		{
-			ID:          "continue-epic",
-			Name:        "Continue Epic",
-			Description: "Continue working on the current epic",
-			Priority:    PriorityP1,
+			ID:            "continue-epic",
+			Name:          "Continue Epic",
+			Description:   "Continue working on the current epic",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"epic_in_progress"},
 		},
 		{
-			ID:          "create-story",
-			Name:        "Create Story",
-			Description: "Create a new user story within the current epic",
-			Priority:    PriorityP1,
+			ID:            "create-story",
+			Name:          "Create Story",
+			Description:   "Create a new user story within the current epic",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"epic_in_progress"},
 		},
 		{
-			ID:          "continue-story",
-			Name:        "Continue Story",
-			Description: "Continue working on the current story",
-			Priority:    PriorityP1,
+			ID:            "continue-story",
+			Name:          "Continue Story",
+			Description:   "Continue working on the current story",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"story_in_progress"},
 		},
 		{
-			ID:          "create-task",
-			Name:        "Create Task",
-			Description: "Create a new task within the current story",
-			Priority:    PriorityP1,
+			ID:            "create-task",
+			Name:          "Create Task",
+			Description:   "Create a new task within the current story",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"story_in_progress"},
 		},
 		{
-			ID:          "continue-task",
-			Name:        "Continue Task",
-			Description: "Continue working on the current task",
-			Priority:    PriorityP1,
+			ID:            "continue-task",
+			Name:          "Continue Task",
+			Description:   "Continue working on the current task",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"task_in_progress"},
 		},
 		{
-			ID:          "complete-task",
-			Name:        "Complete Task",
-			Description: "Mark the current task as completed",
-			Priority:    PriorityP1,
+			ID:            "complete-task",
+			Name:          "Complete Task",
+			Description:   "Mark the current task as completed",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"task_in_progress"},
 		},
 		{
-			ID:          "complete-story",
-			Name:        "Complete Story",
-			Description: "Mark the current story as completed",
-			Priority:    PriorityP1,
+			ID:            "complete-story",
+			Name:          "Complete Story",
+			Description:   "Mark the current story as completed",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"story_in_progress", "all_tasks_complete"},
 		},
 		{
-			ID:          "complete-epic",
-			Name:        "Complete Epic",
-			Description: "Mark the current epic as completed",
-			Priority:    PriorityP1,
+			ID:            "complete-epic",
+			Name:          "Complete Epic",
+			Description:   "Mark the current epic as completed",
+			Priority:      PriorityP1,
 			Prerequisites: []string{"epic_in_progress", "all_stories_complete"},
 		},
 		{
-			ID:          "list-epics",
-			Name:        "List Epics",
-			Description: "Show all available epics and their status",
-			Priority:    PriorityP2,
+			ID:            "list-epics",
+			Name:          "List Epics",
+			Description:   "Show all available epics and their status",
+			Priority:      PriorityP2,
 			Prerequisites: []string{"has_epics"},
 		},
 		{
-			ID:          "list-stories",
-			Name:        "List Stories",
-			Description: "Show all stories in the current epic",
-			Priority:    PriorityP2,
+			ID:            "list-stories",
+			Name:          "List Stories",
+			Description:   "Show all stories in the current epic",
+			Priority:      PriorityP2,
 			Prerequisites: []string{"epic_in_progress"},
 		},
 		{
-			ID:          "list-tasks",
-			Name:        "List Tasks",
-			Description: "Show all tasks in the current story",
-			Priority:    PriorityP2,
+			ID:            "list-tasks",
+			Name:          "List Tasks",
+			Description:   "Show all tasks in the current story",
+			Priority:      PriorityP2,
 			Prerequisites: []string{"story_in_progress"},
 		},
 		{
-			ID:          "status",
-			Name:        "Show Status",
-			Description: "Display current project status and progress",
-			Priority:    PriorityP2,
+			ID:            "status",
+			Name:          "Show Status",
+			Description:   "Display current project status and progress",
+			Priority:      PriorityP2,
 			Prerequisites: []string{"project_initialized"},
 		},
 		{
-			ID:          "help",
-			Name:        "Show Help",
-			Description: "Display available commands and usage information",
-			Priority:    PriorityP2,
+			ID:            "help",
+			Name:          "Show Help",
+			Description:   "Display available commands and usage information",
+			Priority:      PriorityP2,
 			Prerequisites: []string{},
 		},
 	}
-	
+
 	for _, action := range defaultActions {
 		ar.actions[action.ID] = action
 	}

@@ -32,7 +32,7 @@ func captureOutput(f func()) string {
 
 func TestProjectStateDisplay_CreateProgressBar(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		progress float64
 		width    int
@@ -46,7 +46,7 @@ func TestProjectStateDisplay_CreateProgressBar(t *testing.T) {
 		{-0.1, 5, "[░░░░░]"}, // Negative should be clamped to 0
 		{1.5, 5, "[█████]"},  // Over 1 should be clamped to 1
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%.2f_%d", tt.progress, tt.width), func(t *testing.T) {
 			result := display.createProgressBar(tt.progress, tt.width)
@@ -57,7 +57,7 @@ func TestProjectStateDisplay_CreateProgressBar(t *testing.T) {
 
 func TestProjectStateDisplay_GetStateIcon(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		state    WorkflowState
 		expected string
@@ -69,7 +69,7 @@ func TestProjectStateDisplay_GetStateIcon(t *testing.T) {
 		{StateStoryInProgress, "📖 "},
 		{StateTaskInProgress, "⚡ "},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.state.String(), func(t *testing.T) {
 			result := display.getStateIcon(tt.state)
@@ -80,7 +80,7 @@ func TestProjectStateDisplay_GetStateIcon(t *testing.T) {
 
 func TestProjectStateDisplay_GetStatusIcon(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		status   string
 		expected string
@@ -95,7 +95,7 @@ func TestProjectStateDisplay_GetStatusIcon(t *testing.T) {
 		{"review", "👀"},
 		{"unknown_status", "📋"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.status, func(t *testing.T) {
 			result := display.getStatusIcon(tt.status)
@@ -106,7 +106,7 @@ func TestProjectStateDisplay_GetStatusIcon(t *testing.T) {
 
 func TestProjectStateDisplay_GetPriorityIcon(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		priority string
 		expected string
@@ -119,7 +119,7 @@ func TestProjectStateDisplay_GetPriorityIcon(t *testing.T) {
 		{"P2", "🟢 "},
 		{"unknown", "⚪ "},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.priority, func(t *testing.T) {
 			result := display.getPriorityIcon(tt.priority)
@@ -130,7 +130,7 @@ func TestProjectStateDisplay_GetPriorityIcon(t *testing.T) {
 
 func TestProjectStateDisplay_GetProjectName(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		name     string
 		path     string
@@ -157,7 +157,7 @@ func TestProjectStateDisplay_GetProjectName(t *testing.T) {
 			expected: "Claude WM Project",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := &ProjectContext{ProjectPath: tt.path}
@@ -169,7 +169,7 @@ func TestProjectStateDisplay_GetProjectName(t *testing.T) {
 
 func TestProjectStateDisplay_GetNextMilestone(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		state    WorkflowState
 		expected string
@@ -180,7 +180,7 @@ func TestProjectStateDisplay_GetNextMilestone(t *testing.T) {
 		{StateEpicInProgress, "Complete current epic"},
 		{StateTaskInProgress, "Continue current work"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.state.String(), func(t *testing.T) {
 			ctx := &ProjectContext{State: tt.state}
@@ -192,7 +192,7 @@ func TestProjectStateDisplay_GetNextMilestone(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayQuickStatus(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		name     string
 		ctx      *ProjectContext
@@ -234,13 +234,13 @@ func TestProjectStateDisplay_DisplayQuickStatus(t *testing.T) {
 			contains: []string{"Task In Progress", "Test Epic", "Test Story", "Test Task"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output := captureOutput(func() {
 				display.DisplayQuickStatus(tt.ctx)
 			})
-			
+
 			for _, expected := range tt.contains {
 				assert.Contains(t, output, expected)
 			}
@@ -250,7 +250,7 @@ func TestProjectStateDisplay_DisplayQuickStatus(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayProgressSummary(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
 		State: StateStoryInProgress,
 		CurrentEpic: &EpicContext{
@@ -263,11 +263,11 @@ func TestProjectStateDisplay_DisplayProgressSummary(t *testing.T) {
 			TotalTasks:     5,
 		},
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProgressSummary(ctx)
 	})
-	
+
 	assert.Contains(t, output, "Progress Summary")
 	assert.Contains(t, output, "Epic:")
 	assert.Contains(t, output, "60.0%")
@@ -277,7 +277,7 @@ func TestProjectStateDisplay_DisplayProgressSummary(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayActionSummary(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	tests := []struct {
 		name    string
 		actions []string
@@ -299,17 +299,17 @@ func TestProjectStateDisplay_DisplayActionSummary(t *testing.T) {
 			want:    []string{"Available Actions (10)", "a1", "and 2 more"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := &ProjectContext{
 				AvailableActions: tt.actions,
 			}
-			
+
 			output := captureOutput(func() {
 				display.DisplayActionSummary(ctx)
 			})
-			
+
 			for _, expected := range tt.want {
 				assert.Contains(t, output, expected)
 			}
@@ -319,12 +319,12 @@ func TestProjectStateDisplay_DisplayActionSummary(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayWithSuggestions(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
-		State: StateNotInitialized,
+		State:            StateNotInitialized,
 		AvailableActions: []string{"init-project"},
 	}
-	
+
 	suggestions := []*Suggestion{
 		{
 			Action: &workflow.WorkflowAction{
@@ -343,11 +343,11 @@ func TestProjectStateDisplay_DisplayWithSuggestions(t *testing.T) {
 			Reasoning: "Get help with commands",
 		},
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayWithSuggestions(ctx, suggestions)
 	})
-	
+
 	assert.Contains(t, output, "Not Initialized")
 	assert.Contains(t, output, "Recommended Actions")
 	assert.Contains(t, output, "Initialize Project")
@@ -356,16 +356,16 @@ func TestProjectStateDisplay_DisplayWithSuggestions(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayProjectOverview_NotInitialized(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
 		State:       StateNotInitialized,
 		ProjectPath: "/test/project",
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProjectOverview(ctx)
 	})
-	
+
 	assert.Contains(t, output, "project")
 	assert.Contains(t, output, "Not Initialized")
 	assert.Contains(t, output, "/test/project")
@@ -373,7 +373,7 @@ func TestProjectStateDisplay_DisplayProjectOverview_NotInitialized(t *testing.T)
 
 func TestProjectStateDisplay_DisplayProjectOverview_WithEpic(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
 		State: StateEpicInProgress,
 		CurrentEpic: &EpicContext{
@@ -387,11 +387,11 @@ func TestProjectStateDisplay_DisplayProjectOverview_WithEpic(t *testing.T) {
 		},
 		ProjectPath: "/test/project",
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProjectOverview(ctx)
 	})
-	
+
 	assert.Contains(t, output, "Test Epic")
 	assert.Contains(t, output, "EPIC-001")
 	assert.Contains(t, output, "40.0%")
@@ -401,7 +401,7 @@ func TestProjectStateDisplay_DisplayProjectOverview_WithEpic(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayProjectOverview_WithIssues(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
 		State: StateProjectInitialized,
 		Issues: []string{
@@ -409,11 +409,11 @@ func TestProjectStateDisplay_DisplayProjectOverview_WithIssues(t *testing.T) {
 			"Corrupted state",
 		},
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProjectOverview(ctx)
 	})
-	
+
 	assert.Contains(t, output, "Issues (2)")
 	assert.Contains(t, output, "Missing configuration file")
 	assert.Contains(t, output, "Corrupted state")
@@ -421,26 +421,26 @@ func TestProjectStateDisplay_DisplayProjectOverview_WithIssues(t *testing.T) {
 
 func TestProjectStateDisplay_DisplayProjectOverview_ManyIssues(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	ctx := &ProjectContext{
-		State: StateProjectInitialized,
+		State:  StateProjectInitialized,
 		Issues: []string{"issue1", "issue2", "issue3", "issue4", "issue5", "issue6", "issue7"},
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProjectOverview(ctx)
 	})
-	
+
 	assert.Contains(t, output, "Issues (7)")
 	assert.Contains(t, output, "and 2 more") // Should limit to first 5
 }
 
 func TestProjectStateDisplay_SetWidth(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	// Test default width
 	assert.Equal(t, 80, display.width)
-	
+
 	// Test setting custom width
 	display.SetWidth(120)
 	assert.Equal(t, 120, display.width)
@@ -449,7 +449,7 @@ func TestProjectStateDisplay_SetWidth(t *testing.T) {
 func TestProjectStateDisplay_PrintCentered(t *testing.T) {
 	display := NewProjectStateDisplay()
 	display.SetWidth(20)
-	
+
 	tests := []struct {
 		text     string
 		expected string
@@ -463,13 +463,13 @@ func TestProjectStateDisplay_PrintCentered(t *testing.T) {
 			expected: "This is a very long text that exceeds width",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.text, func(t *testing.T) {
 			output := captureOutput(func() {
 				display.printCentered(tt.text)
 			})
-			
+
 			// Remove newline for comparison
 			output = strings.TrimRight(output, "\n")
 			assert.Equal(t, tt.expected, output)
@@ -480,18 +480,18 @@ func TestProjectStateDisplay_PrintCentered(t *testing.T) {
 func TestProjectStateDisplay_PrintSeparator(t *testing.T) {
 	display := NewProjectStateDisplay()
 	display.SetWidth(10)
-	
+
 	output := captureOutput(func() {
 		display.printSeparator("=")
 	})
-	
+
 	expected := "==========\n"
 	assert.Equal(t, expected, output)
 }
 
 func TestProjectStateDisplay_CompleteWorkflow(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	// Test complete workflow with all components
 	ctx := &ProjectContext{
 		State:       StateTaskInProgress,
@@ -529,11 +529,11 @@ func TestProjectStateDisplay_CompleteWorkflow(t *testing.T) {
 			"Test coverage below 80%",
 		},
 	}
-	
+
 	output := captureOutput(func() {
 		display.DisplayProjectOverview(ctx)
 	})
-	
+
 	// Verify all major components are displayed
 	assert.Contains(t, output, "awesome-project")
 	assert.Contains(t, output, "Task In Progress")
@@ -551,7 +551,7 @@ func TestProjectStateDisplay_CompleteWorkflow(t *testing.T) {
 
 func TestProjectStateDisplay_NilValues(t *testing.T) {
 	display := NewProjectStateDisplay()
-	
+
 	// Test handling of nil contexts gracefully
 	ctx := &ProjectContext{
 		State:        StateEpicInProgress,
@@ -559,13 +559,13 @@ func TestProjectStateDisplay_NilValues(t *testing.T) {
 		CurrentStory: nil, // Should handle nil story
 		CurrentTask:  nil, // Should handle nil task
 	}
-	
+
 	// Should not panic
 	require.NotPanics(t, func() {
 		output := captureOutput(func() {
 			display.DisplayProjectOverview(ctx)
 		})
-		
+
 		assert.Contains(t, output, "No active epic")
 	})
 }

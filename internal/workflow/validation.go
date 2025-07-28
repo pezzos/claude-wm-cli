@@ -17,24 +17,24 @@ type ValidationResult struct {
 
 // DependencyViolation represents a specific violation of workflow dependencies
 type DependencyViolation struct {
-	Type         ViolationType `json:"type"`
-	Severity     Severity      `json:"severity"`
-	Description  string        `json:"description"`
-	Prerequisite string        `json:"prerequisite,omitempty"`
-	CurrentState string        `json:"current_state,omitempty"`
-	RequiredState string       `json:"required_state,omitempty"`
-	Blocker      string        `json:"blocker,omitempty"`
+	Type          ViolationType `json:"type"`
+	Severity      Severity      `json:"severity"`
+	Description   string        `json:"description"`
+	Prerequisite  string        `json:"prerequisite,omitempty"`
+	CurrentState  string        `json:"current_state,omitempty"`
+	RequiredState string        `json:"required_state,omitempty"`
+	Blocker       string        `json:"blocker,omitempty"`
 }
 
 // ViolationType categorizes different types of dependency violations
 type ViolationType string
 
 const (
-	ViolationMissingPrerequisite  ViolationType = "missing_prerequisite"
-	ViolationInvalidState         ViolationType = "invalid_state"
-	ViolationCircularDependency   ViolationType = "circular_dependency"
-	ViolationBlockingCondition    ViolationType = "blocking_condition"
-	ViolationIncompatibleAction   ViolationType = "incompatible_action"
+	ViolationMissingPrerequisite ViolationType = "missing_prerequisite"
+	ViolationInvalidState        ViolationType = "invalid_state"
+	ViolationCircularDependency  ViolationType = "circular_dependency"
+	ViolationBlockingCondition   ViolationType = "blocking_condition"
+	ViolationIncompatibleAction  ViolationType = "incompatible_action"
 )
 
 // Severity levels for dependency violations
@@ -117,7 +117,7 @@ func (de *DependencyEnforcer) ValidateActionExecution(actionID string, allowOver
 	de.evaluateOverrideCapability(action, analysis, result, allowOverride)
 
 	// Set overall validity
-	result.IsValid = len(result.Violations) == 0 || 
+	result.IsValid = len(result.Violations) == 0 ||
 		(allowOverride && result.CanOverride && de.onlyNonCriticalViolations(result.Violations))
 
 	return result, nil
@@ -128,11 +128,11 @@ func (de *DependencyEnforcer) validatePrerequisites(action *WorkflowAction, anal
 	for _, prereq := range action.Prerequisites {
 		if !de.isPrerequisiteMet(prereq, analysis) {
 			violation := DependencyViolation{
-				Type:         ViolationMissingPrerequisite,
-				Severity:     de.getPrerequisiteSeverity(prereq),
-				Description:  fmt.Sprintf("Prerequisite '%s' is not met", prereq),
-				Prerequisite: prereq,
-				CurrentState: de.getCurrentStateForPrerequisite(prereq, analysis),
+				Type:          ViolationMissingPrerequisite,
+				Severity:      de.getPrerequisiteSeverity(prereq),
+				Description:   fmt.Sprintf("Prerequisite '%s' is not met", prereq),
+				Prerequisite:  prereq,
+				CurrentState:  de.getCurrentStateForPrerequisite(prereq, analysis),
 				RequiredState: de.getRequiredStateForPrerequisite(prereq),
 			}
 			result.Violations = append(result.Violations, violation)
@@ -172,7 +172,7 @@ func (de *DependencyEnforcer) validateAgainstBlockers(action *WorkflowAction, an
 func (de *DependencyEnforcer) validateCircularDependencies(action *WorkflowAction, analysis *WorkflowAnalysis, result *ValidationResult) {
 	// For now, implement basic circular dependency detection
 	// This could be enhanced with a more sophisticated dependency graph analysis
-	
+
 	if action.ID == "complete-epic" && analysis.CurrentEpic != nil {
 		// Check if epic has incomplete dependencies
 		if len(action.Blocks) > 0 {
@@ -196,10 +196,10 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "init-project":
 		if analysis.ProjectInitialized {
 			violation := DependencyViolation{
-				Type:        ViolationInvalidState,
-				Severity:    SeverityHigh,
-				Description: "Project is already initialized",
-				CurrentState: "initialized",
+				Type:          ViolationInvalidState,
+				Severity:      SeverityHigh,
+				Description:   "Project is already initialized",
+				CurrentState:  "initialized",
 				RequiredState: "not_initialized",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -208,11 +208,11 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "create-epic":
 		if !analysis.ProjectInitialized {
 			violation := DependencyViolation{
-				Type:        ViolationMissingPrerequisite,
-				Severity:    SeverityCritical,
-				Description: "Project must be initialized before creating epics",
-				Prerequisite: "project_initialized",
-				CurrentState: "not_initialized",
+				Type:          ViolationMissingPrerequisite,
+				Severity:      SeverityCritical,
+				Description:   "Project must be initialized before creating epics",
+				Prerequisite:  "project_initialized",
+				CurrentState:  "not_initialized",
 				RequiredState: "initialized",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -221,21 +221,21 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "start-epic":
 		if analysis.CompletionMetrics.TotalEpics == 0 {
 			violation := DependencyViolation{
-				Type:        ViolationMissingPrerequisite,
-				Severity:    SeverityHigh,
-				Description: "No epics available to start",
-				Prerequisite: "has_epics",
-				CurrentState: "no_epics",
+				Type:          ViolationMissingPrerequisite,
+				Severity:      SeverityHigh,
+				Description:   "No epics available to start",
+				Prerequisite:  "has_epics",
+				CurrentState:  "no_epics",
 				RequiredState: "epics_available",
 			}
 			result.Violations = append(result.Violations, violation)
 		}
 		if analysis.CurrentEpic != nil {
 			violation := DependencyViolation{
-				Type:        ViolationInvalidState,
-				Severity:    SeverityMedium,
-				Description: "Another epic is already active",
-				CurrentState: fmt.Sprintf("epic_%s_active", analysis.CurrentEpic.Metadata.ID),
+				Type:          ViolationInvalidState,
+				Severity:      SeverityMedium,
+				Description:   "Another epic is already active",
+				CurrentState:  fmt.Sprintf("epic_%s_active", analysis.CurrentEpic.Metadata.ID),
 				RequiredState: "no_active_epic",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -244,19 +244,19 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "complete-epic":
 		if analysis.CurrentEpic == nil {
 			violation := DependencyViolation{
-				Type:        ViolationMissingPrerequisite,
-				Severity:    SeverityHigh,
-				Description: "No epic is currently active",
-				CurrentState: "no_active_epic",
+				Type:          ViolationMissingPrerequisite,
+				Severity:      SeverityHigh,
+				Description:   "No epic is currently active",
+				CurrentState:  "no_active_epic",
 				RequiredState: "epic_active",
 			}
 			result.Violations = append(result.Violations, violation)
 		} else if analysis.CompletionMetrics.EpicProgress < 100 {
 			violation := DependencyViolation{
-				Type:        ViolationInvalidState,
-				Severity:    SeverityMedium,
-				Description: fmt.Sprintf("Epic is only %.1f%% complete", analysis.CompletionMetrics.EpicProgress),
-				CurrentState: fmt.Sprintf("%.1f%%_complete", analysis.CompletionMetrics.EpicProgress),
+				Type:          ViolationInvalidState,
+				Severity:      SeverityMedium,
+				Description:   fmt.Sprintf("Epic is only %.1f%% complete", analysis.CompletionMetrics.EpicProgress),
+				CurrentState:  fmt.Sprintf("%.1f%%_complete", analysis.CompletionMetrics.EpicProgress),
 				RequiredState: "100%_complete",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -265,10 +265,10 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "create-story":
 		if analysis.CurrentEpic == nil {
 			violation := DependencyViolation{
-				Type:        ViolationMissingPrerequisite,
-				Severity:    SeverityHigh,
-				Description: "No epic is currently active",
-				CurrentState: "no_active_epic",
+				Type:          ViolationMissingPrerequisite,
+				Severity:      SeverityHigh,
+				Description:   "No epic is currently active",
+				CurrentState:  "no_active_epic",
 				RequiredState: "epic_active",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -277,10 +277,10 @@ func (de *DependencyEnforcer) validateActionSpecificConstraints(actionID string,
 	case "create-task":
 		if analysis.CurrentStory == nil {
 			violation := DependencyViolation{
-				Type:        ViolationMissingPrerequisite,
-				Severity:    SeverityHigh,
-				Description: "No story is currently active",
-				CurrentState: "no_active_story",
+				Type:          ViolationMissingPrerequisite,
+				Severity:      SeverityHigh,
+				Description:   "No story is currently active",
+				CurrentState:  "no_active_story",
 				RequiredState: "story_active",
 			}
 			result.Violations = append(result.Violations, violation)
@@ -594,13 +594,13 @@ func (de *DependencyEnforcer) ValidateWorkflowTransition(fromState, toState Work
 	if !validTransition {
 		result.IsValid = false
 		result.Violations = append(result.Violations, DependencyViolation{
-			Type:        ViolationInvalidState,
-			Severity:    SeverityMedium,
-			Description: fmt.Sprintf("Invalid transition from %s to %s", fromState, toState),
-			CurrentState: string(fromState),
+			Type:          ViolationInvalidState,
+			Severity:      SeverityMedium,
+			Description:   fmt.Sprintf("Invalid transition from %s to %s", fromState, toState),
+			CurrentState:  string(fromState),
 			RequiredState: fmt.Sprintf("one of: %v", allowedTransitions),
 		})
-		result.Suggestions = append(result.Suggestions, 
+		result.Suggestions = append(result.Suggestions,
 			fmt.Sprintf("Valid transitions from %s are: %v", fromState, allowedTransitions))
 	}
 

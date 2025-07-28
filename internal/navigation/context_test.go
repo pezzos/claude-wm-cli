@@ -34,10 +34,10 @@ func TestWorkflowState_String(t *testing.T) {
 func TestContextDetector_DetectContext_NotInitialized(t *testing.T) {
 	// Create temporary directory without docs structure
 	tempDir := t.TempDir()
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateNotInitialized, ctx.State)
 	assert.Contains(t, ctx.AvailableActions, "init-project")
@@ -48,10 +48,10 @@ func TestContextDetector_DetectContext_ProjectInitialized(t *testing.T) {
 	// Create temporary directory with docs structure but no epics
 	tempDir := t.TempDir()
 	createProjectStructure(t, tempDir)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateProjectInitialized, ctx.State)
 	assert.Contains(t, ctx.AvailableActions, "create-epic")
@@ -62,10 +62,10 @@ func TestContextDetector_DetectContext_HasEpics(t *testing.T) {
 	tempDir := t.TempDir()
 	createProjectStructure(t, tempDir)
 	createEpicsFile(t, tempDir, false)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateHasEpics, ctx.State)
 	assert.Contains(t, ctx.AvailableActions, "start-epic")
@@ -77,10 +77,10 @@ func TestContextDetector_DetectContext_EpicInProgress(t *testing.T) {
 	createProjectStructure(t, tempDir)
 	createEpicsFile(t, tempDir, true)
 	createCurrentEpicFile(t, tempDir)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateEpicInProgress, ctx.State)
 	assert.NotNil(t, ctx.CurrentEpic)
@@ -96,10 +96,10 @@ func TestContextDetector_DetectContext_StoryInProgress(t *testing.T) {
 	createEpicsFile(t, tempDir, true)
 	createCurrentEpicFile(t, tempDir)
 	createStoriesFile(t, tempDir)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateStoryInProgress, ctx.State)
 	assert.NotNil(t, ctx.CurrentStory)
@@ -115,10 +115,10 @@ func TestContextDetector_DetectContext_TaskInProgress(t *testing.T) {
 	createCurrentEpicFile(t, tempDir)
 	createStoriesFile(t, tempDir)
 	createTodoFile(t, tempDir)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateTaskInProgress, ctx.State)
 	assert.NotNil(t, ctx.CurrentTask)
@@ -128,7 +128,7 @@ func TestContextDetector_DetectContext_TaskInProgress(t *testing.T) {
 
 func TestContextDetector_GetRecommendedAction(t *testing.T) {
 	detector := NewContextDetector("")
-	
+
 	tests := []struct {
 		state    WorkflowState
 		expected string
@@ -154,18 +154,18 @@ func TestContextDetector_HandleCorruptedFiles(t *testing.T) {
 	// Create temporary directory with corrupted JSON files
 	tempDir := t.TempDir()
 	createProjectStructure(t, tempDir)
-	
+
 	// Create corrupted epics.json
 	epicsPath := filepath.Join(tempDir, "docs/1-project/epics.json")
 	err := os.WriteFile(epicsPath, []byte("invalid json"), 0644)
 	require.NoError(t, err)
-	
+
 	detector := NewContextDetector(tempDir)
 	ctx, err := detector.DetectContext()
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, StateHasEpics, ctx.State) // Should still detect epics.json exists
-	assert.NotEmpty(t, ctx.Issues) // Should report issues
+	assert.NotEmpty(t, ctx.Issues)            // Should report issues
 }
 
 // Helper functions for tests
@@ -176,7 +176,7 @@ func createProjectStructure(t *testing.T, tempDir string) {
 		"docs/2-current-epic",
 		"docs/3-current-task",
 	}
-	
+
 	for _, dir := range dirs {
 		err := os.MkdirAll(filepath.Join(tempDir, dir), 0755)
 		require.NoError(t, err)
@@ -193,14 +193,14 @@ func createEpicsFile(t *testing.T, tempDir string, withCurrentEpic bool) {
 			},
 		},
 	}
-	
+
 	if withCurrentEpic {
 		epicsData["epics"].([]map[string]interface{})[0]["status"] = "in_progress"
 	}
-	
+
 	data, err := json.Marshal(epicsData)
 	require.NoError(t, err)
-	
+
 	epicsPath := filepath.Join(tempDir, "docs/1-project/epics.json")
 	err = os.WriteFile(epicsPath, data, 0644)
 	require.NoError(t, err)
@@ -220,17 +220,17 @@ func createCurrentEpicFile(t *testing.T, tempDir string) {
 					"status": "completed",
 				},
 				{
-					"id":     "US-002", 
+					"id":     "US-002",
 					"title":  "Another Story",
 					"status": "todo",
 				},
 			},
 		},
 	}
-	
+
 	data, err := json.Marshal(epicData)
 	require.NoError(t, err)
-	
+
 	epicPath := filepath.Join(tempDir, "docs/2-current-epic/current-epic.json")
 	err = os.WriteFile(epicPath, data, 0644)
 	require.NoError(t, err)
@@ -247,10 +247,10 @@ func createStoriesFile(t *testing.T, tempDir string) {
 			},
 		},
 	}
-	
+
 	data, err := json.Marshal(storiesData)
 	require.NoError(t, err)
-	
+
 	storiesPath := filepath.Join(tempDir, "docs/2-current-epic/stories.json")
 	err = os.WriteFile(storiesPath, data, 0644)
 	require.NoError(t, err)
@@ -268,10 +268,10 @@ func createTodoFile(t *testing.T, tempDir string) {
 			},
 		},
 	}
-	
+
 	data, err := json.Marshal(todoData)
 	require.NoError(t, err)
-	
+
 	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo-epic-001.json")
 	err = os.WriteFile(todoPath, data, 0644)
 	require.NoError(t, err)

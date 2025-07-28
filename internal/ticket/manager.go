@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 	"time"
-	
+
 	"claude-wm-cli/internal/epic"
 )
 
@@ -37,31 +37,31 @@ func (m *Manager) CreateTicket(options TicketCreateOptions) (*Ticket, error) {
 	if strings.TrimSpace(options.Title) == "" {
 		return nil, fmt.Errorf("ticket title cannot be empty")
 	}
-	
+
 	if options.Type != "" && !options.Type.IsValid() {
 		return nil, fmt.Errorf("invalid ticket type: %s", options.Type)
 	}
-	
+
 	if options.Priority != "" && !options.Priority.IsValid() {
 		return nil, fmt.Errorf("invalid ticket priority: %s", options.Priority)
 	}
-	
+
 	// Validate epic/story references if provided
 	if options.RelatedEpicID != "" {
 		if _, err := m.epicManager.GetEpic(options.RelatedEpicID); err != nil {
 			return nil, fmt.Errorf("related epic not found: %s", options.RelatedEpicID)
 		}
 	}
-	
+
 	// Load existing collection
 	collection, err := m.loadTicketCollection()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	// Generate unique ID
 	ticketID := m.generateTicketID(options.Title, collection)
-	
+
 	// Set defaults
 	if options.Type == "" {
 		options.Type = TicketTypeTask
@@ -69,7 +69,7 @@ func (m *Manager) CreateTicket(options TicketCreateOptions) (*Ticket, error) {
 	if options.Priority == "" {
 		options.Priority = TicketPriorityMedium
 	}
-	
+
 	// Create the ticket
 	now := time.Now()
 	ticket := &Ticket{
@@ -86,24 +86,24 @@ func (m *Manager) CreateTicket(options TicketCreateOptions) (*Ticket, error) {
 			EstimatedHours: options.EstimatedHours,
 			StoryPoints:    options.StoryPoints,
 		},
-		Tags:           options.Tags,
-		DueDate:        options.DueDate,
-		ExternalRef:    options.ExternalRef,
-		CreatedAt:      now,
-		UpdatedAt:      now,
+		Tags:        options.Tags,
+		DueDate:     options.DueDate,
+		ExternalRef: options.ExternalRef,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
-	
+
 	// Add to collection
 	collection.Tickets[ticketID] = ticket
-	
+
 	// Update metadata
 	m.updateCollectionMetadata(collection)
-	
+
 	// Save collection
 	if err := m.saveTicketCollection(collection); err != nil {
 		return nil, fmt.Errorf("failed to save ticket collection: %w", err)
 	}
-	
+
 	return ticket, nil
 }
 
@@ -113,47 +113,47 @@ func (m *Manager) UpdateTicket(ticketID string, options TicketUpdateOptions) (*T
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	ticket, exists := collection.Tickets[ticketID]
 	if !exists {
 		return nil, fmt.Errorf("ticket not found: %s", ticketID)
 	}
-	
+
 	// Apply updates
 	now := time.Now()
-	
+
 	if options.Title != nil {
 		if strings.TrimSpace(*options.Title) == "" {
 			return nil, fmt.Errorf("ticket title cannot be empty")
 		}
 		ticket.Title = strings.TrimSpace(*options.Title)
 	}
-	
+
 	if options.Description != nil {
 		ticket.Description = strings.TrimSpace(*options.Description)
 	}
-	
+
 	if options.Type != nil {
 		if !options.Type.IsValid() {
 			return nil, fmt.Errorf("invalid ticket type: %s", *options.Type)
 		}
 		ticket.Type = *options.Type
 	}
-	
+
 	if options.Status != nil {
 		if !options.Status.IsValid() {
 			return nil, fmt.Errorf("invalid ticket status: %s", *options.Status)
 		}
-		
+
 		// Validate status transition
 		if err := m.validateStatusTransition(ticket, *options.Status); err != nil {
 			return nil, err
 		}
-		
+
 		// Handle status change timestamps
 		oldStatus := ticket.Status
 		ticket.Status = *options.Status
-		
+
 		if *options.Status == TicketStatusInProgress && ticket.StartedAt == nil {
 			ticket.StartedAt = &now
 		}
@@ -163,18 +163,18 @@ func (m *Manager) UpdateTicket(ticketID string, options TicketUpdateOptions) (*T
 		if *options.Status == TicketStatusClosed && ticket.ClosedAt == nil {
 			ticket.ClosedAt = &now
 		}
-		
+
 		// Log activity
 		m.logTicketActivity(collection, ticketID, "status_changed", oldStatus, *options.Status, now)
 	}
-	
+
 	if options.Priority != nil {
 		if !options.Priority.IsValid() {
 			return nil, fmt.Errorf("invalid ticket priority: %s", *options.Priority)
 		}
 		ticket.Priority = *options.Priority
 	}
-	
+
 	if options.RelatedEpicID != nil {
 		if *options.RelatedEpicID != "" {
 			if _, err := m.epicManager.GetEpic(*options.RelatedEpicID); err != nil {
@@ -183,49 +183,49 @@ func (m *Manager) UpdateTicket(ticketID string, options TicketUpdateOptions) (*T
 		}
 		ticket.RelatedEpicID = *options.RelatedEpicID
 	}
-	
+
 	if options.RelatedStoryID != nil {
 		ticket.RelatedStoryID = *options.RelatedStoryID
 	}
-	
+
 	if options.AssignedTo != nil {
 		ticket.AssignedTo = *options.AssignedTo
 	}
-	
+
 	if options.EstimatedHours != nil {
 		ticket.Estimations.EstimatedHours = *options.EstimatedHours
 	}
-	
+
 	if options.ActualHours != nil {
 		ticket.Estimations.ActualHours = *options.ActualHours
 	}
-	
+
 	if options.StoryPoints != nil {
 		ticket.Estimations.StoryPoints = *options.StoryPoints
 	}
-	
+
 	if options.Tags != nil {
 		ticket.Tags = *options.Tags
 	}
-	
+
 	if options.DueDate != nil {
 		ticket.DueDate = options.DueDate
 	}
-	
+
 	if options.ExternalRef != nil {
 		ticket.ExternalRef = options.ExternalRef
 	}
-	
+
 	ticket.UpdatedAt = now
-	
+
 	// Update metadata
 	m.updateCollectionMetadata(collection)
-	
+
 	// Save collection
 	if err := m.saveTicketCollection(collection); err != nil {
 		return nil, fmt.Errorf("failed to save ticket collection: %w", err)
 	}
-	
+
 	return ticket, nil
 }
 
@@ -235,12 +235,12 @@ func (m *Manager) GetTicket(ticketID string) (*Ticket, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	ticket, exists := collection.Tickets[ticketID]
 	if !exists {
 		return nil, fmt.Errorf("ticket not found: %s", ticketID)
 	}
-	
+
 	return ticket, nil
 }
 
@@ -250,7 +250,7 @@ func (m *Manager) ListTickets(options TicketListOptions) ([]*Ticket, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	var tickets []*Ticket
 	for _, ticket := range collection.Tickets {
 		// Apply filters
@@ -275,10 +275,10 @@ func (m *Manager) ListTickets(options TicketListOptions) ([]*Ticket, error) {
 		if !options.ShowClosed && (ticket.Status == TicketStatusClosed) {
 			continue
 		}
-		
+
 		tickets = append(tickets, ticket)
 	}
-	
+
 	// Sort by priority, then by creation date
 	sort.Slice(tickets, func(i, j int) bool {
 		// Priority order: urgent > critical > high > medium > low
@@ -289,20 +289,20 @@ func (m *Manager) ListTickets(options TicketListOptions) ([]*Ticket, error) {
 			TicketPriorityMedium:   2,
 			TicketPriorityLow:      1,
 		}
-		
+
 		if priorityOrder[tickets[i].Priority] != priorityOrder[tickets[j].Priority] {
 			return priorityOrder[tickets[i].Priority] > priorityOrder[tickets[j].Priority]
 		}
-		
+
 		// If same priority, sort by creation date (newest first)
 		return tickets[i].CreatedAt.After(tickets[j].CreatedAt)
 	})
-	
+
 	// Apply limit
 	if options.Limit > 0 && len(tickets) > options.Limit {
 		tickets = tickets[:options.Limit]
 	}
-	
+
 	return tickets, nil
 }
 
@@ -312,13 +312,13 @@ func (m *Manager) SetCurrentTicket(ticketID string) (*Ticket, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	if ticketID != "" {
 		ticket, exists := collection.Tickets[ticketID]
 		if !exists {
 			return nil, fmt.Errorf("ticket not found: %s", ticketID)
 		}
-		
+
 		// Auto-start ticket if it's open
 		if ticket.Status == TicketStatusOpen {
 			now := time.Now()
@@ -326,23 +326,23 @@ func (m *Manager) SetCurrentTicket(ticketID string) (*Ticket, error) {
 			ticket.StartedAt = &now
 			ticket.UpdatedAt = now
 		}
-		
+
 		collection.CurrentTicket = ticketID
-		
+
 		// Save collection
 		if err := m.saveTicketCollection(collection); err != nil {
 			return nil, fmt.Errorf("failed to save ticket collection: %w", err)
 		}
-		
+
 		return ticket, nil
 	}
-	
+
 	// Clear current ticket
 	collection.CurrentTicket = ""
 	if err := m.saveTicketCollection(collection); err != nil {
 		return nil, fmt.Errorf("failed to save ticket collection: %w", err)
 	}
-	
+
 	return nil, nil
 }
 
@@ -352,11 +352,11 @@ func (m *Manager) GetCurrentTicket() (*Ticket, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	if collection.CurrentTicket == "" {
 		return nil, nil
 	}
-	
+
 	ticket, exists := collection.Tickets[collection.CurrentTicket]
 	if !exists {
 		// Clear invalid current ticket
@@ -364,7 +364,7 @@ func (m *Manager) GetCurrentTicket() (*Ticket, error) {
 		m.saveTicketCollection(collection)
 		return nil, nil
 	}
-	
+
 	return ticket, nil
 }
 
@@ -374,33 +374,33 @@ func (m *Manager) GetTicketStats() (*TicketStats, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	stats := &TicketStats{
 		TotalTickets: len(collection.Tickets),
 		ByStatus:     make(map[TicketStatus]int),
 		ByPriority:   make(map[TicketPriority]int),
 		ByType:       make(map[TicketType]int),
 	}
-	
+
 	var resolutionTimes []time.Duration
 	var oldestOpen *time.Time
-	
+
 	for _, ticket := range collection.Tickets {
 		// Count by status
 		stats.ByStatus[ticket.Status]++
-		
+
 		// Count by priority
 		stats.ByPriority[ticket.Priority]++
-		
+
 		// Count by type
 		stats.ByType[ticket.Type]++
-		
+
 		// Calculate resolution times
 		if ticket.ResolvedAt != nil {
 			duration := ticket.ResolvedAt.Sub(ticket.CreatedAt)
 			resolutionTimes = append(resolutionTimes, duration)
 		}
-		
+
 		// Track oldest open ticket
 		if ticket.Status == TicketStatusOpen || ticket.Status == TicketStatusInProgress {
 			if oldestOpen == nil || ticket.CreatedAt.Before(*oldestOpen) {
@@ -408,7 +408,7 @@ func (m *Manager) GetTicketStats() (*TicketStats, error) {
 			}
 		}
 	}
-	
+
 	// Calculate average resolution time
 	if len(resolutionTimes) > 0 {
 		var total time.Duration
@@ -417,9 +417,9 @@ func (m *Manager) GetTicketStats() (*TicketStats, error) {
 		}
 		stats.AverageResolutionTime = total / time.Duration(len(resolutionTimes))
 	}
-	
+
 	stats.OldestOpenTicket = oldestOpen
-	
+
 	return stats, nil
 }
 
@@ -429,23 +429,23 @@ func (m *Manager) DeleteTicket(ticketID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load ticket collection: %w", err)
 	}
-	
+
 	_, exists := collection.Tickets[ticketID]
 	if !exists {
 		return fmt.Errorf("ticket not found: %s", ticketID)
 	}
-	
+
 	// Clear current ticket if it's the one being deleted
 	if collection.CurrentTicket == ticketID {
 		collection.CurrentTicket = ""
 	}
-	
+
 	// Remove from collection
 	delete(collection.Tickets, ticketID)
-	
+
 	// Update metadata
 	m.updateCollectionMetadata(collection)
-	
+
 	// Save collection
 	return m.saveTicketCollection(collection)
 }
@@ -454,7 +454,7 @@ func (m *Manager) DeleteTicket(ticketID string) error {
 
 func (m *Manager) loadTicketCollection() (*TicketCollection, error) {
 	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", TicketsFileName)
-	
+
 	// Check if file exists
 	if _, err := os.Stat(ticketsPath); os.IsNotExist(err) {
 		// Create default collection
@@ -466,55 +466,55 @@ func (m *Manager) loadTicketCollection() (*TicketCollection, error) {
 			},
 		}, nil
 	}
-	
+
 	// Read file
 	data, err := os.ReadFile(ticketsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read tickets file: %w", err)
 	}
-	
+
 	var collection TicketCollection
 	if err := json.Unmarshal(data, &collection); err != nil {
 		return nil, fmt.Errorf("failed to parse tickets file: %w", err)
 	}
-	
+
 	// Validate and migrate if needed
 	if err := m.validateAndMigrateCollection(&collection); err != nil {
 		return nil, fmt.Errorf("failed to validate ticket collection: %w", err)
 	}
-	
+
 	return &collection, nil
 }
 
 func (m *Manager) saveTicketCollection(collection *TicketCollection) error {
 	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", TicketsFileName)
-	
+
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(ticketsPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
-	
+
 	// Update metadata
 	collection.Metadata.LastUpdated = time.Now()
 	collection.Metadata.Version = TicketsVersion
-	
+
 	// Marshal to JSON
 	data, err := json.MarshalIndent(collection, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal ticket collection: %w", err)
 	}
-	
+
 	// Write file atomically using temp file + rename
 	tempPath := ticketsPath + ".tmp"
 	if err := os.WriteFile(tempPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write temp tickets file: %w", err)
 	}
-	
+
 	if err := os.Rename(tempPath, ticketsPath); err != nil {
 		os.Remove(tempPath) // cleanup
 		return fmt.Errorf("failed to replace tickets file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -522,7 +522,7 @@ func (m *Manager) generateTicketID(title string, collection *TicketCollection) s
 	// Create base ID from title
 	baseID := strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(title), " ", "-"))
 	baseID = strings.ReplaceAll(baseID, "_", "-")
-	
+
 	// Remove special characters
 	var cleaned strings.Builder
 	for _, r := range baseID {
@@ -530,16 +530,16 @@ func (m *Manager) generateTicketID(title string, collection *TicketCollection) s
 			cleaned.WriteRune(r)
 		}
 	}
-	
+
 	baseID = cleaned.String()
 	if baseID == "" {
 		baseID = "TICKET"
 	}
-	
+
 	// Ensure uniqueness
 	counter := 1
 	ticketID := fmt.Sprintf("TICKET-%03d-%s", counter, baseID)
-	
+
 	for {
 		if _, exists := collection.Tickets[ticketID]; !exists {
 			break
@@ -547,33 +547,33 @@ func (m *Manager) generateTicketID(title string, collection *TicketCollection) s
 		counter++
 		ticketID = fmt.Sprintf("TICKET-%03d-%s", counter, baseID)
 	}
-	
+
 	return ticketID
 }
 
 func (m *Manager) validateStatusTransition(ticket *Ticket, newStatus TicketStatus) error {
 	currentStatus := ticket.Status
-	
+
 	// Define valid transitions
 	validTransitions := map[TicketStatus][]TicketStatus{
 		TicketStatusOpen:       {TicketStatusInProgress, TicketStatusClosed},
 		TicketStatusInProgress: {TicketStatusResolved, TicketStatusOpen, TicketStatusClosed},
 		TicketStatusResolved:   {TicketStatusClosed, TicketStatusInProgress}, // Can reopen
-		TicketStatusClosed:     {TicketStatusOpen}, // Can reopen
+		TicketStatusClosed:     {TicketStatusOpen},                           // Can reopen
 	}
-	
+
 	allowedTransitions, exists := validTransitions[currentStatus]
 	if !exists {
 		return fmt.Errorf("unknown current status: %s", currentStatus)
 	}
-	
+
 	// Check if transition is allowed
 	for _, allowed := range allowedTransitions {
 		if allowed == newStatus {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("invalid status transition from %s to %s", currentStatus, newStatus)
 }
 
@@ -581,7 +581,7 @@ func (m *Manager) updateCollectionMetadata(collection *TicketCollection) {
 	collection.Metadata.TotalTickets = len(collection.Tickets)
 	collection.Metadata.OpenTickets = 0
 	collection.Metadata.ResolvedTickets = 0
-	
+
 	for _, ticket := range collection.Tickets {
 		if ticket.Status == TicketStatusOpen || ticket.Status == TicketStatusInProgress {
 			collection.Metadata.OpenTickets++
@@ -597,19 +597,19 @@ func (m *Manager) validateAndMigrateCollection(collection *TicketCollection) err
 	if collection.Tickets == nil {
 		collection.Tickets = make(map[string]*Ticket)
 	}
-	
+
 	// Set default metadata if missing
 	if collection.Metadata.Version == "" {
 		collection.Metadata.Version = TicketsVersion
 	}
-	
+
 	// Validate each ticket
 	for id, ticket := range collection.Tickets {
 		if ticket == nil {
 			delete(collection.Tickets, id)
 			continue
 		}
-		
+
 		// Ensure required fields
 		if ticket.ID == "" {
 			ticket.ID = id
@@ -630,10 +630,10 @@ func (m *Manager) validateAndMigrateCollection(collection *TicketCollection) err
 			ticket.Type = TicketTypeTask
 		}
 	}
-	
+
 	// Update metadata
 	m.updateCollectionMetadata(collection)
-	
+
 	return nil
 }
 

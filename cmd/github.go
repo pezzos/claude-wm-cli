@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package cmd
 
@@ -13,6 +12,7 @@ import (
 
 	"claude-wm-cli/internal/github"
 	"claude-wm-cli/internal/ticket"
+
 	"github.com/spf13/cobra"
 )
 
@@ -146,25 +146,25 @@ Examples:
 // Flag variables
 var (
 	// Config flags
-	githubOwner      string
-	githubRepo       string
-	githubToken      string
-	githubTokenFile  string
-	githubBaseURL    string
-	githubUploadURL  string
-	githubShow       bool
-	githubDisable    bool
-	githubEnable     bool
-	
+	githubOwner     string
+	githubRepo      string
+	githubToken     string
+	githubTokenFile string
+	githubBaseURL   string
+	githubUploadURL string
+	githubShow      bool
+	githubDisable   bool
+	githubEnable    bool
+
 	// Sync flags
-	syncState        string
-	syncLabels       []string
-	syncAssignee     string
-	syncCreateNew    bool
+	syncState          string
+	syncLabels         []string
+	syncAssignee       string
+	syncCreateNew      bool
 	syncUpdateExisting bool
-	syncCloseResolved bool
-	syncMaxIssues    int
-	
+	syncCloseResolved  bool
+	syncMaxIssues      int
+
 	// Priority and type mappings
 	priorityMappings []string
 	typeMappings     []string
@@ -172,14 +172,14 @@ var (
 
 func init() {
 	rootCmd.AddCommand(githubCmd)
-	
+
 	// Add subcommands
 	githubCmd.AddCommand(githubConfigCmd)
 	githubCmd.AddCommand(githubSyncCmd)
 	githubCmd.AddCommand(githubIssueCmd)
 	githubCmd.AddCommand(githubStatusCmd)
 	githubCmd.AddCommand(githubTestCmd)
-	
+
 	// github config flags
 	githubConfigCmd.Flags().StringVar(&githubOwner, "owner", "", "GitHub repository owner/organization")
 	githubConfigCmd.Flags().StringVar(&githubRepo, "repo", "", "GitHub repository name")
@@ -192,7 +192,7 @@ func init() {
 	githubConfigCmd.Flags().BoolVar(&githubEnable, "enable", false, "Enable GitHub integration")
 	githubConfigCmd.Flags().StringSliceVar(&priorityMappings, "priority-map", []string{}, "Label to priority mappings (format: label=priority)")
 	githubConfigCmd.Flags().StringSliceVar(&typeMappings, "type-map", []string{}, "Label to type mappings (format: label=type)")
-	
+
 	// github sync flags
 	githubSyncCmd.Flags().StringVar(&syncState, "state", "", "Issue state filter (open, closed, all)")
 	githubSyncCmd.Flags().StringSliceVar(&syncLabels, "labels", []string{}, "Filter by issue labels (comma-separated)")
@@ -210,22 +210,22 @@ func configureGitHub(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create GitHub integration
 	integration := github.NewIntegration(wd)
-	
+
 	// Load existing configuration
 	if err := integration.LoadConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Handle show flag
 	if githubShow {
 		showGitHubConfig(integration)
 		return
 	}
-	
+
 	// Handle enable/disable flags
 	if githubDisable {
 		config := github.DefaultConfig()
@@ -237,7 +237,7 @@ func configureGitHub(cmd *cobra.Command) {
 		fmt.Printf("✅ GitHub integration disabled.\n")
 		return
 	}
-	
+
 	if githubEnable {
 		config := github.DefaultConfig()
 		config.Enabled = true
@@ -248,10 +248,10 @@ func configureGitHub(cmd *cobra.Command) {
 		fmt.Printf("✅ GitHub integration enabled.\n")
 		return
 	}
-	
+
 	// Build configuration from flags
 	config := github.DefaultConfig()
-	
+
 	if githubOwner != "" {
 		config.GitHub.Owner = githubOwner
 	}
@@ -270,7 +270,7 @@ func configureGitHub(cmd *cobra.Command) {
 	if githubUploadURL != "" {
 		config.GitHub.UploadURL = githubUploadURL
 	}
-	
+
 	// Parse priority mappings
 	if len(priorityMappings) > 0 {
 		for _, mapping := range priorityMappings {
@@ -286,7 +286,7 @@ func configureGitHub(cmd *cobra.Command) {
 			}
 		}
 	}
-	
+
 	// Parse type mappings
 	if len(typeMappings) > 0 {
 		for _, mapping := range typeMappings {
@@ -302,13 +302,13 @@ func configureGitHub(cmd *cobra.Command) {
 			}
 		}
 	}
-	
+
 	// Update configuration
 	if err := integration.UpdateConfig(config); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to update configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("✅ GitHub integration configured successfully!\n\n")
 	fmt.Printf("📝 Configuration:\n")
 	fmt.Printf("   Repository: %s/%s\n", config.GitHub.Owner, config.GitHub.Repo)
@@ -316,7 +316,7 @@ func configureGitHub(cmd *cobra.Command) {
 	if config.GitHub.BaseURL != "" {
 		fmt.Printf("   Base URL:   %s\n", config.GitHub.BaseURL)
 	}
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Test connection:  claude-wm-cli github test\n")
 	fmt.Printf("   • Sync issues:      claude-wm-cli github sync --create-new\n")
@@ -330,48 +330,48 @@ func syncGitHubIssues(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create GitHub integration
 	integration := github.NewIntegration(wd)
-	
+
 	// Load configuration
 	if err := integration.LoadConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Initialize integration
 	config := github.DefaultConfig()
 	if err := integration.Initialize(config); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to initialize GitHub integration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Build sync options from flags
 	syncOptions := &github.IssueSyncOptions{
-		State:          syncState,
-		Labels:         syncLabels,
-		Assignee:       syncAssignee,
-		CreateNew:      syncCreateNew,
-		UpdateExisting: syncUpdateExisting,
-		CloseResolved:  syncCloseResolved,
-		MaxIssues:      syncMaxIssues,
+		State:           syncState,
+		Labels:          syncLabels,
+		Assignee:        syncAssignee,
+		CreateNew:       syncCreateNew,
+		UpdateExisting:  syncUpdateExisting,
+		CloseResolved:   syncCloseResolved,
+		MaxIssues:       syncMaxIssues,
 		DefaultPriority: ticket.TicketPriorityMedium,
 		DefaultType:     ticket.TicketTypeBug,
 		LabelToPriority: config.Sync.LabelToPriority,
 		LabelToType:     config.Sync.LabelToType,
 	}
-	
+
 	// If no flags provided, use defaults
 	if !syncCreateNew && !syncUpdateExisting {
 		syncOptions.CreateNew = true
 		syncOptions.UpdateExisting = true
 	}
-	
+
 	if syncOptions.State == "" {
 		syncOptions.State = "open"
 	}
-	
+
 	fmt.Printf("🔄 Syncing GitHub issues...\n")
 	fmt.Printf("   Repository: %s/%s\n", config.GitHub.Owner, config.GitHub.Repo)
 	fmt.Printf("   State:      %s\n", syncOptions.State)
@@ -384,14 +384,14 @@ func syncGitHubIssues(cmd *cobra.Command) {
 	fmt.Printf("   Create new: %t\n", syncOptions.CreateNew)
 	fmt.Printf("   Update:     %t\n", syncOptions.UpdateExisting)
 	fmt.Printf("\n")
-	
+
 	// Perform sync
 	result, err := integration.SyncIssues(syncOptions)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Sync failed: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display results
 	fmt.Printf("✅ Sync completed!\n\n")
 	fmt.Printf("📊 Results:\n")
@@ -400,13 +400,13 @@ func syncGitHubIssues(cmd *cobra.Command) {
 	fmt.Printf("   Updated tickets: %d\n", result.UpdatedTickets)
 	fmt.Printf("   Skipped issues:  %d\n", result.SkippedIssues)
 	fmt.Printf("   Errors:          %d\n", result.ErrorCount)
-	
+
 	if result.RateLimitInfo != nil {
 		fmt.Printf("\n⏱️  Rate Limit:\n")
 		fmt.Printf("   Remaining: %d/%d\n", result.RateLimitInfo.Remaining, result.RateLimitInfo.Limit)
 		fmt.Printf("   Reset:     %s\n", result.RateLimitInfo.ResetTime.Format("15:04:05"))
 	}
-	
+
 	// Show errors if any
 	if len(result.Errors) > 0 {
 		fmt.Printf("\n⚠️  Errors:\n")
@@ -414,28 +414,28 @@ func syncGitHubIssues(cmd *cobra.Command) {
 			fmt.Printf("   • %s\n", errMsg)
 		}
 	}
-	
+
 	// Show detailed results for recent issues
 	if len(result.ProcessedIssues) > 0 {
 		fmt.Printf("\n📋 Processed Issues:\n")
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "ISSUE\tACTION\tTICKET ID\tREASON\n")
 		fmt.Fprintf(w, "─────\t──────\t─────────\t──────\n")
-		
+
 		for _, processed := range result.ProcessedIssues {
 			reason := processed.Reason
 			if processed.Error != "" {
 				reason = processed.Error
 			}
-			fmt.Fprintf(w, "#%d\t%s\t%s\t%s\n", 
-				processed.IssueNumber, 
-				processed.Action, 
+			fmt.Fprintf(w, "#%d\t%s\t%s\t%s\n",
+				processed.IssueNumber,
+				processed.Action,
 				processed.TicketID,
 				truncateGitHubString(reason, 40))
 		}
 		w.Flush()
 	}
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • List tickets:    claude-wm-cli ticket list\n")
 	fmt.Printf("   • View status:     claude-wm-cli github status\n")
@@ -448,39 +448,39 @@ func importGitHubIssue(issueNumberStr string) {
 		fmt.Fprintf(os.Stderr, "Error: Invalid issue number '%s'\n", issueNumberStr)
 		os.Exit(1)
 	}
-	
+
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create GitHub integration
 	integration := github.NewIntegration(wd)
-	
+
 	// Load configuration
 	if err := integration.LoadConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Initialize integration
 	config := github.DefaultConfig()
 	if err := integration.Initialize(config); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to initialize GitHub integration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("📥 Importing GitHub issue #%d...\n", issueNumber)
-	
+
 	// Import the issue
 	processed, err := integration.GetIssueByNumber(issueNumber)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to import issue: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display result
 	fmt.Printf("✅ Issue imported successfully!\n\n")
 	fmt.Printf("📝 Result:\n")
@@ -494,7 +494,7 @@ func importGitHubIssue(issueNumberStr string) {
 		fmt.Printf("   Error:     %s\n", processed.Error)
 	}
 	fmt.Printf("   URL:       %s\n", processed.IssueURL)
-	
+
 	if processed.TicketID != "" {
 		fmt.Printf("\n💡 Next steps:\n")
 		fmt.Printf("   • View ticket:  claude-wm-cli ticket show %s\n", processed.TicketID)
@@ -509,23 +509,23 @@ func showGitHubStatus() {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create GitHub integration
 	integration := github.NewIntegration(wd)
-	
+
 	// Load configuration
 	if err := integration.LoadConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	config := github.DefaultConfig()
 	history := integration.GetSyncHistory()
-	
+
 	// Display header
 	fmt.Printf("📊 GitHub Integration Status\n")
 	fmt.Printf("=============================\n\n")
-	
+
 	// Configuration status
 	fmt.Printf("⚙️  Configuration:\n")
 	fmt.Printf("   Enabled:    %t\n", config.Enabled)
@@ -534,11 +534,11 @@ func showGitHubStatus() {
 	} else {
 		fmt.Printf("   Repository: Not configured\n")
 	}
-	
+
 	if config.GitHub.BaseURL != "" {
 		fmt.Printf("   Base URL:   %s\n", config.GitHub.BaseURL)
 	}
-	
+
 	// Authentication status
 	fmt.Printf("\n🔐 Authentication:\n")
 	if config.Auth.Token != "" {
@@ -551,7 +551,7 @@ func showGitHubStatus() {
 		fmt.Printf("   Method:     None\n")
 		fmt.Printf("   Status:     ⚠️ Not configured\n")
 	}
-	
+
 	// Sync history
 	fmt.Printf("\n📈 Sync History:\n")
 	if history.TotalSyncs == 0 {
@@ -563,20 +563,20 @@ func showGitHubStatus() {
 		fmt.Printf("   Last sync:        %s\n", history.LastSync.Format("2006-01-02 15:04:05"))
 		fmt.Printf("   Last successful:  %s\n", history.LastSuccessfulSync.Format("2006-01-02 15:04:05"))
 	}
-	
+
 	// Recent results
 	if len(history.RecentResults) > 0 {
 		fmt.Printf("\n📋 Recent Sync Results:\n")
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "DATE\tISSUES\tCREATED\tUPDATED\tERRORS\n")
 		fmt.Fprintf(w, "────\t──────\t───────\t───────\t──────\n")
-		
+
 		// Show last 5 results
 		start := len(history.RecentResults) - 5
 		if start < 0 {
 			start = 0
 		}
-		
+
 		for i := start; i < len(history.RecentResults); i++ {
 			result := history.RecentResults[i]
 			fmt.Fprintf(w, "%s\t%d\t%d\t%d\t%d\n",
@@ -588,7 +588,7 @@ func showGitHubStatus() {
 		}
 		w.Flush()
 	}
-	
+
 	// Show errors if any
 	if len(history.LastErrors) > 0 {
 		fmt.Printf("\n⚠️  Recent Errors:\n")
@@ -596,7 +596,7 @@ func showGitHubStatus() {
 			fmt.Printf("   • %s\n", errMsg)
 		}
 	}
-	
+
 	// Next steps
 	fmt.Printf("\n💡 Available Actions:\n")
 	if !config.Enabled {
@@ -619,32 +619,32 @@ func testGitHubConnection() {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create GitHub integration
 	integration := github.NewIntegration(wd)
-	
+
 	// Load configuration
 	if err := integration.LoadConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("🔧 Testing GitHub connection...\n")
-	
+
 	// Initialize integration (this will test the connection)
 	config := github.DefaultConfig()
 	if err := integration.Initialize(config); err != nil {
 		fmt.Fprintf(os.Stderr, "❌ Connection test failed: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("✅ GitHub connection test successful!\n\n")
 	fmt.Printf("📝 Connection Details:\n")
 	fmt.Printf("   Repository: %s/%s\n", config.GitHub.Owner, config.GitHub.Repo)
 	if config.GitHub.BaseURL != "" {
 		fmt.Printf("   Base URL:   %s\n", config.GitHub.BaseURL)
 	}
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Sync issues:  claude-wm-cli github sync --create-new\n")
 	fmt.Printf("   • View status:  claude-wm-cli github status\n")
@@ -652,17 +652,17 @@ func testGitHubConnection() {
 
 func showGitHubConfig(integration *github.Integration) {
 	config := github.DefaultConfig()
-	
+
 	fmt.Printf("📋 GitHub Integration Configuration\n")
 	fmt.Printf("===================================\n\n")
-	
+
 	fmt.Printf("🔧 General:\n")
 	fmt.Printf("   Enabled:    %t\n", config.Enabled)
 	fmt.Printf("   Repository: %s/%s\n", config.GitHub.Owner, config.GitHub.Repo)
 	if config.GitHub.BaseURL != "" {
 		fmt.Printf("   Base URL:   %s\n", config.GitHub.BaseURL)
 	}
-	
+
 	fmt.Printf("\n🔐 Authentication:\n")
 	if config.Auth.Token != "" {
 		fmt.Printf("   Token:      [CONFIGURED]\n")
@@ -671,21 +671,21 @@ func showGitHubConfig(integration *github.Integration) {
 	} else {
 		fmt.Printf("   Token:      [NOT CONFIGURED]\n")
 	}
-	
+
 	fmt.Printf("\n🔄 Sync Options:\n")
 	fmt.Printf("   State:         %s\n", config.Sync.State)
 	fmt.Printf("   Create new:    %t\n", config.Sync.CreateNew)
 	fmt.Printf("   Update:        %t\n", config.Sync.UpdateExisting)
 	fmt.Printf("   Close resolved: %t\n", config.Sync.CloseResolved)
 	fmt.Printf("   Max issues:    %d\n", config.Sync.MaxIssues)
-	
+
 	if len(config.Sync.LabelToPriority) > 0 {
 		fmt.Printf("\n🏷️  Priority Mappings:\n")
 		for label, priority := range config.Sync.LabelToPriority {
 			fmt.Printf("   %s → %s\n", label, priority)
 		}
 	}
-	
+
 	if len(config.Sync.LabelToType) > 0 {
 		fmt.Printf("\n🏷️  Type Mappings:\n")
 		for label, ticketType := range config.Sync.LabelToType {

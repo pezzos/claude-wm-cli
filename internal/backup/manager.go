@@ -10,11 +10,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Manager manages backup and recovery operations for state files
@@ -379,13 +376,13 @@ func (m *Manager) RecoverFromBackup(request *RecoveryRequest) (*RecoveryResult, 
 			Timestamp:  time.Now(),
 		})
 		return &RecoveryResult{
-			Success:      false,
-			Error:        fmt.Errorf("restore operation failed: %w", err),
-			BackupUsed:   backup,
-			Duration:     time.Since(startTime),
-			Timestamp:    time.Now(),
-			Changes:      result.Changes,
-			Warnings:     result.Warnings,
+			Success:    false,
+			Error:      fmt.Errorf("restore operation failed: %w", err),
+			BackupUsed: backup,
+			Duration:   time.Since(startTime),
+			Timestamp:  time.Now(),
+			Changes:    result.Changes,
+			Warnings:   result.Warnings,
 		}, nil
 	}
 
@@ -533,7 +530,7 @@ func (m *Manager) Cleanup() error {
 	}
 
 	// Clean up each file's backups according to retention policy
-	for sourceFile, backups := range fileBackups {
+	for _, backups := range fileBackups {
 		toRemove := m.selectBackupsForRemoval(backups)
 		for _, backup := range toRemove {
 			if err := os.Remove(backup.BackupFile); err != nil && !os.IsNotExist(err) {

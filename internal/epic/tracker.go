@@ -9,12 +9,12 @@ import (
 
 // StateTransition represents a change in epic state
 type StateTransition struct {
-	FromStatus    Status                 `json:"from_status"`
-	ToStatus      Status                 `json:"to_status"`
-	Timestamp     time.Time              `json:"timestamp"`
-	Reason        TransitionReason       `json:"reason"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
-	TriggeredBy   string                 `json:"triggered_by,omitempty"` // "auto", "manual", "system"
+	FromStatus  Status                 `json:"from_status"`
+	ToStatus    Status                 `json:"to_status"`
+	Timestamp   time.Time              `json:"timestamp"`
+	Reason      TransitionReason       `json:"reason"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	TriggeredBy string                 `json:"triggered_by,omitempty"` // "auto", "manual", "system"
 }
 
 // TransitionReason indicates why a status transition occurred
@@ -24,9 +24,9 @@ const (
 	ReasonManual            TransitionReason = "manual"              // User-initiated change
 	ReasonAutoStoryComplete TransitionReason = "auto_story_complete" // All stories completed
 	ReasonAutoStoryStart    TransitionReason = "auto_story_start"    // First story started
-	ReasonAutoTimeout       TransitionReason = "auto_timeout"       // Timeout-based transition
-	ReasonAutoDependency    TransitionReason = "auto_dependency"    // Dependency resolution
-	ReasonSystemMaintenance TransitionReason = "system_maintenance" // System-triggered
+	ReasonAutoTimeout       TransitionReason = "auto_timeout"        // Timeout-based transition
+	ReasonAutoDependency    TransitionReason = "auto_dependency"     // Dependency resolution
+	ReasonSystemMaintenance TransitionReason = "system_maintenance"  // System-triggered
 )
 
 // EpicStateEvent represents an event that occurred during epic state tracking
@@ -42,20 +42,20 @@ type EpicStateEvent struct {
 type EventType string
 
 const (
-	EventStatusChange     EventType = "status_change"
-	EventProgressUpdate   EventType = "progress_update"
-	EventDependencyCheck  EventType = "dependency_check"
-	EventValidationError  EventType = "validation_error"
-	EventAutoTransition   EventType = "auto_transition"
-	EventMetricsUpdate    EventType = "metrics_update"
+	EventStatusChange    EventType = "status_change"
+	EventProgressUpdate  EventType = "progress_update"
+	EventDependencyCheck EventType = "dependency_check"
+	EventValidationError EventType = "validation_error"
+	EventAutoTransition  EventType = "auto_transition"
+	EventMetricsUpdate   EventType = "metrics_update"
 )
 
 // TrackerConfig configures the behavior of the epic tracker
 type TrackerConfig struct {
-	AutoTransitionEnabled bool          `json:"auto_transition_enabled"`
-	ProgressUpdateFreq    time.Duration `json:"progress_update_freq"`
-	MaxHistoryEntries     int           `json:"max_history_entries"`
-	EnableEventLogging    bool          `json:"enable_event_logging"`
+	AutoTransitionEnabled bool            `json:"auto_transition_enabled"`
+	ProgressUpdateFreq    time.Duration   `json:"progress_update_freq"`
+	MaxHistoryEntries     int             `json:"max_history_entries"`
+	EnableEventLogging    bool            `json:"enable_event_logging"`
 	ValidationRules       ValidationRules `json:"validation_rules"`
 }
 
@@ -413,9 +413,9 @@ func (et *EpicTracker) CalculateAdvancedMetrics(epicID string) (*AdvancedMetrics
 	}
 
 	metrics := &AdvancedMetrics{
-		EpicID:        epicID,
-		CalculatedAt:  time.Now(),
-		BasicMetrics:  epic.Progress,
+		EpicID:       epicID,
+		CalculatedAt: time.Now(),
+		BasicMetrics: epic.Progress,
 	}
 
 	// Calculate duration metrics
@@ -454,15 +454,15 @@ func (et *EpicTracker) CalculateAdvancedMetrics(epicID string) (*AdvancedMetrics
 
 // AdvancedMetrics contains detailed metrics about an epic
 type AdvancedMetrics struct {
-	EpicID                string             `json:"epic_id"`
-	CalculatedAt          time.Time          `json:"calculated_at"`
-	BasicMetrics          ProgressMetrics    `json:"basic_metrics"`
-	TotalDuration         time.Duration      `json:"total_duration"`
-	DurationDays          int                `json:"duration_days"`
-	StateTransitions      int                `json:"state_transitions"`
-	LastTransition        *StateTransition   `json:"last_transition,omitempty"`
-	AvgTransitionTime     time.Duration      `json:"avg_transition_time"`
-	EstimatedCompletion   *time.Time         `json:"estimated_completion,omitempty"`
+	EpicID              string           `json:"epic_id"`
+	CalculatedAt        time.Time        `json:"calculated_at"`
+	BasicMetrics        ProgressMetrics  `json:"basic_metrics"`
+	TotalDuration       time.Duration    `json:"total_duration"`
+	DurationDays        int              `json:"duration_days"`
+	StateTransitions    int              `json:"state_transitions"`
+	LastTransition      *StateTransition `json:"last_transition,omitempty"`
+	AvgTransitionTime   time.Duration    `json:"avg_transition_time"`
+	EstimatedCompletion *time.Time       `json:"estimated_completion,omitempty"`
 }
 
 // Subscribe adds a subscriber for state change notifications
@@ -551,7 +551,7 @@ func (et *EpicTracker) GetEpicsByStatus(status Status) ([]*Epic, error) {
 	sort.Slice(epics, func(i, j int) bool {
 		iTime, iExists := et.lastUpdate[epics[i].ID]
 		jTime, jExists := et.lastUpdate[epics[j].ID]
-		
+
 		if !iExists && !jExists {
 			return epics[i].UpdatedAt.After(epics[j].UpdatedAt)
 		}

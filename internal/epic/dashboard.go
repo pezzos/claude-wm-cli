@@ -30,13 +30,13 @@ type EpicDashboardData struct {
 
 // ProgressSummary provides detailed progress information
 type ProgressSummary struct {
-	CompletionPercentage   float64
-	StoriesCompleted       int
-	StoriesInProgress      int
-	StoriesPlanned         int
-	TotalStories          int
-	StoryPointsCompleted  int
-	StoryPointsTotal      int
+	CompletionPercentage float64
+	StoriesCompleted     int
+	StoriesInProgress    int
+	StoriesPlanned       int
+	TotalStories         int
+	StoryPointsCompleted int
+	StoryPointsTotal     int
 }
 
 // RiskLevel indicates the risk status of an epic
@@ -51,19 +51,19 @@ const (
 
 // VelocityMetrics tracks epic velocity and productivity
 type VelocityMetrics struct {
-	StoriesPerDay      float64
-	StoryPointsPerDay  float64
-	AverageStoryDays   float64
-	CompletionTrend    string // "improving", "stable", "declining"
+	StoriesPerDay     float64
+	StoryPointsPerDay float64
+	AverageStoryDays  float64
+	CompletionTrend   string // "improving", "stable", "declining"
 }
 
 // TimelineMetrics provides timeline analysis
 type TimelineMetrics struct {
-	DaysActive           int
+	DaysActive             int
 	EstimatedDaysRemaining int
-	OriginalEstimate     string
-	IsOverdue           bool
-	DaysOverdue         int
+	OriginalEstimate       string
+	IsOverdue              bool
+	DaysOverdue            int
 }
 
 // DisplayEpicDashboard shows a comprehensive dashboard for all epics
@@ -101,7 +101,7 @@ func (d *Dashboard) DisplayEpicDashboard() error {
 		if dashboardData[i].Epic.Status != StatusInProgress && dashboardData[j].Epic.Status == StatusInProgress {
 			return false
 		}
-		
+
 		// Then by priority
 		priorityOrder := map[Priority]int{
 			PriorityCritical: 4,
@@ -194,7 +194,7 @@ func (d *Dashboard) displayEpicCard(data *EpicDashboardData) {
 	statusIcon := d.getStatusIcon(epic.Status)
 	priorityIcon := d.getPriorityIcon(epic.Priority)
 	riskIcon := d.getRiskIcon(data.RiskLevel)
-	
+
 	fmt.Printf("┌─ %s %s | %s %s | %s %s\n", statusIcon, epic.Status, priorityIcon, epic.Priority, riskIcon, data.RiskLevel)
 	fmt.Printf("│  📋 %s\n", epic.Title)
 	fmt.Printf("│  🆔 %s\n", epic.ID)
@@ -327,7 +327,7 @@ func (d *Dashboard) calculateProgressMetrics(epic *Epic) ProgressSummary {
 
 	for _, story := range epic.UserStories {
 		storyPointsTotal += story.StoryPoints
-		
+
 		switch story.Status {
 		case StatusCompleted:
 			storiesCompleted++
@@ -346,10 +346,10 @@ func (d *Dashboard) calculateProgressMetrics(epic *Epic) ProgressSummary {
 	}
 
 	return ProgressSummary{
-		CompletionPercentage:  completionPercentage,
-		StoriesCompleted:      storiesCompleted,
-		StoriesInProgress:     storiesInProgress,
-		StoriesPlanned:        storiesPlanned,
+		CompletionPercentage: completionPercentage,
+		StoriesCompleted:     storiesCompleted,
+		StoriesInProgress:    storiesInProgress,
+		StoriesPlanned:       storiesPlanned,
 		TotalStories:         totalStories,
 		StoryPointsCompleted: storyPointsCompleted,
 		StoryPointsTotal:     storyPointsTotal,
@@ -418,7 +418,7 @@ func (d *Dashboard) calculateVelocityMetrics(epic *Epic) VelocityMetrics {
 
 	storiesPerDay := float64(completedStories) / daysActive
 	storyPointsPerDay := float64(completedPoints) / daysActive
-	
+
 	avgStoryDays := 0.0
 	if completedStories > 0 {
 		avgStoryDays = daysActive / float64(completedStories)
@@ -447,7 +447,7 @@ func (d *Dashboard) calculateTimelineMetrics(epic *Epic, progress ProgressSummar
 
 	if epic.StartDate != nil {
 		timeline.DaysActive = int(time.Since(*epic.StartDate).Hours() / 24)
-		
+
 		// Estimate remaining days based on velocity
 		if velocity.StoriesPerDay > 0 && progress.TotalStories > 0 {
 			remainingStories := progress.TotalStories - progress.StoriesCompleted
@@ -459,7 +459,7 @@ func (d *Dashboard) calculateTimelineMetrics(epic *Epic, progress ProgressSummar
 			var estimatedWeeks int
 			fmt.Sscanf(epic.Duration, "%d", &estimatedWeeks)
 			estimatedDays := estimatedWeeks * 7
-			
+
 			if timeline.DaysActive > estimatedDays {
 				timeline.IsOverdue = true
 				timeline.DaysOverdue = timeline.DaysActive - estimatedDays
@@ -475,7 +475,7 @@ func (d *Dashboard) calculateTimelineMetrics(epic *Epic, progress ProgressSummar
 func (d *Dashboard) createProgressBar(percentage float64, width int) string {
 	filled := int(percentage / 100.0 * float64(width))
 	empty := width - filled
-	
+
 	bar := "["
 	for i := 0; i < filled; i++ {
 		bar += "█"
@@ -484,7 +484,7 @@ func (d *Dashboard) createProgressBar(percentage float64, width int) string {
 		bar += "░"
 	}
 	bar += "]"
-	
+
 	return bar
 }
 

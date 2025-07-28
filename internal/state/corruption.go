@@ -14,18 +14,18 @@ import (
 type CorruptionType string
 
 const (
-	CorruptionSyntax     CorruptionType = "syntax"      // Invalid JSON syntax
-	CorruptionSchema     CorruptionType = "schema"      // Schema validation failure
-	CorruptionChecksum   CorruptionType = "checksum"    // Checksum mismatch
-	CorruptionStructure  CorruptionType = "structure"   // Invalid structure/references
-	CorruptionPartial    CorruptionType = "partial"     // Incomplete/truncated file
-	CorruptionEncoding   CorruptionType = "encoding"    // Encoding issues
+	CorruptionSyntax    CorruptionType = "syntax"    // Invalid JSON syntax
+	CorruptionSchema    CorruptionType = "schema"    // Schema validation failure
+	CorruptionChecksum  CorruptionType = "checksum"  // Checksum mismatch
+	CorruptionStructure CorruptionType = "structure" // Invalid structure/references
+	CorruptionPartial   CorruptionType = "partial"   // Incomplete/truncated file
+	CorruptionEncoding  CorruptionType = "encoding"  // Encoding issues
 )
 
 // CorruptionIssue represents a detected corruption issue
 type CorruptionIssue struct {
 	Type        CorruptionType `json:"type"`
-	Severity    string         `json:"severity"`    // critical, major, minor
+	Severity    string         `json:"severity"` // critical, major, minor
 	Field       string         `json:"field,omitempty"`
 	Message     string         `json:"message"`
 	Details     string         `json:"details,omitempty"`
@@ -36,34 +36,34 @@ type CorruptionIssue struct {
 
 // CorruptionReport contains the results of corruption detection
 type CorruptionReport struct {
-	FilePath       string             `json:"file_path"`
-	IsCorrupted    bool               `json:"is_corrupted"`
-	Issues         []CorruptionIssue  `json:"issues"`
-	Checksum       string             `json:"checksum"`
-	FileSize       int64              `json:"file_size"`
-	LastModified   time.Time          `json:"last_modified"`
-	ScanDuration   time.Duration      `json:"scan_duration"`
-	RecoveryOptions []RecoveryOption   `json:"recovery_options,omitempty"`
+	FilePath        string            `json:"file_path"`
+	IsCorrupted     bool              `json:"is_corrupted"`
+	Issues          []CorruptionIssue `json:"issues"`
+	Checksum        string            `json:"checksum"`
+	FileSize        int64             `json:"file_size"`
+	LastModified    time.Time         `json:"last_modified"`
+	ScanDuration    time.Duration     `json:"scan_duration"`
+	RecoveryOptions []RecoveryOption  `json:"recovery_options,omitempty"`
 }
 
 // RecoveryOption represents a possible recovery action
 type RecoveryOption struct {
-	Type        string `json:"type"`        // backup, rebuild, manual
+	Type        string `json:"type"` // backup, rebuild, manual
 	Description string `json:"description"`
 	Command     string `json:"command,omitempty"`
-	Risk        string `json:"risk"`        // low, medium, high
+	Risk        string `json:"risk"` // low, medium, high
 }
 
 // CorruptionDetector provides comprehensive corruption detection
 type CorruptionDetector struct {
-	validator *Validator
+	validator    *Validator
 	atomicWriter *AtomicWriter
 }
 
 // NewCorruptionDetector creates a new corruption detector
 func NewCorruptionDetector(atomicWriter *AtomicWriter) *CorruptionDetector {
 	return &CorruptionDetector{
-		validator: NewValidator(),
+		validator:    NewValidator(),
 		atomicWriter: atomicWriter,
 	}
 }
@@ -71,98 +71,98 @@ func NewCorruptionDetector(atomicWriter *AtomicWriter) *CorruptionDetector {
 // ScanFile performs comprehensive corruption detection on a file
 func (cd *CorruptionDetector) ScanFile(filePath string) *CorruptionReport {
 	start := time.Now()
-	
+
 	report := &CorruptionReport{
 		FilePath:     filePath,
 		IsCorrupted:  false,
 		Issues:       make([]CorruptionIssue, 0),
 		ScanDuration: 0,
 	}
-	
+
 	// Check if file exists
 	if !fileExists(filePath) {
-		report.addIssue(CorruptionStructure, "critical", "", 
+		report.addIssue(CorruptionStructure, "critical", "",
 			"File does not exist", "", "Check file path and restore from backup if available", false)
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	// Get file info
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		report.addIssue(CorruptionStructure, "critical", "", 
+		report.addIssue(CorruptionStructure, "critical", "",
 			"Cannot access file", err.Error(), "Check file permissions", false)
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	report.FileSize = fileInfo.Size()
 	report.LastModified = fileInfo.ModTime()
-	
+
 	// Read file content
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		report.addIssue(CorruptionStructure, "critical", "", 
+		report.addIssue(CorruptionStructure, "critical", "",
 			"Cannot read file", err.Error(), "Check file permissions and disk health", false)
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	// Calculate checksum
 	report.Checksum = calculateSHA256(data)
-	
+
 	// Check for empty or very small files
 	if len(data) == 0 {
-		report.addIssue(CorruptionPartial, "critical", "", 
+		report.addIssue(CorruptionPartial, "critical", "",
 			"File is empty", "", "Restore from backup or reinitialize", true)
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	if len(data) < 10 {
-		report.addIssue(CorruptionPartial, "major", "", 
-			"File appears truncated", fmt.Sprintf("Only %d bytes", len(data)), 
+		report.addIssue(CorruptionPartial, "major", "",
+			"File appears truncated", fmt.Sprintf("Only %d bytes", len(data)),
 			"Restore from backup", true)
 	}
-	
+
 	// Check for encoding issues
 	if err := cd.checkEncoding(data, report); err != nil {
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	// Check JSON syntax
 	var rawData interface{}
 	if err := json.Unmarshal(data, &rawData); err != nil {
-		report.addIssue(CorruptionSyntax, "critical", "", 
-			"Invalid JSON syntax", err.Error(), 
+		report.addIssue(CorruptionSyntax, "critical", "",
+			"Invalid JSON syntax", err.Error(),
 			"Fix JSON syntax or restore from backup", true)
-		
+
 		// Try to suggest specific fixes for common JSON errors
 		if suggestion := cd.suggestJSONFix(err, data); suggestion != "" {
 			report.Issues[len(report.Issues)-1].Suggestion = suggestion
 		}
-		
+
 		report.ScanDuration = time.Since(start)
 		return report
 	}
-	
+
 	// Check checksum integrity if we have a stored one
 	if storedChecksum, exists := cd.atomicWriter.GetChecksum(filePath); exists {
 		if storedChecksum != report.Checksum {
-			report.addIssue(CorruptionChecksum, "major", "", 
-				"Checksum mismatch", 
+			report.addIssue(CorruptionChecksum, "major", "",
+				"Checksum mismatch",
 				fmt.Sprintf("Expected %s, got %s", storedChecksum, report.Checksum),
 				"File may have been modified externally or corrupted", true)
 		}
 	}
-	
+
 	// Determine file type and perform specific validation
 	cd.performSpecificValidation(filePath, data, report)
-	
+
 	// Add recovery options
 	cd.addRecoveryOptions(filePath, report)
-	
+
 	report.ScanDuration = time.Since(start)
 	return report
 }
@@ -172,28 +172,28 @@ func (cd *CorruptionDetector) checkEncoding(data []byte, report *CorruptionRepor
 	// Check for null bytes (often indicates binary corruption in text files)
 	for i, b := range data {
 		if b == 0 {
-			report.addIssue(CorruptionEncoding, "major", "", 
-				"Null byte found in JSON file", 
+			report.addIssue(CorruptionEncoding, "major", "",
+				"Null byte found in JSON file",
 				fmt.Sprintf("Null byte at position %d", i),
 				"File may be corrupted or contain binary data", true)
 			return nil
 		}
 	}
-	
+
 	// Check for non-UTF8 sequences
 	if !isValidUTF8(data) {
-		report.addIssue(CorruptionEncoding, "major", "", 
+		report.addIssue(CorruptionEncoding, "major", "",
 			"Invalid UTF-8 encoding", "",
 			"File contains invalid UTF-8 sequences", true)
 	}
-	
+
 	return nil
 }
 
 // performSpecificValidation performs validation based on file type
 func (cd *CorruptionDetector) performSpecificValidation(filePath string, data []byte, report *CorruptionReport) {
 	filename := filepath.Base(filePath)
-	
+
 	switch {
 	case strings.Contains(filename, "project"):
 		cd.validateProjectFile(data, report)
@@ -212,19 +212,19 @@ func (cd *CorruptionDetector) performSpecificValidation(filePath string, data []
 func (cd *CorruptionDetector) validateProjectFile(data []byte, report *CorruptionReport) {
 	var project ProjectState
 	if err := json.Unmarshal(data, &project); err != nil {
-		report.addIssue(CorruptionSchema, "critical", "", 
+		report.addIssue(CorruptionSchema, "critical", "",
 			"Cannot parse as ProjectState", err.Error(),
 			"Check project schema or restore from backup", true)
 		return
 	}
-	
+
 	// Validate using schema validator
 	result := cd.validator.ValidateProject(&project)
 	cd.addValidationIssues(result, report)
-	
+
 	// Additional project-specific checks
 	if project.Metadata.SchemaVersion == "" {
-		report.addIssue(CorruptionSchema, "minor", "metadata.schema_version", 
+		report.addIssue(CorruptionSchema, "minor", "metadata.schema_version",
 			"Missing schema version", "",
 			"Update file with current schema version", true)
 	}
@@ -239,7 +239,7 @@ func (cd *CorruptionDetector) validateEpicFile(data []byte, report *CorruptionRe
 		cd.addValidationIssues(result, report)
 		return
 	}
-	
+
 	// Try to parse as map of epics
 	var epics map[string]EpicState
 	if err := json.Unmarshal(data, &epics); err == nil {
@@ -249,8 +249,8 @@ func (cd *CorruptionDetector) validateEpicFile(data []byte, report *CorruptionRe
 		}
 		return
 	}
-	
-	report.addIssue(CorruptionSchema, "critical", "", 
+
+	report.addIssue(CorruptionSchema, "critical", "",
 		"Cannot parse as epic data", "",
 		"Check epic schema or restore from backup", true)
 }
@@ -264,7 +264,7 @@ func (cd *CorruptionDetector) validateStoryFile(data []byte, report *CorruptionR
 		cd.addValidationIssues(result, report)
 		return
 	}
-	
+
 	// Try to parse as map of stories
 	var stories map[string]StoryState
 	if err := json.Unmarshal(data, &stories); err == nil {
@@ -274,8 +274,8 @@ func (cd *CorruptionDetector) validateStoryFile(data []byte, report *CorruptionR
 		}
 		return
 	}
-	
-	report.addIssue(CorruptionSchema, "critical", "", 
+
+	report.addIssue(CorruptionSchema, "critical", "",
 		"Cannot parse as story data", "",
 		"Check story schema or restore from backup", true)
 }
@@ -289,7 +289,7 @@ func (cd *CorruptionDetector) validateTaskFile(data []byte, report *CorruptionRe
 		cd.addValidationIssues(result, report)
 		return
 	}
-	
+
 	// Try to parse as map of tasks
 	var tasks map[string]TaskState
 	if err := json.Unmarshal(data, &tasks); err == nil {
@@ -299,8 +299,8 @@ func (cd *CorruptionDetector) validateTaskFile(data []byte, report *CorruptionRe
 		}
 		return
 	}
-	
-	report.addIssue(CorruptionSchema, "critical", "", 
+
+	report.addIssue(CorruptionSchema, "critical", "",
 		"Cannot parse as task data", "",
 		"Check task schema or restore from backup", true)
 }
@@ -309,12 +309,12 @@ func (cd *CorruptionDetector) validateTaskFile(data []byte, report *CorruptionRe
 func (cd *CorruptionDetector) validateGenericState(data []byte, report *CorruptionReport) {
 	var state StateCollection
 	if err := json.Unmarshal(data, &state); err != nil {
-		report.addIssue(CorruptionSchema, "major", "", 
+		report.addIssue(CorruptionSchema, "major", "",
 			"Cannot parse as StateCollection", err.Error(),
 			"Check state schema", true)
 		return
 	}
-	
+
 	result := cd.validator.ValidateStateCollection(&state)
 	cd.addValidationIssues(result, report)
 }
@@ -331,19 +331,19 @@ func (cd *CorruptionDetector) addValidationIssuesWithPrefix(result *ValidationRe
 		if prefix != "" {
 			field = prefix + "." + field
 		}
-		
-		report.addIssue(CorruptionSchema, "major", field, 
+
+		report.addIssue(CorruptionSchema, "major", field,
 			"Schema validation failed", err.Message,
 			"Fix the validation error or restore from backup", true)
 	}
-	
+
 	for _, warn := range result.Warnings {
 		field := warn.Field
 		if prefix != "" {
 			field = prefix + "." + field
 		}
-		
-		report.addIssue(CorruptionSchema, "minor", field, 
+
+		report.addIssue(CorruptionSchema, "minor", field,
 			"Schema validation warning", warn.Message,
 			"Consider fixing the warning", true)
 	}
@@ -352,7 +352,7 @@ func (cd *CorruptionDetector) addValidationIssuesWithPrefix(result *ValidationRe
 // suggestJSONFix suggests fixes for common JSON syntax errors
 func (cd *CorruptionDetector) suggestJSONFix(err error, data []byte) string {
 	errStr := strings.ToLower(err.Error())
-	
+
 	switch {
 	case strings.Contains(errStr, "unexpected end"):
 		return "File appears truncated. Check for missing closing braces or brackets."
@@ -372,7 +372,7 @@ func (cd *CorruptionDetector) addRecoveryOptions(filePath string, report *Corrup
 	if !report.IsCorrupted {
 		return
 	}
-	
+
 	// Check for backups
 	backups, err := cd.atomicWriter.ListBackups(filePath)
 	if err == nil && len(backups) > 0 {
@@ -383,7 +383,7 @@ func (cd *CorruptionDetector) addRecoveryOptions(filePath string, report *Corrup
 			Risk:        "low",
 		})
 	}
-	
+
 	// Suggest rebuild for certain corruption types
 	hasSchemaIssues := false
 	for _, issue := range report.Issues {
@@ -392,7 +392,7 @@ func (cd *CorruptionDetector) addRecoveryOptions(filePath string, report *Corrup
 			break
 		}
 	}
-	
+
 	if hasSchemaIssues {
 		report.RecoveryOptions = append(report.RecoveryOptions, RecoveryOption{
 			Type:        "rebuild",
@@ -401,7 +401,7 @@ func (cd *CorruptionDetector) addRecoveryOptions(filePath string, report *Corrup
 			Risk:        "medium",
 		})
 	}
-	
+
 	// Always offer manual fix option
 	report.RecoveryOptions = append(report.RecoveryOptions, RecoveryOption{
 		Type:        "manual",
@@ -429,31 +429,31 @@ func (r *CorruptionReport) addIssue(cType CorruptionType, severity, field, messa
 // ScanDirectory scans all JSON files in a directory for corruption
 func (cd *CorruptionDetector) ScanDirectory(dirPath string) ([]*CorruptionReport, error) {
 	var reports []*CorruptionReport
-	
+
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && strings.HasSuffix(strings.ToLower(path), ".json") {
 			report := cd.ScanFile(path)
 			reports = append(reports, report)
 		}
-		
+
 		return nil
 	})
-	
+
 	return reports, err
 }
 
 // AutoRepair attempts to automatically repair corrupted files
 func (cd *CorruptionDetector) AutoRepair(filePath string) error {
 	report := cd.ScanFile(filePath)
-	
+
 	if !report.IsCorrupted {
 		return nil // Nothing to repair
 	}
-	
+
 	// Try recovery options in order of safety
 	for _, option := range report.RecoveryOptions {
 		switch option.Type {
@@ -467,7 +467,7 @@ func (cd *CorruptionDetector) AutoRepair(filePath string) error {
 			fmt.Printf("Rebuild option available for %s\n", filePath)
 		}
 	}
-	
+
 	return fmt.Errorf("automatic repair failed for %s", filePath)
 }
 
@@ -494,12 +494,12 @@ func decodeRuneInString(s string) (rune, int) {
 	if len(s) == 0 {
 		return 0, 0
 	}
-	
+
 	b := s[0]
 	if b < 0x80 {
 		return rune(b), 1
 	}
-	
+
 	// For simplicity, return replacement character for non-ASCII
 	// In a real implementation, you'd properly decode UTF-8
 	return '\uFFFD', 1

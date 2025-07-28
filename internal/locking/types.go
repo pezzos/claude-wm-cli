@@ -26,11 +26,11 @@ func (lt LockType) String() string {
 
 // LockOptions configures file locking behavior
 type LockOptions struct {
-	Type       LockType      `json:"type"`         // Type of lock to acquire
-	Timeout    time.Duration `json:"timeout"`      // Maximum time to wait for lock
-	NonBlocking bool          `json:"non_blocking"` // Whether to fail immediately if lock unavailable
+	Type         LockType      `json:"type"`          // Type of lock to acquire
+	Timeout      time.Duration `json:"timeout"`       // Maximum time to wait for lock
+	NonBlocking  bool          `json:"non_blocking"`  // Whether to fail immediately if lock unavailable
 	StaleTimeout time.Duration `json:"stale_timeout"` // Time after which locks are considered stale
-	RetryDelay time.Duration  `json:"retry_delay"`   // Delay between lock acquisition attempts
+	RetryDelay   time.Duration `json:"retry_delay"`   // Delay between lock acquisition attempts
 }
 
 // DefaultLockOptions returns default locking configuration
@@ -39,22 +39,22 @@ func DefaultLockOptions() *LockOptions {
 		Type:         LockExclusive,
 		Timeout:      30 * time.Second, // Proven 30s timeout pattern
 		NonBlocking:  false,
-		StaleTimeout: 5 * time.Minute,  // Locks older than 5 minutes are stale
+		StaleTimeout: 5 * time.Minute, // Locks older than 5 minutes are stale
 		RetryDelay:   100 * time.Millisecond,
 	}
 }
 
 // LockInfo contains information about an active lock
 type LockInfo struct {
-	FilePath    string        `json:"file_path"`    // Path to the locked file
-	LockPath    string        `json:"lock_path"`    // Path to the lock file
-	Type        LockType      `json:"type"`         // Type of lock
-	PID         int           `json:"pid"`          // Process ID that owns the lock
-	Hostname    string        `json:"hostname"`     // Hostname where lock was created
-	AcquiredAt  time.Time     `json:"acquired_at"`  // When the lock was acquired
-	ExpiresAt   time.Time     `json:"expires_at"`   // When the lock expires
-	ProcessName string        `json:"process_name"` // Name of the process holding the lock
-	UserInfo    string        `json:"user_info"`    // User information
+	FilePath    string    `json:"file_path"`    // Path to the locked file
+	LockPath    string    `json:"lock_path"`    // Path to the lock file
+	Type        LockType  `json:"type"`         // Type of lock
+	PID         int       `json:"pid"`          // Process ID that owns the lock
+	Hostname    string    `json:"hostname"`     // Hostname where lock was created
+	AcquiredAt  time.Time `json:"acquired_at"`  // When the lock was acquired
+	ExpiresAt   time.Time `json:"expires_at"`   // When the lock expires
+	ProcessName string    `json:"process_name"` // Name of the process holding the lock
+	UserInfo    string    `json:"user_info"`    // User information
 }
 
 // IsStale checks if the lock is considered stale
@@ -97,27 +97,27 @@ func (ls LockStatus) String() string {
 
 // LockResult contains the result of a lock operation
 type LockResult struct {
-	Status      LockStatus    `json:"status"`
-	LockInfo    *LockInfo     `json:"lock_info,omitempty"`
-	Error       error         `json:"error,omitempty"`
-	Duration    time.Duration `json:"duration"`
-	Attempts    int           `json:"attempts"`
-	Message     string        `json:"message"`
-	Suggestion  string        `json:"suggestion,omitempty"`
-	Timestamp   time.Time     `json:"timestamp"`
+	Status     LockStatus    `json:"status"`
+	LockInfo   *LockInfo     `json:"lock_info,omitempty"`
+	Error      error         `json:"error,omitempty"`
+	Duration   time.Duration `json:"duration"`
+	Attempts   int           `json:"attempts"`
+	Message    string        `json:"message"`
+	Suggestion string        `json:"suggestion,omitempty"`
+	Timestamp  time.Time     `json:"timestamp"`
 }
 
 // LockError represents a locking-specific error
 type LockError struct {
-	Operation   string     `json:"operation"`   // Operation that failed
-	FilePath    string     `json:"file_path"`   // File being locked
-	LockPath    string     `json:"lock_path"`   // Lock file path
-	LockType    LockType   `json:"lock_type"`   // Type of lock attempted
-	Cause       error      `json:"cause"`       // Underlying error
-	CurrentLock *LockInfo  `json:"current_lock,omitempty"` // Info about existing lock
-	Suggestion  string     `json:"suggestion"`  // Suggested action
-	Recoverable bool       `json:"recoverable"` // Whether the error is recoverable
-	Timestamp   time.Time  `json:"timestamp"`
+	Operation   string    `json:"operation"`              // Operation that failed
+	FilePath    string    `json:"file_path"`              // File being locked
+	LockPath    string    `json:"lock_path"`              // Lock file path
+	LockType    LockType  `json:"lock_type"`              // Type of lock attempted
+	Cause       error     `json:"cause"`                  // Underlying error
+	CurrentLock *LockInfo `json:"current_lock,omitempty"` // Info about existing lock
+	Suggestion  string    `json:"suggestion"`             // Suggested action
+	Recoverable bool      `json:"recoverable"`            // Whether the error is recoverable
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 func (e *LockError) Error() string {
@@ -226,7 +226,7 @@ type LockRequest struct {
 	Priority    LockPriority  `json:"priority"`
 	Timeout     time.Duration `json:"timeout"`
 	NonBlocking bool          `json:"non_blocking"`
-	Context     string        `json:"context"`     // Description of why lock is needed
+	Context     string        `json:"context"`      // Description of why lock is needed
 	ProcessInfo string        `json:"process_info"` // Information about requesting process
 }
 
@@ -258,12 +258,12 @@ const (
 
 // LockEvent represents a lock-related event for logging/monitoring
 type LockEvent struct {
-	Type        LockEventType `json:"type"`
-	FilePath    string        `json:"file_path"`
-	LockType    LockType      `json:"lock_type"`
-	PID         int           `json:"pid"`
-	Duration    time.Duration `json:"duration"`
-	Error       string        `json:"error,omitempty"`
-	Details     string        `json:"details,omitempty"`
-	Timestamp   time.Time     `json:"timestamp"`
+	Type      LockEventType `json:"type"`
+	FilePath  string        `json:"file_path"`
+	LockType  LockType      `json:"lock_type"`
+	PID       int           `json:"pid"`
+	Duration  time.Duration `json:"duration"`
+	Error     string        `json:"error,omitempty"`
+	Details   string        `json:"details,omitempty"`
+	Timestamp time.Time     `json:"timestamp"`
 }

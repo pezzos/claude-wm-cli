@@ -139,7 +139,7 @@ func (m *Manager) UpdateEpic(epicID string, options EpicUpdateOptions) (*Epic, e
 
 	// Apply updates
 	now := time.Now()
-	
+
 	if options.Title != nil {
 		if strings.TrimSpace(*options.Title) == "" {
 			return nil, fmt.Errorf("epic title cannot be empty")
@@ -162,14 +162,14 @@ func (m *Manager) UpdateEpic(epicID string, options EpicUpdateOptions) (*Epic, e
 		if !options.Status.IsValid() {
 			return nil, fmt.Errorf("invalid status: %s", *options.Status)
 		}
-		
+
 		// Handle status transitions
 		if err := m.validateStatusTransition(epic, *options.Status); err != nil {
 			return nil, err
 		}
-		
+
 		epic.Status = *options.Status
-		
+
 		// Set timestamps for status changes
 		if *options.Status == StatusInProgress && epic.StartDate == nil {
 			epic.StartDate = &now
@@ -379,7 +379,7 @@ func (m *Manager) DeleteEpic(epicID string) error {
 // loadEpicCollection loads the epic collection from disk
 func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 	epicsPath := filepath.Join(m.rootPath, "docs", "1-project", EpicsFileName)
-	
+
 	// Check if file exists
 	if _, err := os.Stat(epicsPath); os.IsNotExist(err) {
 		// Create default collection
@@ -402,7 +402,7 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 	}
 
 	var collection EpicCollection
-	
+
 	// Try to unmarshal as the new format first
 	if err := json.Unmarshal(data, &collection); err != nil {
 		// If that fails, try to parse the old format and migrate
@@ -416,11 +416,11 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 				// Add other fields as needed for migration
 			} `json:"epics"`
 		}
-		
+
 		if err := json.Unmarshal(data, &oldFormat); err != nil {
 			return nil, fmt.Errorf("failed to parse epics file: %w", err)
 		}
-		
+
 		// Migrate from old format to new format
 		collection = EpicCollection{
 			ProjectID:   "default",
@@ -432,7 +432,7 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 				TotalEpics:  len(oldFormat.Epics),
 			},
 		}
-		
+
 		// Convert old epics to new format
 		for _, oldEpic := range oldFormat.Epics {
 			// Map old priority values to new ones
@@ -449,7 +449,7 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 			default:
 				priority = PriorityMedium
 			}
-			
+
 			// Map old status values to new ones
 			var status Status
 			switch oldEpic.Status {
@@ -464,7 +464,7 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 			default:
 				status = StatusPlanned
 			}
-			
+
 			now := time.Now()
 			epic := &Epic{
 				ID:          oldEpic.ID,
@@ -476,11 +476,11 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 				CreatedAt:   now,
 				UpdatedAt:   now,
 			}
-			
+
 			epic.CalculateProgress()
 			collection.Epics[oldEpic.ID] = epic
 		}
-		
+
 		// Save the migrated format back to disk
 		if err := m.saveEpicCollection(&collection); err != nil {
 			return nil, fmt.Errorf("failed to save migrated epic collection: %w", err)
@@ -498,7 +498,7 @@ func (m *Manager) loadEpicCollection() (*EpicCollection, error) {
 // saveEpicCollection saves the epic collection to disk
 func (m *Manager) saveEpicCollection(collection *EpicCollection) error {
 	epicsPath := filepath.Join(m.rootPath, "docs", "1-project", EpicsFileName)
-	
+
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(epicsPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
@@ -519,7 +519,7 @@ func (m *Manager) saveEpicCollection(collection *EpicCollection) error {
 	if err := os.WriteFile(tempPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write temp epics file: %w", err)
 	}
-	
+
 	if err := os.Rename(tempPath, epicsPath); err != nil {
 		os.Remove(tempPath) // cleanup
 		return fmt.Errorf("failed to replace epics file: %w", err)
@@ -533,7 +533,7 @@ func (m *Manager) generateEpicID(title string, collection *EpicCollection) strin
 	// Create base ID from title
 	baseID := strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(title), " ", "-"))
 	baseID = strings.ReplaceAll(baseID, "_", "-")
-	
+
 	// Remove special characters
 	var cleaned strings.Builder
 	for _, r := range baseID {
@@ -541,16 +541,16 @@ func (m *Manager) generateEpicID(title string, collection *EpicCollection) strin
 			cleaned.WriteRune(r)
 		}
 	}
-	
+
 	baseID = cleaned.String()
 	if baseID == "" {
 		baseID = "EPIC"
 	}
-	
+
 	// Ensure uniqueness
 	counter := 1
 	epicID := fmt.Sprintf("EPIC-%03d-%s", counter, baseID)
-	
+
 	for {
 		if _, exists := collection.Epics[epicID]; !exists {
 			break
@@ -558,35 +558,35 @@ func (m *Manager) generateEpicID(title string, collection *EpicCollection) strin
 		counter++
 		epicID = fmt.Sprintf("EPIC-%03d-%s", counter, baseID)
 	}
-	
+
 	return epicID
 }
 
 // validateStatusTransition checks if a status transition is valid
 func (m *Manager) validateStatusTransition(epic *Epic, newStatus Status) error {
 	currentStatus := epic.Status
-	
+
 	// Define valid transitions
 	validTransitions := map[Status][]Status{
 		StatusPlanned:    {StatusInProgress, StatusOnHold, StatusCancelled},
 		StatusInProgress: {StatusOnHold, StatusCompleted, StatusCancelled},
 		StatusOnHold:     {StatusInProgress, StatusCancelled},
-		StatusCompleted:  {}, // Cannot transition from completed
+		StatusCompleted:  {},              // Cannot transition from completed
 		StatusCancelled:  {StatusPlanned}, // Can restart cancelled epics
 	}
-	
+
 	allowedTransitions, exists := validTransitions[currentStatus]
 	if !exists {
 		return fmt.Errorf("unknown current status: %s", currentStatus)
 	}
-	
+
 	// Check if transition is allowed
 	for _, allowed := range allowedTransitions {
 		if allowed == newStatus {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("invalid status transition from %s to %s", currentStatus, newStatus)
 }
 
@@ -596,22 +596,22 @@ func (m *Manager) validateAndMigrateCollection(collection *EpicCollection) error
 	if collection.Epics == nil {
 		collection.Epics = make(map[string]*Epic)
 	}
-	
+
 	// Set default metadata if missing
 	if collection.Metadata.Version == "" {
 		collection.Metadata.Version = EpicsVersion
 	}
-	
+
 	// Update epic count
 	collection.Metadata.TotalEpics = len(collection.Epics)
-	
+
 	// Validate each epic
 	for id, epic := range collection.Epics {
 		if epic == nil {
 			delete(collection.Epics, id)
 			continue
 		}
-		
+
 		// Ensure required fields
 		if epic.ID == "" {
 			epic.ID = id
@@ -631,10 +631,10 @@ func (m *Manager) validateAndMigrateCollection(collection *EpicCollection) error
 		if epic.UserStories == nil {
 			epic.UserStories = []UserStory{}
 		}
-		
+
 		// Recalculate progress
 		epic.CalculateProgress()
 	}
-	
+
 	return nil
 }

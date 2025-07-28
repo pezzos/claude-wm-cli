@@ -10,7 +10,7 @@ import (
 // platformLock performs platform-specific file locking on Unix systems
 func (fl *FileLock) platformLock(file *os.File) error {
 	var lockType int
-	
+
 	switch fl.options.Type {
 	case LockExclusive:
 		lockType = syscall.LOCK_EX
@@ -19,11 +19,11 @@ func (fl *FileLock) platformLock(file *os.File) error {
 	default:
 		lockType = syscall.LOCK_EX
 	}
-	
+
 	if fl.options.NonBlocking {
 		lockType |= syscall.LOCK_NB
 	}
-	
+
 	return syscall.Flock(int(file.Fd()), lockType)
 }
 
@@ -37,23 +37,23 @@ func (fl *FileLock) processExists(pid int) bool {
 	if pid <= 0 {
 		return false
 	}
-	
+
 	// On Unix, we can send signal 0 to check if process exists
 	err := syscall.Kill(pid, 0)
 	if err == nil {
 		return true
 	}
-	
+
 	// ESRCH means no such process
 	if err == syscall.ESRCH {
 		return false
 	}
-	
+
 	// EPERM means process exists but we don't have permission to signal it
 	if err == syscall.EPERM {
 		return true
 	}
-	
+
 	// Other errors, assume process doesn't exist
 	return false
 }

@@ -30,8 +30,8 @@ func TestProjectStatus_String(t *testing.T) {
 
 func TestDetectProjectInitialization_NotInitialized(t *testing.T) {
 	tests := []struct {
-		name         string
-		setupFunc    func(string)
+		name           string
+		setupFunc      func(string)
 		expectedStatus ProjectStatus
 	}{
 		{
@@ -76,8 +76,8 @@ func TestDetectProjectInitialization_NotInitialized(t *testing.T) {
 
 func TestDetectProjectInitialization_Partial(t *testing.T) {
 	tests := []struct {
-		name         string
-		setupFunc    func(string)
+		name           string
+		setupFunc      func(string)
 		expectedStatus ProjectStatus
 	}{
 		{
@@ -109,7 +109,7 @@ func TestDetectProjectInitialization_Partial(t *testing.T) {
 					os.MkdirAll(filepath.Join(dir, reqDir), 0755)
 				}
 				// Create invalid JSON file
-				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"),
 					[]byte("invalid json content"), 0644)
 			},
 			expectedStatus: Partial,
@@ -178,12 +178,12 @@ func TestDetectProjectInitialization_WithOptionalFiles(t *testing.T) {
 		"title": "Current Epic",
 	}
 	currentEpicJSON, _ := json.Marshal(currentEpicData)
-	os.WriteFile(filepath.Join(tempDir, "docs/2-current-epic/current-epic.json"), 
+	os.WriteFile(filepath.Join(tempDir, "docs/2-current-epic/current-epic.json"),
 		currentEpicJSON, 0644)
 
 	storiesData := map[string]interface{}{"stories": []interface{}{}}
 	storiesJSON, _ := json.Marshal(storiesData)
-	os.WriteFile(filepath.Join(tempDir, "docs/2-current-epic/stories.json"), 
+	os.WriteFile(filepath.Join(tempDir, "docs/2-current-epic/stories.json"),
 		storiesJSON, 0644)
 
 	result, err := DetectProjectInitialization(tempDir)
@@ -202,15 +202,15 @@ func TestDetectProjectInitialization_NonExistentPath(t *testing.T) {
 
 func TestDetectProjectInitialization_PermissionError(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	// Create docs directory with no read permissions
 	docsPath := filepath.Join(tempDir, "docs")
 	os.Mkdir(docsPath, 0755)
-	
+
 	// Create a file with restricted permissions (this simulates permission issues)
 	restrictedFile := filepath.Join(docsPath, "restricted")
 	os.WriteFile(restrictedFile, []byte("test"), 0644)
-	
+
 	// This test depends on the system - on some systems we can't simulate permission errors in temp dirs
 	result, err := DetectProjectInitialization(tempDir)
 	require.NoError(t, err)
@@ -269,9 +269,9 @@ func TestCheckDocsStructure(t *testing.T) {
 
 func TestValidateRequiredFiles(t *testing.T) {
 	tests := []struct {
-		name           string
-		setupFunc      func(string)
-		expectedHas    bool
+		name            string
+		setupFunc       func(string)
+		expectedHas     bool
 		expectedMissing int
 	}{
 		{
@@ -279,17 +279,17 @@ func TestValidateRequiredFiles(t *testing.T) {
 			setupFunc: func(dir string) {
 				os.MkdirAll(filepath.Join(dir, "docs/1-project"), 0755)
 			},
-			expectedHas:    false,
+			expectedHas:     false,
 			expectedMissing: 1,
 		},
 		{
 			name: "invalid JSON file",
 			setupFunc: func(dir string) {
 				os.MkdirAll(filepath.Join(dir, "docs/1-project"), 0755)
-				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"),
 					[]byte("invalid json"), 0644)
 			},
-			expectedHas:    false,
+			expectedHas:     false,
 			expectedMissing: 1,
 		},
 		{
@@ -298,10 +298,10 @@ func TestValidateRequiredFiles(t *testing.T) {
 				os.MkdirAll(filepath.Join(dir, "docs/1-project"), 0755)
 				epicsData := map[string]interface{}{"epics": []interface{}{}}
 				epicsJSON, _ := json.Marshal(epicsData)
-				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"),
 					epicsJSON, 0644)
 			},
-			expectedHas:    true,
+			expectedHas:     true,
 			expectedMissing: 0,
 		},
 	}
@@ -360,10 +360,10 @@ func TestValidateJSONFile(t *testing.T) {
 
 func TestFileExists(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	existingFile := filepath.Join(tempDir, "existing.txt")
 	os.WriteFile(existingFile, []byte("test"), 0644)
-	
+
 	nonExistentFile := filepath.Join(tempDir, "nonexistent.txt")
 
 	assert.True(t, fileExists(existingFile))
@@ -377,7 +377,7 @@ func TestDetermineInitializationStatus(t *testing.T) {
 		expected     ProjectStatus
 	}{
 		{false, false, NotInitialized},
-		{false, true, NotInitialized},  // Can't have files without structure
+		{false, true, NotInitialized}, // Can't have files without structure
 		{true, false, Partial},
 		{true, true, Complete},
 	}
@@ -419,7 +419,7 @@ func TestGetRequiredFilesForCompletion(t *testing.T) {
 				}
 				epicsData := map[string]interface{}{"epics": []interface{}{}}
 				epicsJSON, _ := json.Marshal(epicsData)
-				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/1-project/epics.json"),
 					epicsJSON, 0644)
 			},
 			expectMin: 0, // Should be empty for complete project
@@ -456,7 +456,7 @@ func TestCheckOptionalFiles(t *testing.T) {
 				os.MkdirAll(filepath.Join(dir, "docs/2-current-epic"), 0755)
 				data := map[string]interface{}{"id": "EPIC-001"}
 				jsonData, _ := json.Marshal(data)
-				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/current-epic.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/current-epic.json"),
 					jsonData, 0644)
 			},
 			expectedStatus: 1, // Should note missing stories
@@ -467,12 +467,12 @@ func TestCheckOptionalFiles(t *testing.T) {
 				os.MkdirAll(filepath.Join(dir, "docs/2-current-epic"), 0755)
 				epicData := map[string]interface{}{"id": "EPIC-001"}
 				epicJSON, _ := json.Marshal(epicData)
-				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/current-epic.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/current-epic.json"),
 					epicJSON, 0644)
-				
+
 				storiesData := map[string]interface{}{"stories": []interface{}{}}
 				storiesJSON, _ := json.Marshal(storiesData)
-				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/stories.json"), 
+				os.WriteFile(filepath.Join(dir, "docs/2-current-epic/stories.json"),
 					storiesJSON, 0644)
 			},
 			expectedStatus: 0, // Should have no status messages

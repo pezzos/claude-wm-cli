@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"claude-wm-cli/internal/epic"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -232,8 +233,8 @@ func TestGenerator_GenerateStoriesFromEpic(t *testing.T) {
 
 	// Create a story generator and test manual story creation
 	generator := NewGenerator(tempDir)
-	
-	// Create an epic first  
+
+	// Create an epic first
 	epicManager := epic.NewManager(tempDir)
 	testEpic, err := epicManager.CreateEpic(epic.EpicCreateOptions{
 		Title:       "Test Epic",
@@ -282,15 +283,15 @@ func TestGenerator_GenerateStoriesFromEpic(t *testing.T) {
 		assert.Equal(t, epic.StatusPlanned, story.Status)
 		assert.True(t, story.StoryPoints > 0)
 		storyTitles[story.Title] = true
-		
+
 		// Verify tasks were generated from acceptance criteria
 		assert.True(t, len(story.Tasks) > 0)
 	}
-	
+
 	// Verify both stories were created
 	assert.True(t, storyTitles["User Authentication"])
 	assert.True(t, storyTitles["User Dashboard"])
-	
+
 	// Verify specific story details
 	assert.Equal(t, 5, story1.StoryPoints)
 	assert.Equal(t, 3, story2.StoryPoints)

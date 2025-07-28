@@ -14,9 +14,9 @@ type GitConfig struct {
 	RemoteURL        string `json:"remote_url,omitempty"`
 	Username         string `json:"username,omitempty"`
 	Email            string `json:"email,omitempty"`
-	MaxCommits       int    `json:"max_commits"`        // Maximum commits to keep
-	AutoPush         bool   `json:"auto_push"`          // Auto push to remote
-	ConflictStrategy string `json:"conflict_strategy"`  // merge, rebase, manual
+	MaxCommits       int    `json:"max_commits"`       // Maximum commits to keep
+	AutoPush         bool   `json:"auto_push"`         // Auto push to remote
+	ConflictStrategy string `json:"conflict_strategy"` // merge, rebase, manual
 }
 
 // DefaultGitConfig returns the default Git configuration
@@ -37,67 +37,67 @@ func DefaultGitConfig() *GitConfig {
 type GitOperation string
 
 const (
-	GitOpInit       GitOperation = "init"
-	GitOpAdd        GitOperation = "add"
-	GitOpCommit     GitOperation = "commit"
-	GitOpPush       GitOperation = "push"
-	GitOpPull       GitOperation = "pull"
-	GitOpCheckout   GitOperation = "checkout"
-	GitOpReset      GitOperation = "reset"
-	GitOpLog        GitOperation = "log"
-	GitOpStatus     GitOperation = "status"
-	GitOpDiff       GitOperation = "diff"
-	GitOpBranch     GitOperation = "branch"
-	GitOpMerge      GitOperation = "merge"
-	GitOpRebase     GitOperation = "rebase"
-	GitOpStash      GitOperation = "stash"
-	GitOpTag        GitOperation = "tag"
+	GitOpInit     GitOperation = "init"
+	GitOpAdd      GitOperation = "add"
+	GitOpCommit   GitOperation = "commit"
+	GitOpPush     GitOperation = "push"
+	GitOpPull     GitOperation = "pull"
+	GitOpCheckout GitOperation = "checkout"
+	GitOpReset    GitOperation = "reset"
+	GitOpLog      GitOperation = "log"
+	GitOpStatus   GitOperation = "status"
+	GitOpDiff     GitOperation = "diff"
+	GitOpBranch   GitOperation = "branch"
+	GitOpMerge    GitOperation = "merge"
+	GitOpRebase   GitOperation = "rebase"
+	GitOpStash    GitOperation = "stash"
+	GitOpTag      GitOperation = "tag"
 )
 
 // GitResult represents the result of a Git operation
 type GitResult struct {
-	Operation   GitOperation  `json:"operation"`
-	Success     bool          `json:"success"`
-	Output      string        `json:"output"`
-	Error       string        `json:"error,omitempty"`
-	ExitCode    int           `json:"exit_code"`
-	Duration    time.Duration `json:"duration"`
-	Command     string        `json:"command"`
-	WorkingDir  string        `json:"working_dir"`
-	Timestamp   time.Time     `json:"timestamp"`
+	Operation  GitOperation  `json:"operation"`
+	Success    bool          `json:"success"`
+	Output     string        `json:"output"`
+	Error      string        `json:"error,omitempty"`
+	ExitCode   int           `json:"exit_code"`
+	Duration   time.Duration `json:"duration"`
+	Command    string        `json:"command"`
+	WorkingDir string        `json:"working_dir"`
+	Timestamp  time.Time     `json:"timestamp"`
 }
 
 // CommitInfo represents information about a Git commit
 type CommitInfo struct {
-	Hash        string    `json:"hash"`
-	ShortHash   string    `json:"short_hash"`
-	Message     string    `json:"message"`
-	Author      string    `json:"author"`
-	Email       string    `json:"email"`
-	Date        time.Time `json:"date"`
-	Files       []string  `json:"files"`
-	Insertions  int       `json:"insertions"`
-	Deletions   int       `json:"deletions"`
-	Parent      string    `json:"parent,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
+	Hash       string    `json:"hash"`
+	ShortHash  string    `json:"short_hash"`
+	Message    string    `json:"message"`
+	Author     string    `json:"author"`
+	Email      string    `json:"email"`
+	Date       time.Time `json:"date"`
+	Files      []string  `json:"files"`
+	Insertions int       `json:"insertions"`
+	Deletions  int       `json:"deletions"`
+	Parent     string    `json:"parent,omitempty"`
+	Tags       []string  `json:"tags,omitempty"`
 }
 
 // BranchInfo represents information about a Git branch
 type BranchInfo struct {
-	Name      string    `json:"name"`
-	Current   bool      `json:"current"`
-	Remote    string    `json:"remote,omitempty"`
-	Upstream  string    `json:"upstream,omitempty"`
-	LastCommit string   `json:"last_commit"`
-	Behind    int       `json:"behind"`
-	Ahead     int       `json:"ahead"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Name       string    `json:"name"`
+	Current    bool      `json:"current"`
+	Remote     string    `json:"remote,omitempty"`
+	Upstream   string    `json:"upstream,omitempty"`
+	LastCommit string    `json:"last_commit"`
+	Behind     int       `json:"behind"`
+	Ahead      int       `json:"ahead"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // FileStatus represents the status of a file in Git
 type FileStatus struct {
 	Path       string `json:"path"`
-	Status     string `json:"status"`     // M, A, D, R, C, U, ?, !
+	Status     string `json:"status"` // M, A, D, R, C, U, ?, !
 	Staged     bool   `json:"staged"`
 	Modified   bool   `json:"modified"`
 	Untracked  bool   `json:"untracked"`
@@ -127,33 +127,33 @@ type RecoveryPoint struct {
 	Description string     `json:"description"`
 	StateFiles  []string   `json:"state_files"`
 	Size        int64      `json:"size"`
-	Verified    bool       `json:"verified"`     // Whether state integrity was verified
-	Safe        bool       `json:"safe"`         // Whether recovery is considered safe
-	Automatic   bool       `json:"automatic"`    // Whether this was an automatic checkpoint
+	Verified    bool       `json:"verified"`  // Whether state integrity was verified
+	Safe        bool       `json:"safe"`      // Whether recovery is considered safe
+	Automatic   bool       `json:"automatic"` // Whether this was an automatic checkpoint
 }
 
 // DiffInfo represents information about differences between Git references
 type DiffInfo struct {
-	FromRef     string         `json:"from_ref"`
-	ToRef       string         `json:"to_ref"`
-	Files       []FileDiff     `json:"files"`
-	Insertions  int            `json:"insertions"`
-	Deletions   int            `json:"deletions"`
-	FilesChanged int           `json:"files_changed"`
-	Binary      bool           `json:"binary"`
-	Generated   time.Time      `json:"generated"`
+	FromRef      string     `json:"from_ref"`
+	ToRef        string     `json:"to_ref"`
+	Files        []FileDiff `json:"files"`
+	Insertions   int        `json:"insertions"`
+	Deletions    int        `json:"deletions"`
+	FilesChanged int        `json:"files_changed"`
+	Binary       bool       `json:"binary"`
+	Generated    time.Time  `json:"generated"`
 }
 
 // FileDiff represents differences in a single file
 type FileDiff struct {
-	Path        string   `json:"path"`
-	Status      string   `json:"status"`     // A, M, D, R, C
-	Insertions  int      `json:"insertions"`
-	Deletions   int      `json:"deletions"`
-	Binary      bool     `json:"binary"`
-	Renamed     bool     `json:"renamed"`
-	OldPath     string   `json:"old_path,omitempty"`
-	Hunks       []string `json:"hunks,omitempty"`
+	Path       string   `json:"path"`
+	Status     string   `json:"status"` // A, M, D, R, C
+	Insertions int      `json:"insertions"`
+	Deletions  int      `json:"deletions"`
+	Binary     bool     `json:"binary"`
+	Renamed    bool     `json:"renamed"`
+	OldPath    string   `json:"old_path,omitempty"`
+	Hunks      []string `json:"hunks,omitempty"`
 }
 
 // ConflictInfo represents information about merge conflicts
@@ -190,13 +190,13 @@ func (e GitError) Error() string {
 type StateCommitType string
 
 const (
-	CommitTypeProject  StateCommitType = "project"
-	CommitTypeEpic     StateCommitType = "epic"
-	CommitTypeStory    StateCommitType = "story"
-	CommitTypeTask     StateCommitType = "task"
-	CommitTypeState    StateCommitType = "state"
-	CommitTypeBackup   StateCommitType = "backup"
-	CommitTypeRecovery StateCommitType = "recovery"
+	CommitTypeProject   StateCommitType = "project"
+	CommitTypeEpic      StateCommitType = "epic"
+	CommitTypeStory     StateCommitType = "story"
+	CommitTypeTask      StateCommitType = "task"
+	CommitTypeState     StateCommitType = "state"
+	CommitTypeBackup    StateCommitType = "backup"
+	CommitTypeRecovery  StateCommitType = "recovery"
 	CommitTypeMigration StateCommitType = "migration"
 )
 
@@ -274,11 +274,11 @@ type TagInfo struct {
 
 // RemoteInfo represents information about a Git remote
 type RemoteInfo struct {
-	Name      string `json:"name"`
-	URL       string `json:"url"`
-	FetchURL  string `json:"fetch_url"`
-	PushURL   string `json:"push_url"`
-	Type      string `json:"type"` // origin, upstream, etc.
+	Name     string `json:"name"`
+	URL      string `json:"url"`
+	FetchURL string `json:"fetch_url"`
+	PushURL  string `json:"push_url"`
+	Type     string `json:"type"` // origin, upstream, etc.
 }
 
 // GitHookType represents different types of Git hooks

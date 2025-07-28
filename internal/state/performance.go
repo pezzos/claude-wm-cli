@@ -16,14 +16,14 @@ import (
 // Performance thresholds
 const (
 	// File size thresholds for different optimization strategies
-	SmallFileThreshold  = 1 * 1024 * 1024    // 1MB - load entirely into memory
-	MediumFileThreshold = 10 * 1024 * 1024   // 10MB - use streaming with chunking
-	LargeFileThreshold  = 100 * 1024 * 1024  // 100MB - use aggressive lazy loading
+	SmallFileThreshold  = 1 * 1024 * 1024   // 1MB - load entirely into memory
+	MediumFileThreshold = 10 * 1024 * 1024  // 10MB - use streaming with chunking
+	LargeFileThreshold  = 100 * 1024 * 1024 // 100MB - use aggressive lazy loading
 
 	// Memory usage limits
-	MaxMemoryUsage     = 50 * 1024 * 1024  // 50MB max for state operations
-	ChunkSize          = 64 * 1024         // 64KB chunks for streaming
-	GCInterval         = 5 * time.Second   // How often to check memory and trigger GC
+	MaxMemoryUsage = 50 * 1024 * 1024 // 50MB max for state operations
+	ChunkSize      = 64 * 1024        // 64KB chunks for streaming
+	GCInterval     = 5 * time.Second  // How often to check memory and trigger GC
 
 	// Performance targets (from task requirements)
 	SmallFileMaxDuration = 1 * time.Second // Sub-second for normal files
@@ -32,13 +32,13 @@ const (
 
 // MemoryStats tracks memory usage for state operations
 type MemoryStats struct {
-	AllocatedBytes   uint64        `json:"allocated_bytes"`
-	TotalAllocBytes  uint64        `json:"total_alloc_bytes"`
-	NumGC            uint32        `json:"num_gc"`
-	PauseTime        time.Duration `json:"pause_time"`
-	LastCheckTime    time.Time     `json:"last_check_time"`
-	PeakUsage        uint64        `json:"peak_usage"`
-	OperationCount   int64         `json:"operation_count"`
+	AllocatedBytes  uint64        `json:"allocated_bytes"`
+	TotalAllocBytes uint64        `json:"total_alloc_bytes"`
+	NumGC           uint32        `json:"num_gc"`
+	PauseTime       time.Duration `json:"pause_time"`
+	LastCheckTime   time.Time     `json:"last_check_time"`
+	PeakUsage       uint64        `json:"peak_usage"`
+	OperationCount  int64         `json:"operation_count"`
 }
 
 // PerformanceMetrics tracks performance of state operations
@@ -57,14 +57,14 @@ type PerformanceMetrics struct {
 
 // LazyStateSection represents a section of state that can be loaded on demand
 type LazyStateSection struct {
-	Key           string      `json:"key"`
-	Offset        int64       `json:"offset"`
-	Length        int64       `json:"length"`
-	Loaded        bool        `json:"loaded"`
-	Data          interface{} `json:"data,omitempty"`
-	LastAccessed  time.Time   `json:"last_accessed"`
-	AccessCount   int64       `json:"access_count"`
-	Checksum      string      `json:"checksum"`
+	Key          string      `json:"key"`
+	Offset       int64       `json:"offset"`
+	Length       int64       `json:"length"`
+	Loaded       bool        `json:"loaded"`
+	Data         interface{} `json:"data,omitempty"`
+	LastAccessed time.Time   `json:"last_accessed"`
+	AccessCount  int64       `json:"access_count"`
+	Checksum     string      `json:"checksum"`
 }
 
 // OptimizedStateManager provides performance-optimized state operations
@@ -83,23 +83,23 @@ type OptimizedStateManager struct {
 
 // MemoryMonitor tracks and controls memory usage
 type MemoryMonitor struct {
-	limit        uint64
-	checkTicker  *time.Ticker
-	forceGC      bool
-	alertThresh  float64 // Percentage of limit that triggers alerts
-	mu           sync.RWMutex
-	stats        MemoryStats
-	alerts       []MemoryAlert
+	limit       uint64
+	checkTicker *time.Ticker
+	forceGC     bool
+	alertThresh float64 // Percentage of limit that triggers alerts
+	mu          sync.RWMutex
+	stats       MemoryStats
+	alerts      []MemoryAlert
 }
 
 // MemoryAlert represents a memory usage alert
 type MemoryAlert struct {
-	Timestamp   time.Time `json:"timestamp"`
-	UsageBytes  uint64    `json:"usage_bytes"`
-	LimitBytes  uint64    `json:"limit_bytes"`
-	Percentage  float64   `json:"percentage"`
-	Operation   string    `json:"operation"`
-	Severity    string    `json:"severity"` // info, warning, critical
+	Timestamp  time.Time `json:"timestamp"`
+	UsageBytes uint64    `json:"usage_bytes"`
+	LimitBytes uint64    `json:"limit_bytes"`
+	Percentage float64   `json:"percentage"`
+	Operation  string    `json:"operation"`
+	Severity   string    `json:"severity"` // info, warning, critical
 }
 
 // OptimizedReadOptions configures optimized read operations
@@ -128,7 +128,7 @@ type OptimizedWriteOptions struct {
 // NewOptimizedStateManager creates a new performance-optimized state manager
 func NewOptimizedStateManager(atomic *AtomicWriter) *OptimizedStateManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	memMonitor := &MemoryMonitor{
 		limit:       MaxMemoryUsage,
 		checkTicker: time.NewTicker(GCInterval),
@@ -170,7 +170,7 @@ func (osm *OptimizedStateManager) ReadJSONOptimized(filePath string, target inte
 	}
 
 	fileSize := fileInfo.Size()
-	
+
 	// Set default options if not provided
 	if opts == nil {
 		opts = osm.getDefaultReadOptions(fileSize)
@@ -302,7 +302,7 @@ func (osm *OptimizedStateManager) writeSmallData(ctx context.Context, filePath s
 func (osm *OptimizedStateManager) writeMediumData(ctx context.Context, filePath string, data interface{}, opts *OptimizedWriteOptions) error {
 	// Create temporary file for streaming write
 	tempFile := filePath + ".tmp"
-	
+
 	file, err := os.Create(tempFile)
 	if err != nil {
 		return errors.ErrPermissionDenied(tempFile)
@@ -349,7 +349,7 @@ func (osm *OptimizedStateManager) streamDecode(ctx context.Context, decoder *jso
 	defer ticker.Stop()
 
 	done := make(chan error, 1)
-	
+
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -380,7 +380,7 @@ func (osm *OptimizedStateManager) streamEncode(ctx context.Context, encoder *jso
 	defer ticker.Stop()
 
 	done := make(chan error, 1)
-	
+
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -409,7 +409,7 @@ func (osm *OptimizedStateManager) readWithLazyLoading(ctx context.Context, fileP
 	// This is a simplified implementation of lazy loading
 	// In a real implementation, we would need to parse the JSON structure
 	// and create lazy sections for large arrays or objects
-	
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return errors.ErrFileNotFound(filePath)
@@ -481,7 +481,7 @@ func (osm *OptimizedStateManager) EnableGarbageCollection(enabled bool) {
 // Close shuts down the optimized state manager
 func (osm *OptimizedStateManager) Close() error {
 	osm.cancel()
-	
+
 	if osm.memoryMonitor.checkTicker != nil {
 		osm.memoryMonitor.checkTicker.Stop()
 	}
@@ -635,10 +635,10 @@ func (osm *OptimizedStateManager) monitorMemory() {
 // BenchmarkReadPerformance tests read performance against targets
 func (osm *OptimizedStateManager) BenchmarkReadPerformance(filePath string, iterations int) (*PerformanceBenchmark, error) {
 	benchmark := &PerformanceBenchmark{
-		Operation:   "read",
-		FilePath:    filePath,
-		Iterations:  iterations,
-		StartTime:   time.Now(),
+		Operation:  "read",
+		FilePath:   filePath,
+		Iterations: iterations,
+		StartTime:  time.Now(),
 	}
 
 	fileInfo, err := os.Stat(filePath)
@@ -647,17 +647,17 @@ func (osm *OptimizedStateManager) BenchmarkReadPerformance(filePath string, iter
 	}
 
 	benchmark.FileSize = fileInfo.Size()
-	
+
 	var totalDuration time.Duration
 	var target interface{}
 
 	for i := 0; i < iterations; i++ {
 		start := time.Now()
-		
+
 		err := osm.ReadJSONOptimized(filePath, &target, &OptimizedReadOptions{
 			TrackPerformance: false, // Don't skew metrics during benchmark
 		})
-		
+
 		duration := time.Since(start)
 		totalDuration += duration
 

@@ -14,11 +14,11 @@ func TestSuggestionEngine_GenerateSuggestions_NotInitialized(t *testing.T) {
 	ctx := &ProjectContext{
 		State: StateNotInitialized,
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest init-project as top priority
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "init-project", topSuggestion.Action.ID)
@@ -31,11 +31,11 @@ func TestSuggestionEngine_GenerateSuggestions_ProjectInitialized(t *testing.T) {
 	ctx := &ProjectContext{
 		State: StateProjectInitialized,
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest create-epic as top priority
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "create-epic", topSuggestion.Action.ID)
@@ -47,11 +47,11 @@ func TestSuggestionEngine_GenerateSuggestions_HasEpics(t *testing.T) {
 	ctx := &ProjectContext{
 		State: StateHasEpics,
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest start-epic as top priority
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "start-epic", topSuggestion.Action.ID)
@@ -68,11 +68,11 @@ func TestSuggestionEngine_GenerateSuggestions_EpicInProgress(t *testing.T) {
 			Progress: 0.5,
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest continue-epic since no story is active
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "continue-epic", topSuggestion.Action.ID)
@@ -95,11 +95,11 @@ func TestSuggestionEngine_GenerateSuggestions_EpicInProgressWithStory(t *testing
 			Progress: 0.3,
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest continue-story since story is active
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "continue-story", topSuggestion.Action.ID)
@@ -116,11 +116,11 @@ func TestSuggestionEngine_GenerateSuggestions_StoryInProgress(t *testing.T) {
 			Progress: 0.5,
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest continue-story since no task is active
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "continue-story", topSuggestion.Action.ID)
@@ -135,11 +135,11 @@ func TestSuggestionEngine_GenerateSuggestions_TaskInProgress(t *testing.T) {
 			Title: "Test Task",
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should suggest continue-task
 	topSuggestion := suggestions[0]
 	assert.Equal(t, "continue-task", topSuggestion.Action.ID)
@@ -156,11 +156,11 @@ func TestSuggestionEngine_GenerateSuggestions_NearCompletion(t *testing.T) {
 			Progress: 0.9, // 90% complete
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should include complete-epic suggestion
 	var hasCompleteEpic bool
 	for _, suggestion := range suggestions {
@@ -179,11 +179,11 @@ func TestSuggestionEngine_GenerateSuggestions_WithIssues(t *testing.T) {
 		State:  StateProjectInitialized,
 		Issues: []string{"Missing configuration", "Corrupted state file"},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, suggestions)
-	
+
 	// Should include fix-issues suggestion
 	var hasFixIssues bool
 	for _, suggestion := range suggestions {
@@ -198,7 +198,7 @@ func TestSuggestionEngine_GenerateSuggestions_WithIssues(t *testing.T) {
 
 func TestSuggestionEngine_SortSuggestions(t *testing.T) {
 	engine := NewSuggestionEngine()
-	
+
 	suggestions := []*Suggestion{
 		{
 			Action:   &workflow.WorkflowAction{ID: "low-priority"},
@@ -221,9 +221,9 @@ func TestSuggestionEngine_SortSuggestions(t *testing.T) {
 			Urgency:  5,
 		},
 	}
-	
+
 	engine.sortSuggestions(suggestions)
-	
+
 	// Should be sorted by priority first, then urgency
 	assert.Equal(t, "high-priority-high-urgency", suggestions[0].Action.ID)
 	assert.Equal(t, "high-priority-low-urgency", suggestions[1].Action.ID)
@@ -236,11 +236,11 @@ func TestSuggestionEngine_GetTopSuggestion(t *testing.T) {
 	ctx := &ProjectContext{
 		State: StateNotInitialized,
 	}
-	
+
 	suggestion, err := engine.GetTopSuggestion(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, suggestion)
-	
+
 	assert.Equal(t, "init-project", suggestion.Action.ID)
 	assert.Equal(t, workflow.PriorityP0, suggestion.Priority)
 }
@@ -250,16 +250,16 @@ func TestSuggestionEngine_GetSuggestionsByPriority(t *testing.T) {
 	ctx := &ProjectContext{
 		State: StateProjectInitialized,
 	}
-	
+
 	grouped, err := engine.GetSuggestionsByPriority(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, grouped)
-	
+
 	// Should have P0 suggestions
 	p0Suggestions := grouped[workflow.PriorityP0]
 	assert.NotEmpty(t, p0Suggestions)
 	assert.Equal(t, "create-epic", p0Suggestions[0].Action.ID)
-	
+
 	// Should have P2 suggestions (help, status, etc.)
 	p2Suggestions := grouped[workflow.PriorityP2]
 	assert.NotEmpty(t, p2Suggestions)
@@ -267,7 +267,7 @@ func TestSuggestionEngine_GetSuggestionsByPriority(t *testing.T) {
 
 func TestSuggestionEngine_FilterDuplicates(t *testing.T) {
 	engine := NewSuggestionEngine()
-	
+
 	suggestions := []*Suggestion{
 		{
 			Action: &workflow.WorkflowAction{ID: "help"},
@@ -279,25 +279,25 @@ func TestSuggestionEngine_FilterDuplicates(t *testing.T) {
 			Action: &workflow.WorkflowAction{ID: "help"}, // Duplicate
 		},
 	}
-	
+
 	ctx := &ProjectContext{State: StateProjectInitialized}
 	filtered := engine.filterSuggestions(suggestions, ctx)
-	
+
 	// Should remove duplicate
 	assert.Len(t, filtered, 2)
-	
+
 	ids := make(map[string]bool)
 	for _, suggestion := range filtered {
 		ids[suggestion.Action.ID] = true
 	}
-	
+
 	assert.True(t, ids["help"])
 	assert.True(t, ids["status"])
 }
 
 func TestSuggestionEngine_FormatSuggestion(t *testing.T) {
 	engine := NewSuggestionEngine()
-	
+
 	suggestion := &Suggestion{
 		Action: &workflow.WorkflowAction{
 			ID:   "test-action",
@@ -306,11 +306,11 @@ func TestSuggestionEngine_FormatSuggestion(t *testing.T) {
 		Priority:  workflow.PriorityP1,
 		Reasoning: "This is a test suggestion",
 	}
-	
+
 	// Format without reasoning
 	formatted := engine.FormatSuggestion(suggestion, false)
 	assert.Equal(t, "[P1] Test Action", formatted)
-	
+
 	// Format with reasoning
 	formatted = engine.FormatSuggestion(suggestion, true)
 	assert.Equal(t, "[P1] Test Action - This is a test suggestion", formatted)
@@ -318,11 +318,11 @@ func TestSuggestionEngine_FormatSuggestion(t *testing.T) {
 
 func TestSuggestionEngine_FormatSuggestion_Nil(t *testing.T) {
 	engine := NewSuggestionEngine()
-	
+
 	// Test nil suggestion
 	formatted := engine.FormatSuggestion(nil, true)
 	assert.Equal(t, "No suggestion available", formatted)
-	
+
 	// Test suggestion with nil action
 	suggestion := &Suggestion{Action: nil}
 	formatted = engine.FormatSuggestion(suggestion, true)
@@ -331,7 +331,7 @@ func TestSuggestionEngine_FormatSuggestion_Nil(t *testing.T) {
 
 func TestSuggestionEngine_GenerateSuggestions_NilContext(t *testing.T) {
 	engine := NewSuggestionEngine()
-	
+
 	suggestions, err := engine.GenerateSuggestions(nil)
 	assert.Error(t, err)
 	assert.Nil(t, suggestions)
@@ -348,10 +348,10 @@ func TestSuggestionEngine_EmptyEpicSuggestsCreateStory(t *testing.T) {
 			TotalStories: 0, // No stories yet
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
-	
+
 	// Should suggest creating a story
 	var hasCreateStory bool
 	for _, suggestion := range suggestions {
@@ -374,10 +374,10 @@ func TestSuggestionEngine_EmptyStorySuggestsCreateTask(t *testing.T) {
 			TotalTasks: 0, // No tasks yet
 		},
 	}
-	
+
 	suggestions, err := engine.GenerateSuggestions(ctx)
 	require.NoError(t, err)
-	
+
 	// Should suggest creating a task
 	var hasCreateTask bool
 	for _, suggestion := range suggestions {

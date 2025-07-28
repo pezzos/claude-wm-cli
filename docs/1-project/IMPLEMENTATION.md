@@ -61,7 +61,7 @@ type FileLock struct {
 
 **Three-Tier Command Architecture**:
 1. **Direct Commands**: `claude-wm-cli epic create "Name"`
-2. **Interactive Navigation**: `claude-wm-cli navigate` with context-aware menus  
+2. **Interactive Navigation**: `claude-wm-cli interactive` with context-aware menus  
 3. **Context Suggestions**: Intelligent next-action recommendations
 
 **Navigation Implementation**:

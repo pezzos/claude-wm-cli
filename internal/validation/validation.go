@@ -11,13 +11,13 @@ import (
 type ErrorCode int
 
 const (
-	ErrorSuccess         ErrorCode = 0
-	ErrorGeneral         ErrorCode = 1
-	ErrorInvalidInput    ErrorCode = 2
-	ErrorFileNotFound    ErrorCode = 3
+	ErrorSuccess          ErrorCode = 0
+	ErrorGeneral          ErrorCode = 1
+	ErrorInvalidInput     ErrorCode = 2
+	ErrorFileNotFound     ErrorCode = 3
 	ErrorPermissionDenied ErrorCode = 4
-	ErrorTimeout         ErrorCode = 5
-	ErrorNetworkFailure  ErrorCode = 6
+	ErrorTimeout          ErrorCode = 5
+	ErrorNetworkFailure   ErrorCode = 6
 )
 
 // ValidationError represents a validation error with context
@@ -237,11 +237,11 @@ func ValidateConfigFile(path string) error {
 func HandleValidationError(err error, suggestedCommand string) {
 	if valErr, ok := err.(*ValidationError); ok {
 		fmt.Fprintf(os.Stderr, "❌ %s\n", valErr.Message)
-		
+
 		if suggestedCommand != "" {
 			fmt.Fprintf(os.Stderr, "\n💡 Try: %s\n", suggestedCommand)
 		}
-		
+
 		fmt.Fprintf(os.Stderr, "\n📖 Use --help for more information.\n")
 		os.Exit(int(valErr.Code))
 	} else {

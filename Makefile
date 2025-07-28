@@ -33,7 +33,7 @@ test-coverage:
 # Run linter
 lint:
 	@echo "Running linter..."
-	@golangci-lint run
+	@$(shell go env GOPATH)/bin/golangci-lint run
 
 # Clean build artifacts
 clean:
@@ -51,6 +51,7 @@ install:
 dev: install
 	@echo "Setting up development environment..."
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@go install golang.org/x/tools/cmd/goimports@latest
 
 # Cross-platform build targets
 build-all: build-linux build-windows build-darwin
@@ -100,7 +101,7 @@ run:
 fmt:
 	@echo "Formatting code..."
 	@gofmt -s -w $(GO_FILES)
-	@goimports -w $(GO_FILES)
+	@$(shell go env GOPATH)/bin/goimports -w $(GO_FILES)
 
 # Show help
 help:

@@ -146,7 +146,7 @@ flowchart TD
 ### Installation & Usage
 1. **Build**: `make build` (requires Go 1.21+)
 2. **Run**: `./claude-wm-cli` or `claude-wm-cli` if installed
-3. **Navigate**: Use interactive menus or direct commands
+3. **Interactive**: Use interactive menus or direct commands
 
 ### Available Commands
 ```bash
@@ -154,7 +154,7 @@ flowchart TD
 claude-wm-cli epic create "Epic Name"
 claude-wm-cli story list
 claude-wm-cli ticket create --from-input "Description"
-claude-wm-cli navigate                    # Interactive menu
+claude-wm-cli interactive                    # Interactive menu
 
 # Management commands  
 claude-wm-cli status                      # Project status
@@ -168,7 +168,7 @@ claude-wm-cli ticket create --from-issue 123
 
 ### Example Interactive Session
 ```
-$ claude-wm-cli navigate
+$ claude-wm-cli interactive
 
 🎯 Claude WM CLI - Current Epic: API Development
 ┌─ Epic Status ─────────────────────────────┐

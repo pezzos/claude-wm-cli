@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package cmd
 
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"claude-wm-cli/internal/epic"
+
 	"github.com/spf13/cobra"
 )
 
@@ -198,7 +198,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(epicCmd)
-	
+
 	// Add subcommands
 	epicCmd.AddCommand(epicCreateCmd)
 	epicCmd.AddCommand(epicListCmd)
@@ -286,7 +286,7 @@ func createEpic(title string, cmd *cobra.Command) {
 		fmt.Printf("   Tags:        %s\n", strings.Join(newEpic.Tags, ", "))
 	}
 	fmt.Printf("   Created:     %s\n", newEpic.CreatedAt.Format("2006-01-02 15:04:05"))
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Select this epic:  claude-wm-cli epic select %s\n", newEpic.ID)
 	fmt.Printf("   • List all epics:    claude-wm-cli epic list\n")
@@ -360,7 +360,7 @@ func listEpics(cmd *cobra.Command) {
 
 	// Create table writer
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	// Print header
 	fmt.Fprintf(w, "ID\tTITLE\tSTATUS\tPRIORITY\tPROGRESS\tCREATED\tCURRENT\n")
 	fmt.Fprintf(w, "──\t─────\t──────\t────────\t────────\t───────\t───────\n")
@@ -375,7 +375,7 @@ func listEpics(cmd *cobra.Command) {
 		// Format status with emoji
 		statusIcon := getEpicStatusIcon(ep.Status)
 		priorityIcon := getEpicPriorityIcon(ep.Priority)
-		
+
 		progressStr := fmt.Sprintf("%.0f%%", ep.Progress.CompletionPercentage)
 		if ep.Progress.TotalStories > 0 {
 			progressStr += fmt.Sprintf(" (%d/%d)", ep.Progress.CompletedStories, ep.Progress.TotalStories)
@@ -561,7 +561,7 @@ func showEpic(epicID string) {
 		fmt.Printf(" (CURRENT)")
 	}
 	fmt.Printf("\n")
-	
+
 	fmt.Printf("📝 Title:       %s\n", ep.Title)
 	fmt.Printf("📊 Status:      %s %s\n", getEpicStatusIcon(ep.Status), ep.Status)
 	fmt.Printf("⚡ Priority:    %s %s\n", getEpicPriorityIcon(ep.Priority), ep.Priority)
@@ -700,8 +700,8 @@ func showEpicHistory(epicID string) {
 
 	// Display each transition
 	for i, transition := range history {
-		fmt.Printf("%d. %s → %s\n", i+1, 
-			getEpicStatusIcon(transition.FromStatus), 
+		fmt.Printf("%d. %s → %s\n", i+1,
+			getEpicStatusIcon(transition.FromStatus),
 			getEpicStatusIcon(transition.ToStatus))
 		fmt.Printf("   Status: %s → %s\n", transition.FromStatus, transition.ToStatus)
 		fmt.Printf("   Time:   %s\n", transition.Timestamp.Format("2006-01-02 15:04:05"))
@@ -709,7 +709,7 @@ func showEpicHistory(epicID string) {
 		if transition.TriggeredBy != "" {
 			fmt.Printf("   By:     %s\n", transition.TriggeredBy)
 		}
-		
+
 		// Show metadata if any
 		if len(transition.Metadata) > 0 {
 			fmt.Printf("   Data:   ")
@@ -718,7 +718,7 @@ func showEpicHistory(epicID string) {
 			}
 			fmt.Printf("\n")
 		}
-		
+
 		if i < len(history)-1 {
 			fmt.Printf("\n")
 		}
@@ -726,8 +726,8 @@ func showEpicHistory(epicID string) {
 
 	fmt.Printf("\n📈 Summary: %d state transitions\n", len(history))
 	if len(history) > 0 {
-		fmt.Printf("   Latest: %s (%s)\n", 
-			history[len(history)-1].ToStatus, 
+		fmt.Printf("   Latest: %s (%s)\n",
+			history[len(history)-1].ToStatus,
 			history[len(history)-1].Timestamp.Format("Jan 02 15:04"))
 	}
 }
@@ -764,10 +764,10 @@ func showEpicMetrics(epicID string) {
 	// Basic metrics
 	fmt.Printf("📈 Basic Progress:\n")
 	fmt.Printf("   Overall:         %.1f%%\n", metrics.BasicMetrics.CompletionPercentage)
-	fmt.Printf("   Stories:         %d/%d completed\n", 
+	fmt.Printf("   Stories:         %d/%d completed\n",
 		metrics.BasicMetrics.CompletedStories, metrics.BasicMetrics.TotalStories)
 	if metrics.BasicMetrics.TotalStoryPoints > 0 {
-		fmt.Printf("   Story Points:    %d/%d completed\n", 
+		fmt.Printf("   Story Points:    %d/%d completed\n",
 			metrics.BasicMetrics.CompletedStoryPoints, metrics.BasicMetrics.TotalStoryPoints)
 	}
 
@@ -784,8 +784,8 @@ func showEpicMetrics(epicID string) {
 	fmt.Printf("\n🔄 State Transitions:\n")
 	fmt.Printf("   Total Transitions: %d\n", metrics.StateTransitions)
 	if metrics.LastTransition != nil {
-		fmt.Printf("   Last Transition:   %s → %s (%s)\n", 
-			metrics.LastTransition.FromStatus, 
+		fmt.Printf("   Last Transition:   %s → %s (%s)\n",
+			metrics.LastTransition.FromStatus,
 			metrics.LastTransition.ToStatus,
 			metrics.LastTransition.Timestamp.Format("Jan 02 15:04"))
 	}
@@ -797,7 +797,7 @@ func showEpicMetrics(epicID string) {
 	fmt.Printf("\n🎯 Velocity & Predictions:\n")
 	if metrics.EstimatedCompletion != nil {
 		fmt.Printf("   Est. Completion:   %s\n", metrics.EstimatedCompletion.Format("2006-01-02 15:04"))
-		
+
 		// Calculate time remaining
 		if metrics.EstimatedCompletion.After(time.Now()) {
 			remaining := metrics.EstimatedCompletion.Sub(time.Now())

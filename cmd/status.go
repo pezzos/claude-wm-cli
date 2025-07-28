@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -32,7 +31,7 @@ func showProjectStatus() {
 	fmt.Println("📊 Claude WM CLI Project Status")
 	fmt.Println("================================")
 	fmt.Println()
-	
+
 	// Check for project structure
 	fmt.Println("🏗️  Project Structure:")
 	fmt.Println("  ✓ Go module initialized")
@@ -40,18 +39,18 @@ func showProjectStatus() {
 	fmt.Println("  ✓ Development tooling configured")
 	fmt.Println("  ✓ Directory structure created")
 	fmt.Println()
-	
+
 	// Current epic info (placeholder - will be enhanced later)
 	fmt.Println("🎯 Current Epic: CLI Foundation & Command Execution")
 	fmt.Println("📈 Progress: Basic CLI structure completed")
 	fmt.Println()
-	
+
 	// Configuration status
 	fmt.Println("⚙️  Configuration:")
 	fmt.Printf("  - Config file: %s\n", getConfigStatus())
 	fmt.Printf("  - Verbose mode: %v\n", verbose)
 	fmt.Println()
-	
+
 	fmt.Println("✅ Ready for development!")
 }
 

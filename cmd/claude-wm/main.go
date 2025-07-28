@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package main
 

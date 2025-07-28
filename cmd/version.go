@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -56,32 +55,32 @@ func showVersionInfo() {
 func showVersionDefault() {
 	fmt.Printf("🚀 Claude WM CLI\n")
 	fmt.Printf("================\n\n")
-	
+
 	// Core version info
 	fmt.Printf("Version:     %s\n", getVersionString())
 	fmt.Printf("Git Commit:  %s\n", GitCommit)
 	fmt.Printf("Built:       %s\n", BuildTime)
 	fmt.Printf("Go Version:  %s\n", runtime.Version())
 	fmt.Printf("OS/Arch:     %s/%s\n", runtime.GOOS, runtime.GOARCH)
-	
+
 	if verbose {
 		fmt.Printf("\n🔧 Build Details:\n")
 		fmt.Printf("Compiler:    %s\n", runtime.Compiler)
 		fmt.Printf("NumCPU:      %d\n", runtime.NumCPU())
-		
+
 		// Get build info including dependencies
 		if info, ok := debug.ReadBuildInfo(); ok {
 			fmt.Printf("\n📦 Dependencies:\n")
 			for _, dep := range info.Deps {
-				if dep.Path == "github.com/spf13/cobra" || 
-				   dep.Path == "github.com/spf13/viper" || 
-				   dep.Path == "github.com/stretchr/testify" {
+				if dep.Path == "github.com/spf13/cobra" ||
+					dep.Path == "github.com/spf13/viper" ||
+					dep.Path == "github.com/stretchr/testify" {
 					fmt.Printf("%-12s %s@%s\n", getShortName(dep.Path)+":", dep.Path, dep.Version)
 				}
 			}
 		}
 	}
-	
+
 	fmt.Printf("\n📖 Documentation: docs/README.md\n")
 	fmt.Printf("🐛 Report issues: [repository-url]/issues\n")
 }

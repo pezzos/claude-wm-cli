@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package cmd
 
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"claude-wm-cli/internal/ticket"
+
 	"github.com/spf13/cobra"
 )
 
@@ -181,7 +181,7 @@ var (
 	ticketStoryID        string
 	ticketStatus         string
 	ticketDueDate        string
-	
+
 	// List options
 	listTicketStatus     string
 	listTicketPriority   string
@@ -189,14 +189,14 @@ var (
 	listTicketAssignedTo string
 	listTicketAll        bool
 	listTicketLimit      int
-	
+
 	// Current ticket options
-	clearCurrent         bool
+	clearCurrent bool
 )
 
 func init() {
 	rootCmd.AddCommand(ticketCmd)
-	
+
 	// Add subcommands
 	ticketCmd.AddCommand(ticketCreateCmd)
 	ticketCmd.AddCommand(ticketListCmd)
@@ -205,7 +205,7 @@ func init() {
 	ticketCmd.AddCommand(ticketStatusCmd)
 	ticketCmd.AddCommand(ticketCurrentCmd)
 	ticketCmd.AddCommand(ticketStatsCmd)
-	
+
 	// ticket create flags
 	ticketCreateCmd.Flags().StringVarP(&ticketPriority, "priority", "p", "medium", "Ticket priority (low, medium, high, critical, urgent)")
 	ticketCreateCmd.Flags().StringVarP(&ticketType, "type", "t", "task", "Ticket type (bug, feature, interruption, task, support)")
@@ -217,7 +217,7 @@ func init() {
 	ticketCreateCmd.Flags().StringVar(&ticketEpicID, "epic-id", "", "Related epic ID")
 	ticketCreateCmd.Flags().StringVar(&ticketStoryID, "story-id", "", "Related story ID")
 	ticketCreateCmd.Flags().StringVar(&ticketDueDate, "due-date", "", "Due date (YYYY-MM-DD format)")
-	
+
 	// ticket list flags
 	ticketListCmd.Flags().StringVar(&listTicketStatus, "status", "", "Filter by status (open, in_progress, resolved, closed)")
 	ticketListCmd.Flags().StringVar(&listTicketPriority, "priority", "", "Filter by priority (low, medium, high, critical, urgent)")
@@ -225,7 +225,7 @@ func init() {
 	ticketListCmd.Flags().StringVar(&listTicketAssignedTo, "assigned-to", "", "Filter by assignee")
 	ticketListCmd.Flags().BoolVar(&listTicketAll, "all", false, "Show all tickets including closed")
 	ticketListCmd.Flags().IntVar(&listTicketLimit, "limit", 0, "Limit number of results")
-	
+
 	// ticket update flags
 	ticketUpdateCmd.Flags().StringVar(&ticketPriority, "priority", "", "Update ticket priority")
 	ticketUpdateCmd.Flags().StringVar(&ticketType, "type", "", "Update ticket type")
@@ -238,11 +238,11 @@ func init() {
 	ticketUpdateCmd.Flags().StringVar(&ticketStoryID, "story-id", "", "Update related story ID")
 	ticketUpdateCmd.Flags().StringVar(&ticketDueDate, "due-date", "", "Update due date (YYYY-MM-DD format)")
 	ticketUpdateCmd.Flags().StringVar(&ticketTitle, "title", "", "Update ticket title")
-	
+
 	// ticket status flags
 	ticketStatusCmd.Flags().StringVar(&ticketStatus, "status", "", "New status (open, in_progress, resolved, closed)")
 	ticketStatusCmd.MarkFlagRequired("status")
-	
+
 	// ticket current flags
 	ticketCurrentCmd.Flags().BoolVar(&clearCurrent, "clear", false, "Clear current ticket")
 }
@@ -256,10 +256,10 @@ func createTicket(title string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Parse priority
 	var priority ticket.TicketPriority
 	if ticketPriority != "" {
@@ -269,7 +269,7 @@ func createTicket(title string, cmd *cobra.Command) {
 			os.Exit(1)
 		}
 	}
-	
+
 	// Parse type
 	var ticketTypeVal ticket.TicketType
 	if ticketType != "" {
@@ -279,7 +279,7 @@ func createTicket(title string, cmd *cobra.Command) {
 			os.Exit(1)
 		}
 	}
-	
+
 	// Parse due date
 	var dueDate *time.Time
 	if ticketDueDate != "" {
@@ -290,7 +290,7 @@ func createTicket(title string, cmd *cobra.Command) {
 		}
 		dueDate = &parsed
 	}
-	
+
 	// Create ticket options
 	options := ticket.TicketCreateOptions{
 		Title:          title,
@@ -305,14 +305,14 @@ func createTicket(title string, cmd *cobra.Command) {
 		Tags:           ticketTags,
 		DueDate:        dueDate,
 	}
-	
+
 	// Create the ticket
 	newTicket, err := manager.CreateTicket(options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to create ticket: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display success message
 	fmt.Printf("✅ Ticket created successfully!\n\n")
 	fmt.Printf("🎫 Ticket Details:\n")
@@ -337,7 +337,7 @@ func createTicket(title string, cmd *cobra.Command) {
 		fmt.Printf("   Due date:    %s\n", newTicket.DueDate.Format("2006-01-02"))
 	}
 	fmt.Printf("   Created:     %s\n", newTicket.CreatedAt.Format("2006-01-02 15:04:05"))
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Start this ticket: claude-wm-cli ticket current %s\n", newTicket.ID)
 	fmt.Printf("   • List all tickets:  claude-wm-cli ticket list\n")
@@ -351,10 +351,10 @@ func listTickets(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Parse filter options
 	var statusFilter ticket.TicketStatus
 	if listTicketStatus != "" {
@@ -364,7 +364,7 @@ func listTickets(cmd *cobra.Command) {
 			os.Exit(1)
 		}
 	}
-	
+
 	var priorityFilter ticket.TicketPriority
 	if listTicketPriority != "" {
 		priorityFilter = ticket.TicketPriority(listTicketPriority)
@@ -373,7 +373,7 @@ func listTickets(cmd *cobra.Command) {
 			os.Exit(1)
 		}
 	}
-	
+
 	var typeFilter ticket.TicketType
 	if listTicketType != "" {
 		typeFilter = ticket.TicketType(listTicketType)
@@ -382,7 +382,7 @@ func listTickets(cmd *cobra.Command) {
 			os.Exit(1)
 		}
 	}
-	
+
 	// Create list options
 	options := ticket.TicketListOptions{
 		Status:     statusFilter,
@@ -392,25 +392,25 @@ func listTickets(cmd *cobra.Command) {
 		ShowClosed: listTicketAll,
 		Limit:      listTicketLimit,
 	}
-	
+
 	// Get tickets
 	tickets, err := manager.ListTickets(options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to list tickets: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Get current ticket
 	currentTicket, _ := manager.GetCurrentTicket()
 	var currentTicketID string
 	if currentTicket != nil {
 		currentTicketID = currentTicket.ID
 	}
-	
+
 	// Display header
 	fmt.Printf("🎫 Tickets\n")
 	fmt.Printf("==========\n\n")
-	
+
 	if len(tickets) == 0 {
 		fmt.Printf("No tickets found")
 		if listTicketStatus != "" || listTicketPriority != "" || listTicketType != "" {
@@ -420,33 +420,33 @@ func listTickets(cmd *cobra.Command) {
 		fmt.Printf("💡 Create your first ticket: claude-wm-cli ticket create \"Ticket Title\"\n")
 		return
 	}
-	
+
 	// Create table writer
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	
+
 	// Print header
 	fmt.Fprintf(w, "ID\tTITLE\tTYPE\tSTATUS\tPRIORITY\tASSIGNED\tCREATED\tCURRENT\n")
 	fmt.Fprintf(w, "──\t─────\t────\t──────\t────────\t────────\t───────\t───────\n")
-	
+
 	// Print each ticket
 	for _, t := range tickets {
 		isCurrent := ""
 		if t.ID == currentTicketID {
 			isCurrent = "→"
 		}
-		
+
 		// Format icons
 		typeIcon := getTicketTypeIcon(t.Type)
 		statusIcon := getTicketStatusIcon(t.Status)
 		priorityIcon := getTicketPriorityIcon(t.Priority)
-		
+
 		assignedTo := t.AssignedTo
 		if assignedTo == "" {
 			assignedTo = "-"
 		}
-		
+
 		createdStr := t.CreatedAt.Format("Jan 02")
-		
+
 		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s %s\t%s\t%s\t%s\n",
 			t.ID,
 			truncateTicketString(t.Title, 30),
@@ -457,16 +457,16 @@ func listTickets(cmd *cobra.Command) {
 			createdStr,
 			isCurrent)
 	}
-	
+
 	w.Flush()
-	
+
 	// Show summary
 	fmt.Printf("\n📊 Summary: %d ticket(s)", len(tickets))
 	if currentTicketID != "" {
 		fmt.Printf(" • Current: %s", currentTicketID)
 	}
 	fmt.Printf("\n\n")
-	
+
 	// Show next actions
 	if len(tickets) > 0 && currentTicketID == "" {
 		fmt.Printf("💡 Next steps:\n")
@@ -482,44 +482,44 @@ func showTicket(ticketID string) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Get the ticket
 	t, err := manager.GetTicket(ticketID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get ticket: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Check if it's the current ticket
 	currentTicket, _ := manager.GetCurrentTicket()
 	isCurrent := currentTicket != nil && currentTicket.ID == t.ID
-	
+
 	// Display ticket details
 	fmt.Printf("🎫 Ticket Details\n")
 	fmt.Printf("=================\n\n")
-	
+
 	fmt.Printf("🆔 ID:          %s", t.ID)
 	if isCurrent {
 		fmt.Printf(" (CURRENT)")
 	}
 	fmt.Printf("\n")
-	
+
 	fmt.Printf("📝 Title:       %s\n", t.Title)
 	fmt.Printf("🏷️  Type:        %s %s\n", getTicketTypeIcon(t.Type), t.Type)
 	fmt.Printf("📊 Status:      %s %s\n", getTicketStatusIcon(t.Status), t.Status)
 	fmt.Printf("⚡ Priority:    %s %s\n", getTicketPriorityIcon(t.Priority), t.Priority)
-	
+
 	if t.Description != "" {
 		fmt.Printf("📄 Description: %s\n", t.Description)
 	}
-	
+
 	if t.AssignedTo != "" {
 		fmt.Printf("👤 Assigned to: %s\n", t.AssignedTo)
 	}
-	
+
 	// Estimations
 	if t.Estimations.EstimatedHours > 0 || t.Estimations.StoryPoints > 0 {
 		fmt.Printf("\n📈 Estimations:\n")
@@ -533,7 +533,7 @@ func showTicket(ticketID string) {
 			fmt.Printf("   Story points:    %d\n", t.Estimations.StoryPoints)
 		}
 	}
-	
+
 	// Related items
 	if t.RelatedEpicID != "" || t.RelatedStoryID != "" {
 		fmt.Printf("\n🔗 Related:\n")
@@ -544,11 +544,11 @@ func showTicket(ticketID string) {
 			fmt.Printf("   Story: %s\n", t.RelatedStoryID)
 		}
 	}
-	
+
 	if len(t.Tags) > 0 {
 		fmt.Printf("\n🏷️  Tags:        %s\n", strings.Join(t.Tags, ", "))
 	}
-	
+
 	if t.DueDate != nil {
 		fmt.Printf("\n⏰ Due date:    %s", t.DueDate.Format("2006-01-02"))
 		daysUntilDue := int(time.Until(*t.DueDate).Hours() / 24)
@@ -559,7 +559,7 @@ func showTicket(ticketID string) {
 		}
 		fmt.Printf("\n")
 	}
-	
+
 	// External reference
 	if t.ExternalRef != nil {
 		fmt.Printf("\n🔗 External:    %s %s", t.ExternalRef.System, t.ExternalRef.ID)
@@ -568,7 +568,7 @@ func showTicket(ticketID string) {
 		}
 		fmt.Printf("\n")
 	}
-	
+
 	// Timestamps
 	fmt.Printf("\n📅 Timeline:\n")
 	fmt.Printf("   Created:    %s\n", t.CreatedAt.Format("2006-01-02 15:04:05"))
@@ -582,7 +582,7 @@ func showTicket(ticketID string) {
 	if t.ClosedAt != nil {
 		fmt.Printf("   Closed:     %s\n", t.ClosedAt.Format("2006-01-02 15:04:05"))
 	}
-	
+
 	// Next actions
 	fmt.Printf("\n💡 Available Actions:\n")
 	if !isCurrent && (t.Status == ticket.TicketStatusOpen || t.Status == ticket.TicketStatusInProgress) {
@@ -600,21 +600,21 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Build update options
 	options := ticket.TicketUpdateOptions{}
-	
+
 	if ticketTitle != "" {
 		options.Title = &ticketTitle
 	}
-	
+
 	if ticketDescription != "" {
 		options.Description = &ticketDescription
 	}
-	
+
 	if ticketPriority != "" {
 		priority := ticket.TicketPriority(ticketPriority)
 		if !priority.IsValid() {
@@ -623,7 +623,7 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 		}
 		options.Priority = &priority
 	}
-	
+
 	if ticketType != "" {
 		ticketTypeVal := ticket.TicketType(ticketType)
 		if !ticketTypeVal.IsValid() {
@@ -632,31 +632,31 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 		}
 		options.Type = &ticketTypeVal
 	}
-	
+
 	if ticketAssignedTo != "" {
 		options.AssignedTo = &ticketAssignedTo
 	}
-	
+
 	if ticketEstimatedHours >= 0 {
 		options.EstimatedHours = &ticketEstimatedHours
 	}
-	
+
 	if ticketStoryPoints >= 0 {
 		options.StoryPoints = &ticketStoryPoints
 	}
-	
+
 	if len(ticketTags) > 0 {
 		options.Tags = &ticketTags
 	}
-	
+
 	if ticketEpicID != "" {
 		options.RelatedEpicID = &ticketEpicID
 	}
-	
+
 	if ticketStoryID != "" {
 		options.RelatedStoryID = &ticketStoryID
 	}
-	
+
 	if ticketDueDate != "" {
 		parsed, err := time.Parse("2006-01-02", ticketDueDate)
 		if err != nil {
@@ -665,7 +665,7 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 		}
 		options.DueDate = &parsed
 	}
-	
+
 	// Check if any updates were specified
 	if options.Title == nil && options.Description == nil && options.Priority == nil &&
 		options.Type == nil && options.AssignedTo == nil && options.EstimatedHours == nil &&
@@ -674,14 +674,14 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: No updates specified. Use flags like --title, --priority, --type, etc.\n")
 		os.Exit(1)
 	}
-	
+
 	// Update the ticket
 	updatedTicket, err := manager.UpdateTicket(ticketID, options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to update ticket: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display success message
 	fmt.Printf("✅ Ticket updated successfully!\n\n")
 	fmt.Printf("🎫 Updated Ticket Details:\n")
@@ -700,34 +700,34 @@ func changeTicketStatus(ticketID string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Validate status
 	newStatus := ticket.TicketStatus(ticketStatus)
 	if !newStatus.IsValid() {
 		fmt.Fprintf(os.Stderr, "Error: Invalid status '%s'. Valid values: open, in_progress, resolved, closed\n", ticketStatus)
 		os.Exit(1)
 	}
-	
+
 	// Update the ticket status
 	options := ticket.TicketUpdateOptions{
 		Status: &newStatus,
 	}
-	
+
 	updatedTicket, err := manager.UpdateTicket(ticketID, options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to update ticket status: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display success message
 	fmt.Printf("✅ Ticket status updated successfully!\n\n")
 	fmt.Printf("🎫 %s\n", updatedTicket.ID)
 	fmt.Printf("   Status: %s %s\n", getTicketStatusIcon(updatedTicket.Status), updatedTicket.Status)
 	fmt.Printf("   Updated: %s\n", updatedTicket.UpdatedAt.Format("2006-01-02 15:04:05"))
-	
+
 	// Show status-specific information
 	switch updatedTicket.Status {
 	case ticket.TicketStatusInProgress:
@@ -754,10 +754,10 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Handle clear flag
 	if clearCurrent {
 		_, err := manager.SetCurrentTicket("")
@@ -768,7 +768,7 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		fmt.Printf("✅ Current ticket cleared.\n")
 		return
 	}
-	
+
 	// If no arguments, show current ticket
 	if len(args) == 0 {
 		currentTicket, err := manager.GetCurrentTicket()
@@ -776,13 +776,13 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 			fmt.Fprintf(os.Stderr, "Error: Failed to get current ticket: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		if currentTicket == nil {
 			fmt.Printf("📋 No current ticket set.\n\n")
 			fmt.Printf("💡 Set a current ticket: claude-wm-cli ticket current <ticket-id>\n")
 			return
 		}
-		
+
 		fmt.Printf("🎯 Current Ticket:\n")
 		fmt.Printf("   ID:       %s\n", currentTicket.ID)
 		fmt.Printf("   Title:    %s\n", currentTicket.Title)
@@ -790,7 +790,7 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		fmt.Printf("   Priority: %s %s\n", getTicketPriorityIcon(currentTicket.Priority), currentTicket.Priority)
 		return
 	}
-	
+
 	// Set current ticket
 	ticketID := args[0]
 	selectedTicket, err := manager.SetCurrentTicket(ticketID)
@@ -798,14 +798,14 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to set current ticket: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("✅ Current ticket set!\n\n")
 	fmt.Printf("🎯 Active Ticket:\n")
 	fmt.Printf("   ID:       %s\n", selectedTicket.ID)
 	fmt.Printf("   Title:    %s\n", selectedTicket.Title)
 	fmt.Printf("   Status:   %s %s\n", getTicketStatusIcon(selectedTicket.Status), selectedTicket.Status)
 	fmt.Printf("   Priority: %s %s\n", getTicketPriorityIcon(selectedTicket.Priority), selectedTicket.Priority)
-	
+
 	if selectedTicket.Status == ticket.TicketStatusInProgress {
 		fmt.Printf("\n💡 Ticket is now in progress!\n")
 	}
@@ -818,31 +818,31 @@ func showTicketStats() {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create ticket manager
 	manager := ticket.NewManager(wd)
-	
+
 	// Get stats
 	stats, err := manager.GetTicketStats()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get ticket stats: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display header
 	fmt.Printf("📊 Ticket Statistics\n")
 	fmt.Printf("====================\n\n")
-	
+
 	if stats.TotalTickets == 0 {
 		fmt.Printf("No tickets found. Create your first ticket to get started!\n\n")
 		fmt.Printf("💡 Create a ticket: claude-wm-cli ticket create \"Ticket Title\"\n")
 		return
 	}
-	
+
 	// Overall stats
 	fmt.Printf("📈 Overall:\n")
 	fmt.Printf("   Total tickets: %d\n", stats.TotalTickets)
-	
+
 	// By status
 	fmt.Printf("\n📊 By Status:\n")
 	for status, count := range stats.ByStatus {
@@ -850,7 +850,7 @@ func showTicketStats() {
 			fmt.Printf("   %s %-12s: %d\n", getTicketStatusIcon(status), status, count)
 		}
 	}
-	
+
 	// By priority
 	fmt.Printf("\n⚡ By Priority:\n")
 	priorityOrder := []ticket.TicketPriority{
@@ -865,7 +865,7 @@ func showTicketStats() {
 			fmt.Printf("   %s %-12s: %d\n", getTicketPriorityIcon(priority), priority, count)
 		}
 	}
-	
+
 	// By type
 	fmt.Printf("\n🏷️  By Type:\n")
 	for ticketType, count := range stats.ByType {
@@ -873,13 +873,13 @@ func showTicketStats() {
 			fmt.Printf("   %s %-12s: %d\n", getTicketTypeIcon(ticketType), ticketType, count)
 		}
 	}
-	
+
 	// Performance metrics
 	if stats.AverageResolutionTime > 0 {
 		fmt.Printf("\n⏱️  Performance:\n")
 		fmt.Printf("   Average resolution: %s\n", formatTicketDuration(stats.AverageResolutionTime))
 	}
-	
+
 	if stats.OldestOpenTicket != nil {
 		fmt.Printf("   Oldest open ticket: %s ago\n", formatTicketDuration(time.Since(*stats.OldestOpenTicket)))
 	}
@@ -947,7 +947,7 @@ func formatTicketDuration(d time.Duration) string {
 	days := int(d.Hours() / 24)
 	hours := int(d.Hours()) % 24
 	minutes := int(d.Minutes()) % 60
-	
+
 	if days > 0 {
 		return fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 	} else if hours > 0 {

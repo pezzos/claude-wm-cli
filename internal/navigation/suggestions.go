@@ -12,8 +12,8 @@ import (
 type Suggestion struct {
 	Action      *workflow.WorkflowAction
 	Priority    workflow.Priority
-	Reasoning   string // Why this action is suggested
-	Urgency     int    // 1-10 scale for ordering within priority
+	Reasoning   string   // Why this action is suggested
+	Urgency     int      // 1-10 scale for ordering within priority
 	Conditions  []string // Current conditions that make this suggestion valid
 	NextActions []string // What actions become available after this one
 }
@@ -35,34 +35,34 @@ func (se *SuggestionEngine) GenerateSuggestions(ctx *ProjectContext) ([]*Suggest
 	if ctx == nil {
 		return nil, fmt.Errorf("project context is nil")
 	}
-	
+
 	var suggestions []*Suggestion
-	
+
 	// Generate state-specific suggestions
 	stateSuggestions := se.generateStateSuggestions(ctx)
 	suggestions = append(suggestions, stateSuggestions...)
-	
+
 	// Generate context-specific suggestions
 	contextSuggestions := se.generateContextSuggestions(ctx)
 	suggestions = append(suggestions, contextSuggestions...)
-	
+
 	// Generate general suggestions that are always available
 	generalSuggestions := se.generateGeneralSuggestions(ctx)
 	suggestions = append(suggestions, generalSuggestions...)
-	
+
 	// Sort suggestions by priority and urgency
 	se.sortSuggestions(suggestions)
-	
+
 	// Remove duplicates and filter by context
 	suggestions = se.filterSuggestions(suggestions, ctx)
-	
+
 	return suggestions, nil
 }
 
 // generateStateSuggestions generates suggestions based on the current workflow state
 func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Suggestion {
 	var suggestions []*Suggestion
-	
+
 	switch ctx.State {
 	case StateNotInitialized:
 		suggestions = append(suggestions, &Suggestion{
@@ -73,7 +73,7 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 			Conditions:  []string{"no_docs_directory"},
 			NextActions: []string{"create-epic"},
 		})
-		
+
 	case StateProjectInitialized:
 		suggestions = append(suggestions, &Suggestion{
 			Action:      se.getAction("create-epic"),
@@ -83,7 +83,7 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 			Conditions:  []string{"docs_structure_exists", "no_epics"},
 			NextActions: []string{"start-epic"},
 		})
-		
+
 	case StateHasEpics:
 		suggestions = append(suggestions, &Suggestion{
 			Action:      se.getAction("start-epic"),
@@ -93,7 +93,7 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 			Conditions:  []string{"epics_exist", "no_active_epic"},
 			NextActions: []string{"continue-epic", "create-story"},
 		})
-		
+
 	case StateEpicInProgress:
 		if ctx.CurrentStory == nil {
 			epicTitle := "current epic"
@@ -126,7 +126,7 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 				NextActions: []string{"continue-task", "complete-story"},
 			})
 		}
-		
+
 	case StateStoryInProgress:
 		if ctx.CurrentTask == nil {
 			storyTitle := "current story"
@@ -155,7 +155,7 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 				NextActions: []string{"complete-task"},
 			})
 		}
-		
+
 	case StateTaskInProgress:
 		taskTitle := "current task"
 		if ctx.CurrentTask != nil {
@@ -170,14 +170,14 @@ func (se *SuggestionEngine) generateStateSuggestions(ctx *ProjectContext) []*Sug
 			NextActions: []string{"complete-task", "create-task"},
 		})
 	}
-	
+
 	return suggestions
 }
 
 // generateContextSuggestions generates suggestions based on specific context information
 func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*Suggestion {
 	var suggestions []*Suggestion
-	
+
 	// Suggest completion actions if progress indicates near completion
 	if ctx.CurrentEpic != nil && ctx.CurrentEpic.Progress > 0.8 {
 		suggestions = append(suggestions, &Suggestion{
@@ -189,7 +189,7 @@ func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"start-epic", "create-epic"},
 		})
 	}
-	
+
 	if ctx.CurrentStory != nil && ctx.CurrentStory.Progress > 0.8 {
 		suggestions = append(suggestions, &Suggestion{
 			Action:      se.getAction("complete-story"),
@@ -200,7 +200,7 @@ func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"continue-epic", "create-story"},
 		})
 	}
-	
+
 	// Suggest creating new work items if current level is empty
 	if ctx.State >= StateEpicInProgress {
 		if ctx.CurrentEpic != nil && ctx.CurrentEpic.TotalStories == 0 {
@@ -213,7 +213,7 @@ func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*S
 				NextActions: []string{"continue-story"},
 			})
 		}
-		
+
 		if ctx.CurrentStory != nil && ctx.CurrentStory.TotalTasks == 0 {
 			suggestions = append(suggestions, &Suggestion{
 				Action:      se.getAction("create-task"),
@@ -225,7 +225,7 @@ func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*S
 			})
 		}
 	}
-	
+
 	// Suggest addressing issues if any exist
 	if len(ctx.Issues) > 0 {
 		suggestions = append(suggestions, &Suggestion{
@@ -242,14 +242,14 @@ func (se *SuggestionEngine) generateContextSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"status"},
 		})
 	}
-	
+
 	return suggestions
 }
 
 // generateGeneralSuggestions generates general suggestions that are usually available
 func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*Suggestion {
 	var suggestions []*Suggestion
-	
+
 	// Always suggest status if project is initialized
 	if ctx.State > StateNotInitialized {
 		suggestions = append(suggestions, &Suggestion{
@@ -261,7 +261,7 @@ func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{},
 		})
 	}
-	
+
 	// Always suggest help
 	suggestions = append(suggestions, &Suggestion{
 		Action:      se.getAction("help"),
@@ -271,7 +271,7 @@ func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*S
 		Conditions:  []string{},
 		NextActions: []string{},
 	})
-	
+
 	// Suggest list commands based on state
 	if ctx.State >= StateHasEpics {
 		suggestions = append(suggestions, &Suggestion{
@@ -283,7 +283,7 @@ func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"start-epic"},
 		})
 	}
-	
+
 	if ctx.State >= StateEpicInProgress {
 		suggestions = append(suggestions, &Suggestion{
 			Action:      se.getAction("list-stories"),
@@ -294,7 +294,7 @@ func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"continue-story"},
 		})
 	}
-	
+
 	if ctx.State >= StateStoryInProgress {
 		suggestions = append(suggestions, &Suggestion{
 			Action:      se.getAction("list-tasks"),
@@ -305,7 +305,7 @@ func (se *SuggestionEngine) generateGeneralSuggestions(ctx *ProjectContext) []*S
 			NextActions: []string{"continue-task"},
 		})
 	}
-	
+
 	return suggestions
 }
 
@@ -314,7 +314,7 @@ func (se *SuggestionEngine) getAction(id string) *workflow.WorkflowAction {
 	if action, exists := se.actionRegistry.GetAction(id); exists {
 		return action
 	}
-	
+
 	// Return a fallback action if not found
 	return &workflow.WorkflowAction{
 		ID:          id,
@@ -333,14 +333,14 @@ func (se *SuggestionEngine) sortSuggestions(suggestions []*Suggestion) {
 			workflow.PriorityP1: 2,
 			workflow.PriorityP2: 1,
 		}
-		
+
 		iPriority := priorityOrder[suggestions[i].Priority]
 		jPriority := priorityOrder[suggestions[j].Priority]
-		
+
 		if iPriority != jPriority {
 			return iPriority > jPriority
 		}
-		
+
 		// If same priority, sort by urgency
 		return suggestions[i].Urgency > suggestions[j].Urgency
 	})
@@ -350,20 +350,20 @@ func (se *SuggestionEngine) sortSuggestions(suggestions []*Suggestion) {
 func (se *SuggestionEngine) filterSuggestions(suggestions []*Suggestion, ctx *ProjectContext) []*Suggestion {
 	seen := make(map[string]bool)
 	var filtered []*Suggestion
-	
+
 	for _, suggestion := range suggestions {
 		// Skip if we've already seen this action
 		if seen[suggestion.Action.ID] {
 			continue
 		}
 		seen[suggestion.Action.ID] = true
-		
+
 		// Filter based on context conditions
 		if se.shouldIncludeSuggestion(suggestion, ctx) {
 			filtered = append(filtered, suggestion)
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -373,15 +373,15 @@ func (se *SuggestionEngine) shouldIncludeSuggestion(suggestion *Suggestion, ctx 
 	if suggestion.Priority == workflow.PriorityP0 {
 		return true
 	}
-	
+
 	// Limit total number of suggestions to avoid overwhelming the user
 	// This could be made configurable
 	maxSuggestions := 8
-	
+
 	// For now, we'll include all suggestions but this could be enhanced
 	// with more sophisticated filtering logic
 	_ = maxSuggestions
-	
+
 	return true
 }
 
@@ -391,11 +391,11 @@ func (se *SuggestionEngine) GetTopSuggestion(ctx *ProjectContext) (*Suggestion, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(suggestions) == 0 {
 		return nil, fmt.Errorf("no suggestions available")
 	}
-	
+
 	return suggestions[0], nil
 }
 
@@ -405,12 +405,12 @@ func (se *SuggestionEngine) GetSuggestionsByPriority(ctx *ProjectContext) (map[w
 	if err != nil {
 		return nil, err
 	}
-	
+
 	grouped := make(map[workflow.Priority][]*Suggestion)
 	for _, suggestion := range suggestions {
 		grouped[suggestion.Priority] = append(grouped[suggestion.Priority], suggestion)
 	}
-	
+
 	return grouped, nil
 }
 
@@ -419,12 +419,12 @@ func (se *SuggestionEngine) FormatSuggestion(suggestion *Suggestion, includeReas
 	if suggestion == nil || suggestion.Action == nil {
 		return "No suggestion available"
 	}
-	
+
 	formatted := fmt.Sprintf("[%s] %s", suggestion.Priority, suggestion.Action.Name)
-	
+
 	if includeReasoning && suggestion.Reasoning != "" {
 		formatted += fmt.Sprintf(" - %s", suggestion.Reasoning)
 	}
-	
+
 	return formatted
 }

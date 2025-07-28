@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -10,11 +9,10 @@ import (
 
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/validation"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-
 
 // Version information - will be set at build time
 var (
@@ -131,5 +129,3 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
-
-

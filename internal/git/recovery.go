@@ -11,16 +11,16 @@ import (
 
 // GitRecoveryEngine provides advanced recovery mechanisms using Git history
 type GitRecoveryEngine struct {
-	repository       *Repository
-	versionManager   *StateVersionManager
+	repository         *Repository
+	versionManager     *StateVersionManager
 	corruptionDetector *state.CorruptionDetector
-	config           *GitConfig
+	config             *GitConfig
 }
 
 // NewGitRecoveryEngine creates a new Git recovery engine
-func NewGitRecoveryEngine(repository *Repository, versionManager *StateVersionManager, 
+func NewGitRecoveryEngine(repository *Repository, versionManager *StateVersionManager,
 	corruptionDetector *state.CorruptionDetector, config *GitConfig) *GitRecoveryEngine {
-	
+
 	return &GitRecoveryEngine{
 		repository:         repository,
 		versionManager:     versionManager,
@@ -33,21 +33,21 @@ func NewGitRecoveryEngine(repository *Repository, versionManager *StateVersionMa
 type RecoveryStrategy string
 
 const (
-	StrategyAutomatic    RecoveryStrategy = "automatic"     // Automatic recovery using best practices
-	StrategyInteractive  RecoveryStrategy = "interactive"   // User-guided recovery
-	StrategyConservative RecoveryStrategy = "conservative"  // Safe recovery with minimal changes
-	StrategyAggressive   RecoveryStrategy = "aggressive"    // Comprehensive recovery including hard resets
+	StrategyAutomatic    RecoveryStrategy = "automatic"    // Automatic recovery using best practices
+	StrategyInteractive  RecoveryStrategy = "interactive"  // User-guided recovery
+	StrategyConservative RecoveryStrategy = "conservative" // Safe recovery with minimal changes
+	StrategyAggressive   RecoveryStrategy = "aggressive"   // Comprehensive recovery including hard resets
 )
 
 // RecoveryOptions configures recovery behavior
 type RecoveryOptions struct {
-	Strategy         RecoveryStrategy `json:"strategy"`
-	MaxSearchDepth   int              `json:"max_search_depth"`    // How far back to look
-	VerifyIntegrity  bool             `json:"verify_integrity"`    // Verify state after recovery
-	CreateBackup     bool             `json:"create_backup"`       // Backup before recovery
-	AllowDataLoss    bool             `json:"allow_data_loss"`     // Allow operations that might lose data
-	TargetFiles      []string         `json:"target_files"`        // Specific files to recover
-	TimeWindow       *TimeWindow      `json:"time_window"`         // Time-based recovery constraints
+	Strategy        RecoveryStrategy `json:"strategy"`
+	MaxSearchDepth  int              `json:"max_search_depth"` // How far back to look
+	VerifyIntegrity bool             `json:"verify_integrity"` // Verify state after recovery
+	CreateBackup    bool             `json:"create_backup"`    // Backup before recovery
+	AllowDataLoss   bool             `json:"allow_data_loss"`  // Allow operations that might lose data
+	TargetFiles     []string         `json:"target_files"`     // Specific files to recover
+	TimeWindow      *TimeWindow      `json:"time_window"`      // Time-based recovery constraints
 }
 
 // TimeWindow defines a time range for recovery operations
@@ -58,46 +58,46 @@ type TimeWindow struct {
 
 // RecoveryPlan describes the steps needed for recovery
 type RecoveryPlan struct {
-	Strategy        RecoveryStrategy   `json:"strategy"`
-	Steps           []RecoveryStep     `json:"steps"`
-	EstimatedRisk   string             `json:"estimated_risk"`     // low, medium, high
-	DataLossRisk    bool               `json:"data_loss_risk"`
-	RequiresBackup  bool               `json:"requires_backup"`
-	EstimatedTime   time.Duration      `json:"estimated_time"`
-	RecoveryPoints  []*RecoveryPoint   `json:"recovery_points"`
-	Warnings        []string           `json:"warnings"`
-	Prerequisites   []string           `json:"prerequisites"`
+	Strategy       RecoveryStrategy `json:"strategy"`
+	Steps          []RecoveryStep   `json:"steps"`
+	EstimatedRisk  string           `json:"estimated_risk"` // low, medium, high
+	DataLossRisk   bool             `json:"data_loss_risk"`
+	RequiresBackup bool             `json:"requires_backup"`
+	EstimatedTime  time.Duration    `json:"estimated_time"`
+	RecoveryPoints []*RecoveryPoint `json:"recovery_points"`
+	Warnings       []string         `json:"warnings"`
+	Prerequisites  []string         `json:"prerequisites"`
 }
 
 // RecoveryStep represents a single step in the recovery process
 type RecoveryStep struct {
-	ID          string        `json:"id"`
-	Type        string        `json:"type"`           // checkout, reset, merge, manual
-	Description string        `json:"description"`
-	Command     string        `json:"command,omitempty"`
-	Files       []string      `json:"files,omitempty"`
-	Risk        string        `json:"risk"`           // low, medium, high
-	Reversible  bool          `json:"reversible"`
-	Required    bool          `json:"required"`
-	Automated   bool          `json:"automated"`
+	ID            string        `json:"id"`
+	Type          string        `json:"type"` // checkout, reset, merge, manual
+	Description   string        `json:"description"`
+	Command       string        `json:"command,omitempty"`
+	Files         []string      `json:"files,omitempty"`
+	Risk          string        `json:"risk"` // low, medium, high
+	Reversible    bool          `json:"reversible"`
+	Required      bool          `json:"required"`
+	Automated     bool          `json:"automated"`
 	EstimatedTime time.Duration `json:"estimated_time"`
 }
 
 // RecoveryResult contains the outcome of recovery operations
 type RecoveryResult struct {
-	Success         bool              `json:"success"`
-	Strategy        RecoveryStrategy  `json:"strategy"`
-	StepsExecuted   []RecoveryStep    `json:"steps_executed"`
-	StepsFailed     []RecoveryStep    `json:"steps_failed"`
-	FilesRecovered  []string          `json:"files_recovered"`
-	FilesCorrupted  []string          `json:"files_corrupted"`
-	BackupCreated   string            `json:"backup_created,omitempty"`
-	Duration        time.Duration     `json:"duration"`
-	RecoveryPoint   *RecoveryPoint    `json:"recovery_point,omitempty"`
-	IntegrityCheck  bool              `json:"integrity_check"`
-	Warnings        []string          `json:"warnings"`
-	NextSteps       []string          `json:"next_steps"`
-	Timestamp       time.Time         `json:"timestamp"`
+	Success        bool             `json:"success"`
+	Strategy       RecoveryStrategy `json:"strategy"`
+	StepsExecuted  []RecoveryStep   `json:"steps_executed"`
+	StepsFailed    []RecoveryStep   `json:"steps_failed"`
+	FilesRecovered []string         `json:"files_recovered"`
+	FilesCorrupted []string         `json:"files_corrupted"`
+	BackupCreated  string           `json:"backup_created,omitempty"`
+	Duration       time.Duration    `json:"duration"`
+	RecoveryPoint  *RecoveryPoint   `json:"recovery_point,omitempty"`
+	IntegrityCheck bool             `json:"integrity_check"`
+	Warnings       []string         `json:"warnings"`
+	NextSteps      []string         `json:"next_steps"`
+	Timestamp      time.Time        `json:"timestamp"`
 }
 
 // AutoRecover automatically recovers from state corruption
@@ -112,14 +112,14 @@ func (gre *GitRecoveryEngine) AutoRecover(corruptedFiles []string, options *Reco
 			TargetFiles:     corruptedFiles,
 		}
 	}
-	
+
 	start := time.Now()
 	result := &RecoveryResult{
 		Strategy:       options.Strategy,
 		FilesCorrupted: corruptedFiles,
 		Timestamp:      start,
 	}
-	
+
 	// Step 1: Create backup if requested
 	if options.CreateBackup {
 		backup, err := gre.createPreRecoveryBackup(corruptedFiles)
@@ -128,19 +128,19 @@ func (gre *GitRecoveryEngine) AutoRecover(corruptedFiles []string, options *Reco
 		}
 		result.BackupCreated = backup
 	}
-	
+
 	// Step 2: Analyze corruption and create recovery plan
 	plan, err := gre.CreateRecoveryPlan(corruptedFiles, options)
 	if err != nil {
 		return result, fmt.Errorf("failed to create recovery plan: %w", err)
 	}
-	
+
 	// Step 3: Execute recovery plan
 	for _, step := range plan.Steps {
 		if err := gre.executeRecoveryStep(step, result); err != nil {
 			result.StepsFailed = append(result.StepsFailed, step)
 			result.Warnings = append(result.Warnings, fmt.Sprintf("Step failed: %s - %v", step.ID, err))
-			
+
 			// For automatic recovery, stop on first failure
 			if options.Strategy == StrategyAutomatic && !step.Required {
 				break
@@ -149,7 +149,7 @@ func (gre *GitRecoveryEngine) AutoRecover(corruptedFiles []string, options *Reco
 			result.StepsExecuted = append(result.StepsExecuted, step)
 		}
 	}
-	
+
 	// Step 4: Verify recovery
 	if options.VerifyIntegrity {
 		result.IntegrityCheck = gre.verifyRecoveryIntegrity(corruptedFiles)
@@ -157,11 +157,11 @@ func (gre *GitRecoveryEngine) AutoRecover(corruptedFiles []string, options *Reco
 			result.Warnings = append(result.Warnings, "Recovery integrity check failed")
 		}
 	}
-	
+
 	// Step 5: Determine overall success
 	result.Success = len(result.StepsFailed) == 0 && (result.IntegrityCheck || !options.VerifyIntegrity)
 	result.Duration = time.Since(start)
-	
+
 	// Add next steps recommendations
 	if result.Success {
 		result.NextSteps = []string{
@@ -176,7 +176,7 @@ func (gre *GitRecoveryEngine) AutoRecover(corruptedFiles []string, options *Reco
 			"Contact support if issues persist",
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -192,22 +192,22 @@ func (gre *GitRecoveryEngine) CreateRecoveryPlan(corruptedFiles []string, option
 		Warnings:       make([]string, 0),
 		Prerequisites:  make([]string, 0),
 	}
-	
+
 	// Find suitable recovery points
 	recoveryPoints, err := gre.findRecoveryPoints(corruptedFiles, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find recovery points: %w", err)
 	}
-	
+
 	if len(recoveryPoints) == 0 {
 		return nil, fmt.Errorf("no suitable recovery points found")
 	}
-	
+
 	plan.RecoveryPoints = recoveryPoints
-	
+
 	// Analyze corruption severity
 	corruptionSeverity := gre.analyzeCorruptionSeverity(corruptedFiles)
-	
+
 	// Create recovery steps based on strategy and corruption severity
 	switch options.Strategy {
 	case StrategyAutomatic:
@@ -221,11 +221,11 @@ func (gre *GitRecoveryEngine) CreateRecoveryPlan(corruptedFiles []string, option
 	default:
 		return nil, fmt.Errorf("unknown recovery strategy: %s", options.Strategy)
 	}
-	
+
 	// Calculate estimated time and risk
 	totalTime := time.Duration(0)
 	highRiskSteps := 0
-	
+
 	for _, step := range plan.Steps {
 		totalTime += step.EstimatedTime
 		if step.Risk == "high" {
@@ -235,25 +235,25 @@ func (gre *GitRecoveryEngine) CreateRecoveryPlan(corruptedFiles []string, option
 			plan.DataLossRisk = true
 		}
 	}
-	
+
 	plan.EstimatedTime = totalTime
-	
+
 	if highRiskSteps > 0 {
 		plan.EstimatedRisk = "high"
 	} else if len(plan.Steps) > 3 {
 		plan.EstimatedRisk = "medium"
 	}
-	
+
 	// Add warnings and prerequisites
 	if plan.DataLossRisk {
 		plan.Warnings = append(plan.Warnings, "Recovery may result in data loss")
 		plan.Prerequisites = append(plan.Prerequisites, "Create backup before proceeding")
 	}
-	
+
 	if corruptionSeverity == "high" {
 		plan.Warnings = append(plan.Warnings, "High corruption detected - recovery may be incomplete")
 	}
-	
+
 	return plan, nil
 }
 
@@ -261,18 +261,18 @@ func (gre *GitRecoveryEngine) CreateRecoveryPlan(corruptedFiles []string, option
 func (gre *GitRecoveryEngine) ExecuteRecoveryPlan(plan *RecoveryPlan, options *RecoveryOptions) (*RecoveryResult, error) {
 	start := time.Now()
 	result := &RecoveryResult{
-		Strategy:    plan.Strategy,
-		Timestamp:   start,
+		Strategy:      plan.Strategy,
+		Timestamp:     start,
 		StepsExecuted: make([]RecoveryStep, 0),
 		StepsFailed:   make([]RecoveryStep, 0),
 	}
-	
+
 	// Execute each step
 	for _, step := range plan.Steps {
 		if err := gre.executeRecoveryStep(step, result); err != nil {
 			result.StepsFailed = append(result.StepsFailed, step)
 			result.Warnings = append(result.Warnings, fmt.Sprintf("Step '%s' failed: %v", step.ID, err))
-			
+
 			// Stop on critical failures
 			if step.Required {
 				result.Success = false
@@ -283,10 +283,10 @@ func (gre *GitRecoveryEngine) ExecuteRecoveryPlan(plan *RecoveryPlan, options *R
 			result.StepsExecuted = append(result.StepsExecuted, step)
 		}
 	}
-	
+
 	result.Success = len(result.StepsFailed) == 0
 	result.Duration = time.Since(start)
-	
+
 	return result, nil
 }
 
@@ -298,9 +298,9 @@ func (gre *GitRecoveryEngine) findRecoveryPoints(corruptedFiles []string, option
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var recoveryPoints []*RecoveryPoint
-	
+
 	for _, commit := range commits {
 		// Filter by time window if specified
 		if options.TimeWindow != nil {
@@ -308,7 +308,7 @@ func (gre *GitRecoveryEngine) findRecoveryPoints(corruptedFiles []string, option
 				continue
 			}
 		}
-		
+
 		// Check if commit affects our corrupted files
 		affectsFiles := len(corruptedFiles) == 0 // If no specific files, consider all commits
 		for _, corruptedFile := range corruptedFiles {
@@ -322,11 +322,11 @@ func (gre *GitRecoveryEngine) findRecoveryPoints(corruptedFiles []string, option
 				break
 			}
 		}
-		
+
 		if !affectsFiles {
 			continue
 		}
-		
+
 		recoveryPoint := &RecoveryPoint{
 			Commit:      *commit,
 			Description: commit.Message,
@@ -335,20 +335,20 @@ func (gre *GitRecoveryEngine) findRecoveryPoints(corruptedFiles []string, option
 			Safe:        true,  // Assume safe unless proven otherwise
 			Automatic:   strings.Contains(commit.Message, "backup:"),
 		}
-		
+
 		recoveryPoints = append(recoveryPoints, recoveryPoint)
-		
+
 		// Limit number of recovery points
 		if len(recoveryPoints) >= 10 {
 			break
 		}
 	}
-	
+
 	// Sort by date (newest first)
 	sort.Slice(recoveryPoints, func(i, j int) bool {
 		return recoveryPoints[i].Commit.Date.After(recoveryPoints[j].Commit.Date)
 	})
-	
+
 	return recoveryPoints, nil
 }
 
@@ -356,10 +356,10 @@ func (gre *GitRecoveryEngine) analyzeCorruptionSeverity(corruptedFiles []string)
 	if gre.corruptionDetector == nil {
 		return "unknown"
 	}
-	
+
 	criticalIssues := 0
 	majorIssues := 0
-	
+
 	for _, file := range corruptedFiles {
 		report := gre.corruptionDetector.ScanFile(file)
 		for _, issue := range report.Issues {
@@ -371,7 +371,7 @@ func (gre *GitRecoveryEngine) analyzeCorruptionSeverity(corruptedFiles []string)
 			}
 		}
 	}
-	
+
 	if criticalIssues > 0 {
 		return "high"
 	} else if majorIssues > 2 {
@@ -380,18 +380,18 @@ func (gre *GitRecoveryEngine) analyzeCorruptionSeverity(corruptedFiles []string)
 	return "low"
 }
 
-func (gre *GitRecoveryEngine) createAutomaticRecoverySteps(recoveryPoints []*RecoveryPoint, 
+func (gre *GitRecoveryEngine) createAutomaticRecoverySteps(recoveryPoints []*RecoveryPoint,
 	corruptedFiles []string, severity string) []RecoveryStep {
-	
+
 	var steps []RecoveryStep
-	
+
 	if len(recoveryPoints) == 0 {
 		return steps
 	}
-	
+
 	// Use the most recent recovery point
 	latestPoint := recoveryPoints[0]
-	
+
 	// Step 1: Checkout files from recovery point
 	steps = append(steps, RecoveryStep{
 		ID:            "checkout_files",
@@ -404,7 +404,7 @@ func (gre *GitRecoveryEngine) createAutomaticRecoverySteps(recoveryPoints []*Rec
 		Automated:     true,
 		EstimatedTime: 5 * time.Second,
 	})
-	
+
 	// Step 2: Verify integrity
 	steps = append(steps, RecoveryStep{
 		ID:            "verify_integrity",
@@ -417,15 +417,15 @@ func (gre *GitRecoveryEngine) createAutomaticRecoverySteps(recoveryPoints []*Rec
 		Automated:     true,
 		EstimatedTime: 2 * time.Second,
 	})
-	
+
 	return steps
 }
 
-func (gre *GitRecoveryEngine) createConservativeRecoverySteps(recoveryPoints []*RecoveryPoint, 
+func (gre *GitRecoveryEngine) createConservativeRecoverySteps(recoveryPoints []*RecoveryPoint,
 	corruptedFiles []string, severity string) []RecoveryStep {
-	
+
 	var steps []RecoveryStep
-	
+
 	// Conservative approach: multiple verification steps
 	steps = append(steps, RecoveryStep{
 		ID:            "analyze_corruption",
@@ -438,7 +438,7 @@ func (gre *GitRecoveryEngine) createConservativeRecoverySteps(recoveryPoints []*
 		Automated:     true,
 		EstimatedTime: 3 * time.Second,
 	})
-	
+
 	if len(recoveryPoints) > 0 {
 		steps = append(steps, RecoveryStep{
 			ID:            "selective_restore",
@@ -452,15 +452,15 @@ func (gre *GitRecoveryEngine) createConservativeRecoverySteps(recoveryPoints []*
 			EstimatedTime: 10 * time.Second,
 		})
 	}
-	
+
 	return steps
 }
 
-func (gre *GitRecoveryEngine) createAggressiveRecoverySteps(recoveryPoints []*RecoveryPoint, 
+func (gre *GitRecoveryEngine) createAggressiveRecoverySteps(recoveryPoints []*RecoveryPoint,
 	corruptedFiles []string, severity string) []RecoveryStep {
-	
+
 	var steps []RecoveryStep
-	
+
 	if len(recoveryPoints) > 0 {
 		// Aggressive approach: hard reset to known good state
 		steps = append(steps, RecoveryStep{
@@ -475,15 +475,15 @@ func (gre *GitRecoveryEngine) createAggressiveRecoverySteps(recoveryPoints []*Re
 			EstimatedTime: 3 * time.Second,
 		})
 	}
-	
+
 	return steps
 }
 
-func (gre *GitRecoveryEngine) createInteractiveRecoverySteps(recoveryPoints []*RecoveryPoint, 
+func (gre *GitRecoveryEngine) createInteractiveRecoverySteps(recoveryPoints []*RecoveryPoint,
 	corruptedFiles []string, severity string) []RecoveryStep {
-	
+
 	var steps []RecoveryStep
-	
+
 	// Interactive approach: present options to user
 	steps = append(steps, RecoveryStep{
 		ID:            "user_review",
@@ -496,7 +496,7 @@ func (gre *GitRecoveryEngine) createInteractiveRecoverySteps(recoveryPoints []*R
 		Automated:     false,
 		EstimatedTime: 30 * time.Second, // User interaction time
 	})
-	
+
 	return steps
 }
 
@@ -569,7 +569,7 @@ func (gre *GitRecoveryEngine) verifyRecoveryIntegrity(files []string) bool {
 	if gre.corruptionDetector == nil {
 		return true // Assume success if no detector
 	}
-	
+
 	for _, file := range files {
 		report := gre.corruptionDetector.ScanFile(file)
 		if report.IsCorrupted {

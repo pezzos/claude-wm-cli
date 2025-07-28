@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	
+
 	"claude-wm-cli/internal/epic"
 	"claude-wm-cli/internal/ticket"
 )
@@ -16,7 +16,7 @@ import (
 func TestNewInterruptionStack(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
 	assert.NotNil(t, stack)
 	assert.Equal(t, tempDir, stack.rootPath)
@@ -27,9 +27,9 @@ func TestNewInterruptionStack(t *testing.T) {
 func TestInterruptionStack_SaveCurrentContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Test saving normal context
 	options := ContextSaveOptions{
 		Name:             "Test Normal Context",
@@ -40,11 +40,11 @@ func TestInterruptionStack_SaveCurrentContext(t *testing.T) {
 		IncludeFileState: true,
 		IncludeGitState:  true,
 	}
-	
+
 	context, err := stack.SaveCurrentContext(options)
 	require.NoError(t, err)
 	require.NotNil(t, context)
-	
+
 	// Verify context properties
 	assert.NotEmpty(t, context.ID)
 	assert.Equal(t, "Test Normal Context", context.Name)
@@ -57,7 +57,7 @@ func TestInterruptionStack_SaveCurrentContext(t *testing.T) {
 	assert.False(t, context.SavedAt.IsZero())
 	assert.False(t, context.LastAccessedAt.IsZero())
 	assert.NotNil(t, context.Metadata)
-	
+
 	// Verify file and git state capture
 	assert.Equal(t, true, context.Metadata["file_state_captured"])
 	assert.Equal(t, true, context.Metadata["git_state_captured"])
@@ -66,34 +66,34 @@ func TestInterruptionStack_SaveCurrentContext(t *testing.T) {
 func TestInterruptionStack_SaveInterruptionContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Save initial normal context
 	normalOptions := ContextSaveOptions{
 		Name: "Normal Work",
 		Type: WorkflowContextTypeNormal,
 	}
-	
+
 	normalContext, err := stack.SaveCurrentContext(normalOptions)
 	require.NoError(t, err)
-	
+
 	// Save interruption context
 	interruptOptions := ContextSaveOptions{
 		Name: "Urgent Bug Fix",
 		Type: WorkflowContextTypeInterruption,
 	}
-	
+
 	interruptContext, err := stack.SaveCurrentContext(interruptOptions)
 	require.NoError(t, err)
-	
+
 	// Verify interruption context has parent relationship
 	assert.Equal(t, normalContext.ID, interruptContext.ParentContextID)
-	
+
 	// Get updated stack data to check parent-child relationships
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
-	
+
 	// Find the normal context in the stack (it should be there)
 	var updatedNormalContext *WorkflowContext
 	for _, ctx := range stackData.ContextStack {
@@ -104,7 +104,7 @@ func TestInterruptionStack_SaveInterruptionContext(t *testing.T) {
 	}
 	require.NotNil(t, updatedNormalContext, "Normal context should be in stack")
 	assert.Contains(t, updatedNormalContext.ChildContextIDs, interruptContext.ID)
-	
+
 	// Verify stack metadata
 	assert.Equal(t, 1, stackData.Metadata.TotalInterruptions)
 	assert.Equal(t, 1, stackData.Metadata.ActiveInterruptions)
@@ -117,48 +117,48 @@ func TestInterruptionStack_SaveInterruptionContext(t *testing.T) {
 func TestInterruptionStack_NestedInterruptions(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create nested interruption stack: Normal -> Interruption -> Emergency
 	contexts := make([]*WorkflowContext, 3)
-	
+
 	// Level 1: Normal work
 	options1 := ContextSaveOptions{
 		Name: "Feature Development",
 		Type: WorkflowContextTypeNormal,
 	}
 	contexts[0], _ = stack.SaveCurrentContext(options1)
-	
+
 	// Level 2: Interruption
 	options2 := ContextSaveOptions{
 		Name: "Bug Report",
 		Type: WorkflowContextTypeInterruption,
 	}
 	contexts[1], _ = stack.SaveCurrentContext(options2)
-	
+
 	// Level 3: Emergency
 	options3 := ContextSaveOptions{
 		Name: "Production Issue",
 		Type: WorkflowContextTypeEmergency,
 	}
 	contexts[2], _ = stack.SaveCurrentContext(options3)
-	
+
 	// Verify stack depth and relationships
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
 	assert.Equal(t, 2, stackData.Metadata.CurrentStackDepth) // Emergency is current, 2 in stack
 	assert.Equal(t, 2, stackData.Metadata.ActiveInterruptions)
 	assert.Equal(t, 2, stackData.Metadata.TotalInterruptions) // Only interruption and emergency are counted
-	
+
 	// Verify parent-child relationships
 	assert.Equal(t, contexts[0].ID, contexts[1].ParentContextID)
 	assert.Equal(t, contexts[1].ID, contexts[2].ParentContextID)
-	
+
 	// Check child relationships in the active contexts (updated versions)
 	assert.Contains(t, stackData.ActiveContexts[contexts[0].ID].ChildContextIDs, contexts[1].ID)
 	assert.Contains(t, stackData.ActiveContexts[contexts[1].ID].ChildContextIDs, contexts[2].ID)
-	
+
 	// Verify current context is the emergency
 	assert.Equal(t, contexts[2].ID, stackData.CurrentContext.ID)
 }
@@ -166,20 +166,20 @@ func TestInterruptionStack_NestedInterruptions(t *testing.T) {
 func TestInterruptionStack_RestoreContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create context hierarchy
 	normalCtx, _ := stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Normal Work",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	_, _ = stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Interruption",
 		Type: WorkflowContextTypeInterruption,
 	})
-	
+
 	// Restore to normal context
 	restoreOptions := ContextRestoreOptions{
 		RestoreFiles:    true,
@@ -189,21 +189,21 @@ func TestInterruptionStack_RestoreContext(t *testing.T) {
 		Force:           false,
 		BackupCurrent:   true,
 	}
-	
+
 	err := stack.RestoreContext(normalCtx.ID, restoreOptions)
 	require.NoError(t, err)
-	
+
 	// Verify current context is restored
 	currentCtx, err := stack.GetCurrentContext()
 	require.NoError(t, err)
 	assert.Equal(t, normalCtx.ID, currentCtx.ID)
-	
+
 	// Verify stack metadata updated
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
 	assert.Equal(t, 0, stackData.Metadata.ActiveInterruptions)
 	assert.Equal(t, 0, stackData.Metadata.CurrentStackDepth)
-	
+
 	// Verify last accessed time updated
 	assert.True(t, currentCtx.LastAccessedAt.After(normalCtx.LastAccessedAt))
 }
@@ -211,41 +211,41 @@ func TestInterruptionStack_RestoreContext(t *testing.T) {
 func TestInterruptionStack_PopContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create context stack
 	normalCtx, _ := stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Normal Work",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	_, _ = stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Interruption",
 		Type: WorkflowContextTypeInterruption,
 	})
-	
+
 	// Pop the most recent context (should restore normal work)
 	restoreOptions := ContextRestoreOptions{
 		RestoreFiles:   true,
 		RestoreTickets: true,
 		RestoreEpics:   true,
 	}
-	
+
 	restoredCtx, err := stack.PopContext(restoreOptions)
 	require.NoError(t, err)
 	assert.Equal(t, normalCtx.ID, restoredCtx.ID)
-	
+
 	// Verify current context
 	currentCtx, err := stack.GetCurrentContext()
 	require.NoError(t, err)
 	assert.Equal(t, normalCtx.ID, currentCtx.ID)
-	
+
 	// Verify stack is empty
 	depth, err := stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 0, depth)
-	
+
 	// Test popping from empty stack
 	_, err = stack.PopContext(restoreOptions)
 	assert.Error(t, err)
@@ -255,9 +255,9 @@ func TestInterruptionStack_PopContext(t *testing.T) {
 func TestInterruptionStack_ContextNotFound(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Try to restore non-existent context
 	restoreOptions := ContextRestoreOptions{}
 	err := stack.RestoreContext("non-existent-id", restoreOptions)
@@ -268,15 +268,15 @@ func TestInterruptionStack_ContextNotFound(t *testing.T) {
 func TestInterruptionStack_RestoreCurrentContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Save a context
 	ctx, _ := stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Test Context",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	// Try to restore the same context (should fail)
 	restoreOptions := ContextRestoreOptions{}
 	err := stack.RestoreContext(ctx.ID, restoreOptions)
@@ -287,9 +287,9 @@ func TestInterruptionStack_RestoreCurrentContext(t *testing.T) {
 func TestInterruptionStack_ListContexts(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create multiple contexts
 	contexts := make([]*WorkflowContext, 3)
 	for i := 0; i < 3; i++ {
@@ -297,62 +297,62 @@ func TestInterruptionStack_ListContexts(t *testing.T) {
 		if i > 0 {
 			contextType = WorkflowContextTypeInterruption
 		}
-		
+
 		options := ContextSaveOptions{
 			Name: fmt.Sprintf("Context %d", i+1),
 			Type: contextType,
 		}
 		contexts[i], _ = stack.SaveCurrentContext(options)
 	}
-	
+
 	// List all contexts
 	stackData, err := stack.ListContexts()
 	require.NoError(t, err)
-	
+
 	// Verify we have all contexts
-	assert.Equal(t, 2, len(stackData.ContextStack)) // First two pushed to stack
-	assert.Equal(t, 3, len(stackData.ContextHistory)) // All in history
-	assert.Equal(t, 3, len(stackData.ActiveContexts)) // All active
+	assert.Equal(t, 2, len(stackData.ContextStack))              // First two pushed to stack
+	assert.Equal(t, 3, len(stackData.ContextHistory))            // All in history
+	assert.Equal(t, 3, len(stackData.ActiveContexts))            // All active
 	assert.Equal(t, contexts[2].ID, stackData.CurrentContext.ID) // Last is current
 }
 
 func TestInterruptionStack_GetStackDepth(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Initially empty
 	depth, err := stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 0, depth)
-	
+
 	// Add normal context (doesn't increase depth)
 	stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Normal",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	depth, err = stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 0, depth)
-	
+
 	// Add interruption (increases depth)
 	stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Interrupt 1",
 		Type: WorkflowContextTypeInterruption,
 	})
-	
+
 	depth, err = stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 1, depth)
-	
+
 	// Add another interruption
 	stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Interrupt 2",
 		Type: WorkflowContextTypeEmergency,
 	})
-	
+
 	depth, err = stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 2, depth)
@@ -361,9 +361,9 @@ func TestInterruptionStack_GetStackDepth(t *testing.T) {
 func TestInterruptionStack_ClearStack(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create contexts
 	for i := 0; i < 3; i++ {
 		stack.SaveCurrentContext(ContextSaveOptions{
@@ -371,24 +371,24 @@ func TestInterruptionStack_ClearStack(t *testing.T) {
 			Type: WorkflowContextTypeInterruption,
 		})
 	}
-	
+
 	// Verify stack has contents
 	depth, _ := stack.GetStackDepth()
 	assert.Equal(t, 2, depth)
-	
+
 	// Clear stack
 	err := stack.ClearStack()
 	require.NoError(t, err)
-	
+
 	// Verify stack is cleared
 	depth, err = stack.GetStackDepth()
 	require.NoError(t, err)
 	assert.Equal(t, 0, depth)
-	
+
 	currentCtx, err := stack.GetCurrentContext()
 	require.NoError(t, err)
 	assert.Nil(t, currentCtx)
-	
+
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
 	assert.Equal(t, 0, len(stackData.ContextStack))
@@ -400,12 +400,12 @@ func TestInterruptionStack_ClearStack(t *testing.T) {
 func TestInterruptionStack_WithEpicAndTicketContext(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	// Create an epic and ticket for testing
 	setupTestEpicAndTicket(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Save context (should capture epic and ticket)
 	options := ContextSaveOptions{
 		Name:             "Context with Epic and Ticket",
@@ -413,10 +413,10 @@ func TestInterruptionStack_WithEpicAndTicketContext(t *testing.T) {
 		IncludeFileState: true,
 		IncludeGitState:  true,
 	}
-	
+
 	context, err := stack.SaveCurrentContext(options)
 	require.NoError(t, err)
-	
+
 	// Verify epic and ticket context captured
 	// Note: Since we're using mocked managers, epic and ticket IDs might be empty
 	// but the capture methods should not fail
@@ -426,9 +426,9 @@ func TestInterruptionStack_WithEpicAndTicketContext(t *testing.T) {
 func TestInterruptionStack_HistoryLimiting(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create more than 50 contexts to test history limiting
 	for i := 0; i < 55; i++ {
 		options := ContextSaveOptions{
@@ -437,12 +437,12 @@ func TestInterruptionStack_HistoryLimiting(t *testing.T) {
 		}
 		stack.SaveCurrentContext(options)
 	}
-	
+
 	// Verify history is limited to 50
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
 	assert.Equal(t, 50, len(stackData.ContextHistory))
-	
+
 	// Verify the most recent contexts are kept
 	lastContext := stackData.ContextHistory[len(stackData.ContextHistory)-1]
 	assert.Equal(t, "Context 55", lastContext.Name)
@@ -451,29 +451,29 @@ func TestInterruptionStack_HistoryLimiting(t *testing.T) {
 func TestInterruptionStack_PersistenceAndMigration(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack1 := NewInterruptionStack(tempDir)
-	
+
 	// Save some contexts
 	ctx1, _ := stack1.SaveCurrentContext(ContextSaveOptions{
 		Name: "Persistent Context 1",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	ctx2, _ := stack1.SaveCurrentContext(ContextSaveOptions{
 		Name: "Persistent Context 2",
 		Type: WorkflowContextTypeInterruption,
 	})
-	
+
 	// Create new stack instance (simulates app restart)
 	stack2 := NewInterruptionStack(tempDir)
-	
+
 	// Verify data persisted
 	currentCtx, err := stack2.GetCurrentContext()
 	require.NoError(t, err)
 	assert.Equal(t, ctx2.ID, currentCtx.ID)
 	assert.Equal(t, "Persistent Context 2", currentCtx.Name)
-	
+
 	stackData, err := stack2.loadStack()
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(stackData.ContextStack))
@@ -493,15 +493,15 @@ func TestWorkflowContextType_Constants(t *testing.T) {
 func TestContextSaveOptions_Validation(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Test with minimal options
 	options := ContextSaveOptions{
 		Name: "Minimal Context",
 		Type: WorkflowContextTypeNormal,
 	}
-	
+
 	context, err := stack.SaveCurrentContext(options)
 	require.NoError(t, err)
 	assert.Equal(t, "Minimal Context", context.Name)
@@ -514,21 +514,21 @@ func TestContextSaveOptions_Validation(t *testing.T) {
 func TestContextRestoreOptions_Validation(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	stack := NewInterruptionStack(tempDir)
-	
+
 	// Create and save context
 	ctx, _ := stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Test Context",
 		Type: WorkflowContextTypeNormal,
 	})
-	
+
 	// Create interruption
 	stack.SaveCurrentContext(ContextSaveOptions{
 		Name: "Interruption",
 		Type: WorkflowContextTypeInterruption,
 	})
-	
+
 	// Test with all restore options enabled
 	restoreOptions := ContextRestoreOptions{
 		RestoreFiles:    true,
@@ -538,10 +538,10 @@ func TestContextRestoreOptions_Validation(t *testing.T) {
 		Force:           true,
 		BackupCurrent:   true,
 	}
-	
+
 	err := stack.RestoreContext(ctx.ID, restoreOptions)
 	require.NoError(t, err)
-	
+
 	// Verify backup was created (should have at least the original contexts)
 	stackData, err := stack.loadStack()
 	require.NoError(t, err)
@@ -554,11 +554,11 @@ func setupTestDirs(t *testing.T, tempDir string) {
 	docsDir := filepath.Join(tempDir, "docs", "1-project")
 	err := os.MkdirAll(docsDir, 0755)
 	require.NoError(t, err)
-	
+
 	currentEpicDir := filepath.Join(tempDir, "docs", "2-current-epic")
 	err = os.MkdirAll(currentEpicDir, 0755)
 	require.NoError(t, err)
-	
+
 	currentTaskDir := filepath.Join(tempDir, "docs", "3-current-task")
 	err = os.MkdirAll(currentTaskDir, 0755)
 	require.NoError(t, err)
@@ -574,11 +574,11 @@ func setupTestEpicAndTicket(t *testing.T, tempDir string) {
 	}
 	testEpic, err := epicManager.CreateEpic(epicOptions)
 	require.NoError(t, err)
-	
+
 	// Set as current epic
 	_, err = epicManager.SelectEpic(testEpic.ID)
 	require.NoError(t, err)
-	
+
 	// Create a test ticket
 	ticketManager := ticket.NewManager(tempDir)
 	ticketOptions := ticket.TicketCreateOptions{
@@ -589,7 +589,7 @@ func setupTestEpicAndTicket(t *testing.T, tempDir string) {
 	}
 	testTicket, err := ticketManager.CreateTicket(ticketOptions)
 	require.NoError(t, err)
-	
+
 	// Set as current ticket
 	_, err = ticketManager.SetCurrentTicket(testTicket.ID)
 	require.NoError(t, err)

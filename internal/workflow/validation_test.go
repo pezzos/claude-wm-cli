@@ -11,7 +11,7 @@ import (
 func TestNewDependencyEnforcer(t *testing.T) {
 	rootPath := "/test/path"
 	enforcer := NewDependencyEnforcer(rootPath)
-	
+
 	assert.NotNil(t, enforcer)
 	assert.NotNil(t, enforcer.analyzer)
 	assert.NotNil(t, enforcer.commandGenerator)
@@ -20,11 +20,11 @@ func TestNewDependencyEnforcer(t *testing.T) {
 func TestValidateActionExecution_UnknownAction(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("unknown-action", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.Len(t, result.Violations, 1)
 	assert.Equal(t, ViolationInvalidState, result.Violations[0].Type)
@@ -38,11 +38,11 @@ func TestValidateActionExecution_UnknownAction(t *testing.T) {
 func TestValidateActionExecution_InitProject_Valid(t *testing.T) {
 	tempDir := t.TempDir()
 	// Don't initialize project - this should be valid for init-project
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("init-project", false)
 	require.NoError(t, err)
-	
+
 	assert.True(t, result.IsValid)
 	assert.Empty(t, result.Violations)
 }
@@ -50,14 +50,14 @@ func TestValidateActionExecution_InitProject_Valid(t *testing.T) {
 func TestValidateActionExecution_InitProject_AlreadyInitialized(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("init-project", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about project already being initialized
 	foundInitializedViolation := false
 	for _, violation := range result.Violations {
@@ -74,11 +74,11 @@ func TestValidateActionExecution_InitProject_AlreadyInitialized(t *testing.T) {
 func TestValidateActionExecution_CreateEpic_Valid(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.True(t, result.IsValid)
 	assert.Empty(t, result.Violations)
 }
@@ -86,20 +86,20 @@ func TestValidateActionExecution_CreateEpic_Valid(t *testing.T) {
 func TestValidateActionExecution_CreateEpic_NotInitialized(t *testing.T) {
 	tempDir := t.TempDir()
 	// Don't initialize project
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a critical violation about project initialization
 	foundCriticalViolation := false
 	for _, violation := range result.Violations {
-		if violation.Severity == SeverityCritical && 
-		   (contains(violation.Description, "must be initialized") || 
-		    contains(violation.Description, "project_initialized")) {
+		if violation.Severity == SeverityCritical &&
+			(contains(violation.Description, "must be initialized") ||
+				contains(violation.Description, "project_initialized")) {
 			foundCriticalViolation = true
 			break
 		}
@@ -110,19 +110,19 @@ func TestValidateActionExecution_CreateEpic_NotInitialized(t *testing.T) {
 func TestValidateActionExecution_StartEpic_NoEpics(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("start-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about no epics available
 	foundNoEpicsViolation := false
 	for _, violation := range result.Violations {
-		if contains(violation.Description, "No epics available") || 
-		   contains(violation.Description, "has_epics") {
+		if contains(violation.Description, "No epics available") ||
+			contains(violation.Description, "has_epics") {
 			foundNoEpicsViolation = true
 			break
 		}
@@ -135,19 +135,19 @@ func TestValidateActionExecution_StartEpic_EpicAlreadyActive(t *testing.T) {
 	setupCompleteProjectStructure(t, tempDir)
 	setupMultipleEpics(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("start-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about epic already being active
 	foundActiveEpicViolation := false
 	for _, violation := range result.Violations {
 		if contains(violation.Description, "already active") ||
-		   contains(violation.Description, "no_active_epic") {
+			contains(violation.Description, "no_active_epic") {
 			foundActiveEpicViolation = true
 			break
 		}
@@ -158,19 +158,19 @@ func TestValidateActionExecution_StartEpic_EpicAlreadyActive(t *testing.T) {
 func TestValidateActionExecution_CompleteEpic_NoActiveEpic(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("complete-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about no active epic
 	foundNoActiveEpicViolation := false
 	for _, violation := range result.Violations {
 		if contains(violation.Description, "No epic is currently active") ||
-		   contains(violation.Description, "epic_in_progress") {
+			contains(violation.Description, "epic_in_progress") {
 			foundNoActiveEpicViolation = true
 			break
 		}
@@ -183,19 +183,19 @@ func TestValidateActionExecution_CompleteEpic_NotComplete(t *testing.T) {
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("complete-epic", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about epic not being complete
 	foundIncompleteViolation := false
 	for _, violation := range result.Violations {
 		if contains(violation.Description, "complete") ||
-		   contains(violation.Description, "all_stories_complete") {
+			contains(violation.Description, "all_stories_complete") {
 			foundIncompleteViolation = true
 			break
 		}
@@ -206,19 +206,19 @@ func TestValidateActionExecution_CompleteEpic_NotComplete(t *testing.T) {
 func TestValidateActionExecution_CreateStory_NoActiveEpic(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-story", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about no active epic
 	foundNoActiveEpicViolation := false
 	for _, violation := range result.Violations {
 		if contains(violation.Description, "No epic is currently active") ||
-		   contains(violation.Description, "epic_in_progress") {
+			contains(violation.Description, "epic_in_progress") {
 			foundNoActiveEpicViolation = true
 			break
 		}
@@ -230,19 +230,19 @@ func TestValidateActionExecution_CreateTask_NoActiveStory(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-task", false)
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.NotEmpty(t, result.Violations)
-	
+
 	// Should have a violation about no active story
 	foundNoActiveStoryViolation := false
 	for _, violation := range result.Violations {
 		if contains(violation.Description, "No story is currently active") ||
-		   contains(violation.Description, "story_in_progress") {
+			contains(violation.Description, "story_in_progress") {
 			foundNoActiveStoryViolation = true
 			break
 		}
@@ -256,11 +256,11 @@ func TestValidateActionExecution_WithBlockers(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupBlockedTasks(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("continue-task", false)
 	require.NoError(t, err)
-	
+
 	// Should have blocking violations
 	hasBlockingViolation := false
 	for _, violation := range result.Violations {
@@ -276,11 +276,11 @@ func TestValidateActionExecution_WithBlockers(t *testing.T) {
 func TestValidateActionExecution_WithOverride(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-epic", true) // allow override
 	require.NoError(t, err)
-	
+
 	assert.True(t, result.IsValid)
 	assert.True(t, result.CanOverride)
 }
@@ -288,11 +288,11 @@ func TestValidateActionExecution_WithOverride(t *testing.T) {
 func TestValidateActionExecution_CriticalViolationNoOverride(t *testing.T) {
 	tempDir := t.TempDir()
 	// Don't initialize project
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	result, err := enforcer.ValidateActionExecution("create-epic", true) // allow override
 	require.NoError(t, err)
-	
+
 	assert.False(t, result.IsValid)
 	assert.False(t, result.CanOverride) // Critical violations can't be overridden
 	assert.Contains(t, result.OverrideRisk, "Critical dependencies prevent override")
@@ -301,7 +301,7 @@ func TestValidateActionExecution_CriticalViolationNoOverride(t *testing.T) {
 func TestValidateWorkflowTransition_ValidTransitions(t *testing.T) {
 	tempDir := t.TempDir()
 	enforcer := NewDependencyEnforcer(tempDir)
-	
+
 	tests := []struct {
 		name     string
 		from     WorkflowPosition
@@ -323,8 +323,8 @@ func TestValidateWorkflowTransition_ValidTransitions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := enforcer.ValidateWorkflowTransition(tt.from, tt.to, "test-action")
 			require.NoError(t, err)
-			
-			assert.Equal(t, tt.expected, result.IsValid, 
+
+			assert.Equal(t, tt.expected, result.IsValid,
 				"Transition from %s to %s should be %v", tt.from, tt.to, tt.expected)
 		})
 	}
@@ -333,13 +333,13 @@ func TestValidateWorkflowTransition_ValidTransitions(t *testing.T) {
 func TestGetAllowedActions(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	actions, err := enforcer.GetAllowedActions()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, actions)
-	
+
 	// Should contain create-epic since project is initialized
 	foundCreateEpic := false
 	for _, action := range actions {
@@ -354,13 +354,13 @@ func TestGetAllowedActions(t *testing.T) {
 func TestGetBlockedActions(t *testing.T) {
 	tempDir := t.TempDir()
 	// Don't initialize project - this should block most actions
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	blocked, err := enforcer.GetBlockedActions()
 	require.NoError(t, err)
-	
+
 	assert.NotEmpty(t, blocked)
-	
+
 	// Should contain create-epic since project is not initialized
 	createEpicResult, exists := blocked["create-epic"]
 	assert.True(t, exists, "create-epic should be blocked when project not initialized")
@@ -371,7 +371,7 @@ func TestGetBlockedActions(t *testing.T) {
 func TestViolationSeverityMapping(t *testing.T) {
 	tempDir := t.TempDir()
 	enforcer := NewDependencyEnforcer(tempDir)
-	
+
 	tests := []struct {
 		blockerSeverity string
 		expected        Severity
@@ -397,14 +397,14 @@ func TestPrerequisiteMapping(t *testing.T) {
 	setupMultipleEpics(t, tempDir) // This adds epics
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	analysis, err := enforcer.analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
 
 	tests := []struct {
-		prerequisite    string
-		expectedCurrent string
+		prerequisite     string
+		expectedCurrent  string
 		expectedRequired string
 	}{
 		{"project_initialized", "initialized", "initialized"},
@@ -418,7 +418,7 @@ func TestPrerequisiteMapping(t *testing.T) {
 		t.Run(tt.prerequisite, func(t *testing.T) {
 			current := enforcer.getCurrentStateForPrerequisite(tt.prerequisite, analysis)
 			required := enforcer.getRequiredStateForPrerequisite(tt.prerequisite)
-			
+
 			assert.Equal(t, tt.expectedCurrent, current)
 			assert.Equal(t, tt.expectedRequired, required)
 		})
@@ -428,7 +428,7 @@ func TestPrerequisiteMapping(t *testing.T) {
 func TestSuggestionGeneration(t *testing.T) {
 	tempDir := t.TempDir()
 	enforcer := NewDependencyEnforcer(tempDir)
-	
+
 	// Test not initialized project
 	analysis := &WorkflowAnalysis{
 		ProjectInitialized: false,
@@ -438,7 +438,7 @@ func TestSuggestionGeneration(t *testing.T) {
 	}
 
 	tests := []struct {
-		prerequisite      string
+		prerequisite       string
 		expectedSuggestion string
 	}{
 		{"project_initialized", "init-project"},
@@ -450,7 +450,7 @@ func TestSuggestionGeneration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.prerequisite, func(t *testing.T) {
 			suggestions := enforcer.getSuggestionsForPrerequisite(tt.prerequisite, analysis)
-			
+
 			assert.NotEmpty(t, suggestions)
 			foundExpected := false
 			for _, suggestion := range suggestions {
@@ -470,8 +470,8 @@ func TestStateTransitionSuggestions(t *testing.T) {
 	analysis := &WorkflowAnalysis{}
 
 	tests := []struct {
-		currentState     string
-		requiredState    string
+		currentState       string
+		requiredState      string
 		expectedSuggestion string
 	}{
 		{"not_initialized", "initialized", "init-project"},
@@ -483,7 +483,7 @@ func TestStateTransitionSuggestions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%s_to_%s", tt.currentState, tt.requiredState), func(t *testing.T) {
 			suggestions := enforcer.getSuggestionsForStateTransition(tt.currentState, tt.requiredState, analysis)
-			
+
 			assert.NotEmpty(t, suggestions)
 			foundExpected := false
 			for _, suggestion := range suggestions {
@@ -502,15 +502,15 @@ func TestOverrideRiskCalculation(t *testing.T) {
 	enforcer := NewDependencyEnforcer(tempDir)
 
 	tests := []struct {
-		name        string
-		actionID    string
-		violations  []DependencyViolation
+		name         string
+		actionID     string
+		violations   []DependencyViolation
 		expectedRisk string
 	}{
 		{
-			name:        "high risk action",
-			actionID:    "init-project",
-			violations:  []DependencyViolation{},
+			name:         "high risk action",
+			actionID:     "init-project",
+			violations:   []DependencyViolation{},
 			expectedRisk: "high",
 		},
 		{
@@ -556,7 +556,7 @@ func TestCircularDependencyDetection(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	enforcer := NewDependencyEnforcer(tempDir)
 	analysis, err := enforcer.analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
@@ -564,15 +564,15 @@ func TestCircularDependencyDetection(t *testing.T) {
 	result := &ValidationResult{
 		Violations: []DependencyViolation{},
 	}
-	
+
 	// Create an action with blocks
 	action := &WorkflowAction{
 		ID:     "complete-epic",
 		Blocks: []string{"create-story"},
 	}
-	
+
 	enforcer.validateCircularDependencies(action, analysis, result)
-	
+
 	// Should detect potential circular dependency if story creation is still executable
 	if len(result.Violations) > 0 {
 		assert.Equal(t, ViolationCircularDependency, result.Violations[0].Type)
@@ -583,9 +583,9 @@ func TestCircularDependencyDetection(t *testing.T) {
 func TestContainsStringHelper(t *testing.T) {
 	tempDir := t.TempDir()
 	enforcer := NewDependencyEnforcer(tempDir)
-	
+
 	slice := []string{"apple", "banana", "cherry"}
-	
+
 	assert.True(t, enforcer.containsString(slice, "banana"))
 	assert.False(t, enforcer.containsString(slice, "orange"))
 	assert.False(t, enforcer.containsString([]string{}, "apple"))
@@ -594,7 +594,7 @@ func TestContainsStringHelper(t *testing.T) {
 func TestOnlyNonCriticalViolations(t *testing.T) {
 	tempDir := t.TempDir()
 	enforcer := NewDependencyEnforcer(tempDir)
-	
+
 	tests := []struct {
 		name       string
 		violations []DependencyViolation
@@ -632,4 +632,3 @@ func TestOnlyNonCriticalViolations(t *testing.T) {
 		})
 	}
 }
-

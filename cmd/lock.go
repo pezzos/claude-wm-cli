@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"claude-wm-cli/internal/locking"
+
 	"github.com/spf13/cobra"
 )
 
@@ -111,24 +111,24 @@ func showLockStatus(files []string) {
 		fmt.Println("💡 Usage: claude-wm-cli lock status <file1> [file2...]")
 		return
 	}
-	
+
 	manager := locking.GetGlobalLockManager()
-	
+
 	fmt.Println("🔒 File Lock Status")
 	fmt.Println("==================")
-	
+
 	for _, file := range files {
 		absPath, err := filepath.Abs(file)
 		if err != nil {
 			fmt.Printf("❌ %s: Invalid path (%v)\n", file, err)
 			continue
 		}
-		
+
 		result := manager.CheckLockStatus(absPath)
-		
+
 		fmt.Printf("\n📁 %s\n", file)
 		fmt.Printf("Status: %s\n", getStatusIcon(result.Status))
-		
+
 		if result.LockInfo != nil {
 			info := result.LockInfo
 			fmt.Printf("Type: %s\n", info.Type)
@@ -136,20 +136,20 @@ func showLockStatus(files []string) {
 			fmt.Printf("Hostname: %s\n", info.Hostname)
 			fmt.Printf("Acquired: %s\n", info.AcquiredAt.Format("2006-01-02 15:04:05"))
 			fmt.Printf("Age: %v\n", info.Age())
-			
+
 			if info.IsStale() {
 				fmt.Printf("⚠️  Lock is stale (expired %v ago)\n", time.Since(info.ExpiresAt))
 			}
 		}
-		
+
 		if result.Error != nil {
 			fmt.Printf("Error: %v\n", result.Error)
 		}
-		
+
 		if result.Suggestion != "" {
 			fmt.Printf("💡 %s\n", result.Suggestion)
 		}
-		
+
 		if lockFormat == "json" {
 			jsonData, _ := json.MarshalIndent(result, "", "  ")
 			fmt.Printf("\nRaw data:\n%s\n", string(jsonData))
@@ -162,7 +162,7 @@ func acquireLocks(files []string) {
 		fmt.Println("❌ No files specified")
 		return
 	}
-	
+
 	options := &locking.LockOptions{
 		Type:         locking.LockExclusive,
 		Timeout:      lockTimeout,
@@ -170,15 +170,15 @@ func acquireLocks(files []string) {
 		StaleTimeout: 5 * time.Minute,
 		RetryDelay:   100 * time.Millisecond,
 	}
-	
+
 	if lockType == "shared" {
 		options.Type = locking.LockShared
 	}
-	
+
 	manager := locking.GetGlobalLockManager()
-	
+
 	fmt.Printf("🔒 Acquiring %s locks...\n", options.Type)
-	
+
 	acquired := 0
 	for _, file := range files {
 		absPath, err := filepath.Abs(file)
@@ -186,17 +186,17 @@ func acquireLocks(files []string) {
 			fmt.Printf("❌ %s: Invalid path (%v)\n", file, err)
 			continue
 		}
-		
+
 		lock, result := manager.LockFile(absPath, options)
-		
+
 		fmt.Printf("\n📁 %s\n", file)
-		
+
 		if result.Status == locking.LockStatusHeld {
 			fmt.Printf("✅ Lock acquired successfully\n")
 			fmt.Printf("Duration: %v\n", result.Duration)
 			fmt.Printf("Attempts: %d\n", result.Attempts)
 			acquired++
-			
+
 			if lockInfo := lock.GetLockInfo(); lockInfo != nil {
 				fmt.Printf("Lock ID: %d\n", lockInfo.PID)
 			}
@@ -211,9 +211,9 @@ func acquireLocks(files []string) {
 			}
 		}
 	}
-	
+
 	fmt.Printf("\n📊 Summary: %d/%d locks acquired\n", acquired, len(files))
-	
+
 	if acquired > 0 {
 		fmt.Println("⚠️  Locks are held by this process. Use 'claude-wm-cli lock release' to release them.")
 	}
@@ -224,11 +224,11 @@ func releaseLocks(files []string) {
 		fmt.Println("❌ No files specified")
 		return
 	}
-	
+
 	manager := locking.GetGlobalLockManager()
-	
+
 	fmt.Println("🔓 Releasing locks...")
-	
+
 	released := 0
 	for _, file := range files {
 		absPath, err := filepath.Abs(file)
@@ -236,9 +236,9 @@ func releaseLocks(files []string) {
 			fmt.Printf("❌ %s: Invalid path (%v)\n", file, err)
 			continue
 		}
-		
+
 		fmt.Printf("\n📁 %s\n", file)
-		
+
 		if err := manager.UnlockFile(absPath); err != nil {
 			fmt.Printf("❌ Failed to release lock: %v\n", err)
 		} else {
@@ -246,7 +246,7 @@ func releaseLocks(files []string) {
 			released++
 		}
 	}
-	
+
 	fmt.Printf("\n📊 Summary: %d/%d locks released\n", released, len(files))
 }
 
@@ -255,20 +255,20 @@ func testLocking(args []string) {
 	if len(args) > 0 {
 		testFile = args[0]
 	}
-	
+
 	fmt.Println("🧪 Testing File Locking System")
 	fmt.Println("==============================")
-	
+
 	// Create test file
 	if err := os.WriteFile(testFile, []byte("test data"), 0644); err != nil {
 		fmt.Printf("❌ Failed to create test file: %v\n", err)
 		return
 	}
 	defer os.Remove(testFile)
-	
+
 	manager := locking.GetGlobalLockManager()
 	options := locking.DefaultLockOptions()
-	
+
 	// Test 1: Basic lock acquisition
 	fmt.Println("\n🔬 Test 1: Basic Lock Acquisition")
 	lock1, result1 := manager.LockFile(testFile, options)
@@ -278,7 +278,7 @@ func testLocking(args []string) {
 		fmt.Printf("❌ Lock acquisition failed: %v\n", result1.Error)
 		return
 	}
-	
+
 	// Test 2: Conflict detection
 	fmt.Println("\n🔬 Test 2: Conflict Detection")
 	_, result2 := manager.LockFile(testFile, options)
@@ -289,7 +289,7 @@ func testLocking(args []string) {
 	} else {
 		fmt.Printf("❌ Unexpected result: %s\n", result2.Status)
 	}
-	
+
 	// Test 3: Lock info
 	fmt.Println("\n🔬 Test 3: Lock Information")
 	if info := lock1.GetLockInfo(); info != nil {
@@ -300,7 +300,7 @@ func testLocking(args []string) {
 	} else {
 		fmt.Println("❌ Failed to get lock info")
 	}
-	
+
 	// Test 4: Release lock
 	fmt.Println("\n🔬 Test 4: Lock Release")
 	if err := manager.UnlockFile(testFile); err != nil {
@@ -308,7 +308,7 @@ func testLocking(args []string) {
 	} else {
 		fmt.Println("✅ Lock released successfully")
 	}
-	
+
 	// Test 5: Re-acquisition after release
 	fmt.Println("\n🔬 Test 5: Re-acquisition After Release")
 	_, result5 := manager.LockFile(testFile, options)
@@ -318,7 +318,7 @@ func testLocking(args []string) {
 	} else {
 		fmt.Printf("❌ Failed to re-acquire lock: %v\n", result5.Error)
 	}
-	
+
 	// Test 6: Timeout test
 	fmt.Println("\n🔬 Test 6: Timeout Behavior")
 	quickOptions := &locking.LockOptions{
@@ -327,24 +327,24 @@ func testLocking(args []string) {
 		NonBlocking: false,
 		RetryDelay:  10 * time.Millisecond,
 	}
-	
+
 	// Acquire lock first
 	manager.LockFile(testFile, options)
-	
+
 	// Try to acquire with short timeout (should fail)
 	start := time.Now()
 	_, timeoutResult := manager.LockFile(testFile, quickOptions)
 	duration := time.Since(start)
-	
+
 	if timeoutResult.Status == locking.LockStatusError {
 		fmt.Printf("✅ Timeout behavior correct (took %v)\n", duration)
 	} else {
 		fmt.Printf("❌ Unexpected timeout result: %s\n", timeoutResult.Status)
 	}
-	
+
 	// Clean up
 	manager.UnlockFile(testFile)
-	
+
 	// Show metrics
 	fmt.Println("\n📊 Test Metrics")
 	metrics := manager.GetMetrics()
@@ -353,7 +353,7 @@ func testLocking(args []string) {
 	fmt.Printf("Failed locks: %d\n", metrics.FailedLocks)
 	fmt.Printf("Timeout errors: %d\n", metrics.TimeoutErrors)
 	fmt.Printf("Active locks: %d\n", metrics.ActiveLocks)
-	
+
 	fmt.Println("\n🎉 File locking test completed!")
 }
 
@@ -361,28 +361,28 @@ func cleanupLocks(directories []string) {
 	if len(directories) == 0 {
 		directories = []string{"."} // Default to current directory
 	}
-	
+
 	manager := locking.GetGlobalLockManager()
-	
+
 	fmt.Println("🧹 Cleaning Up Stale Locks")
 	fmt.Println("==========================")
-	
+
 	totalCleaned := 0
 	for _, dir := range directories {
 		fmt.Printf("\n📁 Scanning directory: %s\n", dir)
-		
+
 		cleaned, err := manager.CleanupStaleLocks(dir)
 		if err != nil {
 			fmt.Printf("❌ Error scanning directory: %v\n", err)
 			continue
 		}
-		
+
 		fmt.Printf("✅ Cleaned %d stale locks\n", cleaned)
 		totalCleaned += cleaned
 	}
-	
+
 	fmt.Printf("\n📊 Total stale locks cleaned: %d\n", totalCleaned)
-	
+
 	if totalCleaned == 0 {
 		fmt.Println("🎉 No stale locks found!")
 	}
@@ -409,22 +409,22 @@ func getStatusIcon(status locking.LockStatus) string {
 
 func init() {
 	rootCmd.AddCommand(lockCmd)
-	
+
 	// Add subcommands
 	lockCmd.AddCommand(lockStatusCmd)
 	lockCmd.AddCommand(lockAcquireCmd)
 	lockCmd.AddCommand(lockReleaseCmd)
 	lockCmd.AddCommand(lockTestCmd)
 	lockCmd.AddCommand(lockCleanupCmd)
-	
+
 	// Global flags
 	lockCmd.PersistentFlags().StringVarP(&lockFormat, "format", "f", "text", "Output format (text, json)")
-	
+
 	// Acquire command flags
 	lockAcquireCmd.Flags().StringVar(&lockType, "type", "exclusive", "Lock type (exclusive, shared)")
 	lockAcquireCmd.Flags().DurationVarP(&lockTimeout, "timeout", "t", 30*time.Second, "Lock acquisition timeout")
 	lockAcquireCmd.Flags().BoolVar(&lockNonBlocking, "non-blocking", false, "Fail immediately if lock unavailable")
-	
+
 	// Cleanup command flags
 	lockCleanupCmd.Flags().BoolVar(&lockCleanup, "force", false, "Force cleanup even if process might be alive")
 }

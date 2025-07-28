@@ -15,7 +15,7 @@ import (
 type WorkflowPosition string
 
 const (
-	PositionUnknown       WorkflowPosition = "unknown"
+	PositionUnknown        WorkflowPosition = "unknown"
 	PositionNotInitialized WorkflowPosition = "not_initialized"
 	PositionProjectLevel   WorkflowPosition = "project"
 	PositionEpicLevel      WorkflowPosition = "epic"
@@ -30,24 +30,24 @@ func (wp WorkflowPosition) String() string {
 
 // WorkflowAnalysis contains the complete analysis of the current workflow state
 type WorkflowAnalysis struct {
-	Position            WorkflowPosition    `json:"position"`
-	ProjectInitialized  bool               `json:"project_initialized"`
-	CurrentEpic         *state.EpicState   `json:"current_epic,omitempty"`
-	CurrentStory        *state.StoryState  `json:"current_story,omitempty"`
-	CurrentTasks        []state.TaskState  `json:"current_tasks,omitempty"`
-	CompletionMetrics   CompletionMetrics  `json:"completion_metrics"`
-	Blockers           []WorkflowBlocker   `json:"blockers,omitempty"`
-	Recommendations    []string           `json:"recommendations,omitempty"`
-	RootPath           string             `json:"root_path"`
-	AnalyzedAt         time.Time          `json:"analyzed_at"`
-	Issues             []string           `json:"issues,omitempty"`
+	Position           WorkflowPosition  `json:"position"`
+	ProjectInitialized bool              `json:"project_initialized"`
+	CurrentEpic        *state.EpicState  `json:"current_epic,omitempty"`
+	CurrentStory       *state.StoryState `json:"current_story,omitempty"`
+	CurrentTasks       []state.TaskState `json:"current_tasks,omitempty"`
+	CompletionMetrics  CompletionMetrics `json:"completion_metrics"`
+	Blockers           []WorkflowBlocker `json:"blockers,omitempty"`
+	Recommendations    []string          `json:"recommendations,omitempty"`
+	RootPath           string            `json:"root_path"`
+	AnalyzedAt         time.Time         `json:"analyzed_at"`
+	Issues             []string          `json:"issues,omitempty"`
 }
 
 // CompletionMetrics tracks progress at all levels of the workflow
 type CompletionMetrics struct {
-	ProjectProgress  float64 `json:"project_progress"`  // Overall project completion %
-	EpicProgress     float64 `json:"epic_progress"`     // Current epic completion %
-	StoryProgress    float64 `json:"story_progress"`    // Current story completion %
+	ProjectProgress  float64 `json:"project_progress"` // Overall project completion %
+	EpicProgress     float64 `json:"epic_progress"`    // Current epic completion %
+	StoryProgress    float64 `json:"story_progress"`   // Current story completion %
 	TotalEpics       int     `json:"total_epics"`
 	CompletedEpics   int     `json:"completed_epics"`
 	TotalStories     int     `json:"total_stories"`
@@ -63,7 +63,7 @@ type WorkflowBlocker struct {
 	Type        BlockerType `json:"type"`
 	Severity    string      `json:"severity"` // critical, high, medium, low
 	Description string      `json:"description"`
-	Entity      string      `json:"entity,omitempty"`    // ID of blocked entity
+	Entity      string      `json:"entity,omitempty"` // ID of blocked entity
 	Suggestion  string      `json:"suggestion,omitempty"`
 }
 
@@ -93,10 +93,10 @@ func NewWorkflowAnalyzer(rootPath string) *WorkflowAnalyzer {
 // AnalyzeWorkflowPosition performs a comprehensive analysis of the current workflow state
 func (wa *WorkflowAnalyzer) AnalyzeWorkflowPosition() (*WorkflowAnalysis, error) {
 	analysis := &WorkflowAnalysis{
-		RootPath:   wa.rootPath,
-		AnalyzedAt: time.Now(),
-		Issues:     []string{},
-		Blockers:   []WorkflowBlocker{},
+		RootPath:        wa.rootPath,
+		AnalyzedAt:      time.Now(),
+		Issues:          []string{},
+		Blockers:        []WorkflowBlocker{},
 		Recommendations: []string{},
 	}
 
@@ -179,7 +179,7 @@ func (wa *WorkflowAnalyzer) analyzeCurrentPosition(analysis *WorkflowAnalysis) e
 // loadCurrentEpic loads the currently active epic
 func (wa *WorkflowAnalyzer) loadCurrentEpic() (*state.EpicState, error) {
 	epicPath := filepath.Join(wa.rootPath, "docs/2-current-epic/current-epic.json")
-	
+
 	data, err := os.ReadFile(epicPath)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (wa *WorkflowAnalyzer) loadCurrentEpic() (*state.EpicState, error) {
 func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
 	// Try to load from stories.json and find the current one
 	storiesPath := filepath.Join(wa.rootPath, "docs/2-current-epic/stories.json")
-	
+
 	data, err := os.ReadFile(storiesPath)
 	if err != nil {
 		return nil, err
@@ -216,8 +216,8 @@ func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
 
 	// Find current story (either by meta.current_story or by status in_progress)
 	for _, story := range storiesFile.Stories {
-		if story.Metadata.ID == storiesFile.Meta.CurrentStory || 
-		   story.Status == state.StatusInProgress {
+		if story.Metadata.ID == storiesFile.Meta.CurrentStory ||
+			story.Status == state.StatusInProgress {
 			return &story, nil
 		}
 	}
@@ -228,7 +228,7 @@ func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
 // loadCurrentTasks loads currently active tasks
 func (wa *WorkflowAnalyzer) loadCurrentTasks() ([]state.TaskState, error) {
 	tasksDir := filepath.Join(wa.rootPath, "docs/3-current-task")
-	
+
 	// Check if tasks directory exists
 	if _, err := os.Stat(tasksDir); err != nil {
 		if os.IsNotExist(err) {
@@ -337,7 +337,7 @@ func (wa *WorkflowAnalyzer) calculateCompletionMetrics(analysis *WorkflowAnalysi
 // loadAllEpics loads all epics from the epics.json file
 func (wa *WorkflowAnalyzer) loadAllEpics() ([]state.EpicState, error) {
 	epicsPath := filepath.Join(wa.rootPath, "docs/1-project/epics.json")
-	
+
 	data, err := os.ReadFile(epicsPath)
 	if err != nil {
 		return nil, err
@@ -358,7 +358,7 @@ func (wa *WorkflowAnalyzer) loadAllEpics() ([]state.EpicState, error) {
 func (wa *WorkflowAnalyzer) calculateEpicMetrics(analysis *WorkflowAnalysis, metrics *CompletionMetrics) error {
 	// Load stories for the current epic
 	storiesPath := filepath.Join(wa.rootPath, "docs/2-current-epic/stories.json")
-	
+
 	data, err := os.ReadFile(storiesPath)
 	if err != nil {
 		return err

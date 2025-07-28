@@ -6,29 +6,29 @@ import (
 
 // Epic represents a large unit of work composed of multiple user stories
 type Epic struct {
-	ID          string         `json:"id"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	Priority    Priority       `json:"priority"`
-	Status      Status         `json:"status"`
-	StartDate   *time.Time     `json:"start_date,omitempty"`
-	EndDate     *time.Time     `json:"end_date,omitempty"`
-	Duration    string         `json:"duration,omitempty"`
-	Tags        []string       `json:"tags,omitempty"`
-	Dependencies []string      `json:"dependencies,omitempty"`
-	UserStories []UserStory    `json:"user_stories,omitempty"`
-	Progress    ProgressMetrics `json:"progress"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	ID           string          `json:"id"`
+	Title        string          `json:"title"`
+	Description  string          `json:"description"`
+	Priority     Priority        `json:"priority"`
+	Status       Status          `json:"status"`
+	StartDate    *time.Time      `json:"start_date,omitempty"`
+	EndDate      *time.Time      `json:"end_date,omitempty"`
+	Duration     string          `json:"duration,omitempty"`
+	Tags         []string        `json:"tags,omitempty"`
+	Dependencies []string        `json:"dependencies,omitempty"`
+	UserStories  []UserStory     `json:"user_stories,omitempty"`
+	Progress     ProgressMetrics `json:"progress"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 // Priority represents the priority level of an epic
 type Priority string
 
 const (
-	PriorityLow    Priority = "low"
-	PriorityMedium Priority = "medium"
-	PriorityHigh   Priority = "high"
+	PriorityLow      Priority = "low"
+	PriorityMedium   Priority = "medium"
+	PriorityHigh     Priority = "high"
 	PriorityCritical Priority = "critical"
 )
 
@@ -56,19 +56,19 @@ type UserStory struct {
 
 // ProgressMetrics tracks the progress of an epic
 type ProgressMetrics struct {
-	TotalStoryPoints     int     `json:"total_story_points"`
-	CompletedStoryPoints int     `json:"completed_story_points"`
-	TotalStories         int     `json:"total_stories"`
-	CompletedStories     int     `json:"completed_stories"`
-	CompletionPercentage float64 `json:"completion_percentage"`
+	TotalStoryPoints     int        `json:"total_story_points"`
+	CompletedStoryPoints int        `json:"completed_story_points"`
+	TotalStories         int        `json:"total_stories"`
+	CompletedStories     int        `json:"completed_stories"`
+	CompletionPercentage float64    `json:"completion_percentage"`
 	EstimatedEndDate     *time.Time `json:"estimated_end_date,omitempty"`
 }
 
 // EpicCollection represents a collection of epics with metadata
 type EpicCollection struct {
-	ProjectID   string            `json:"project_id"`
-	Epics       map[string]*Epic  `json:"epics"`
-	CurrentEpic string            `json:"current_epic,omitempty"`
+	ProjectID   string             `json:"project_id"`
+	Epics       map[string]*Epic   `json:"epics"`
+	CurrentEpic string             `json:"current_epic,omitempty"`
 	Metadata    CollectionMetadata `json:"metadata"`
 }
 

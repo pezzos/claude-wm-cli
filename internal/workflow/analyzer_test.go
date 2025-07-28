@@ -36,7 +36,7 @@ func TestWorkflowPosition_String(t *testing.T) {
 func TestNewWorkflowAnalyzer(t *testing.T) {
 	rootPath := "/test/path"
 	analyzer := NewWorkflowAnalyzer(rootPath)
-	
+
 	assert.NotNil(t, analyzer)
 	assert.Equal(t, rootPath, analyzer.rootPath)
 }
@@ -47,7 +47,7 @@ func TestAnalyzeWorkflowPosition_NotInitialized(t *testing.T) {
 
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, PositionNotInitialized, analysis.Position)
 	assert.False(t, analysis.ProjectInitialized)
 	assert.Contains(t, analysis.Recommendations, "Initialize project structure")
@@ -58,11 +58,11 @@ func TestAnalyzeWorkflowPosition_NotInitialized(t *testing.T) {
 func TestAnalyzeWorkflowPosition_ProjectLevel(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, PositionProjectLevel, analysis.Position)
 	assert.True(t, analysis.ProjectInitialized)
 	assert.Nil(t, analysis.CurrentEpic)
@@ -75,11 +75,11 @@ func TestAnalyzeWorkflowPosition_EpicLevel(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, PositionEpicLevel, analysis.Position)
 	assert.True(t, analysis.ProjectInitialized)
 	assert.NotNil(t, analysis.CurrentEpic)
@@ -93,11 +93,11 @@ func TestAnalyzeWorkflowPosition_StoryLevel(t *testing.T) {
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, PositionStoryLevel, analysis.Position)
 	assert.True(t, analysis.ProjectInitialized)
 	assert.NotNil(t, analysis.CurrentEpic)
@@ -113,11 +113,11 @@ func TestAnalyzeWorkflowPosition_TaskLevel(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupCurrentTasks(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, PositionTaskLevel, analysis.Position)
 	assert.True(t, analysis.ProjectInitialized)
 	assert.NotNil(t, analysis.CurrentEpic)
@@ -131,11 +131,11 @@ func TestAnalyzeWorkflowPosition_WithBlockers(t *testing.T) {
 	setupCompleteProjectStructure(t, tempDir)
 	setupCurrentEpic(t, tempDir)
 	// Don't setup current story - this should create a blocker
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	assert.Len(t, analysis.Blockers, 1)
 	assert.Equal(t, BlockerMissingDefinition, analysis.Blockers[0].Type)
 	assert.Contains(t, analysis.Blockers[0].Description, "Epic is selected but no stories are defined")
@@ -149,21 +149,21 @@ func TestCalculateCompletionMetrics(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupCurrentTasks(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	metrics := analysis.CompletionMetrics
-	assert.Equal(t, 3, metrics.TotalEpics) // From setupMultipleEpics
+	assert.Equal(t, 3, metrics.TotalEpics)     // From setupMultipleEpics
 	assert.Equal(t, 1, metrics.CompletedEpics) // One epic marked as done
 	assert.InDelta(t, 33.33, metrics.ProjectProgress, 0.1)
-	
-	assert.Equal(t, 2, metrics.TotalStories) // From setupCurrentStory
+
+	assert.Equal(t, 2, metrics.TotalStories)     // From setupCurrentStory
 	assert.Equal(t, 1, metrics.CompletedStories) // One story marked as done
 	assert.Equal(t, 50.0, metrics.EpicProgress)
-	
-	assert.Equal(t, 2, metrics.TotalTasks) // From setupCurrentTasks
+
+	assert.Equal(t, 2, metrics.TotalTasks)     // From setupCurrentTasks
 	assert.Equal(t, 0, metrics.CompletedTasks) // No tasks marked as done
 	assert.Equal(t, 0.0, metrics.StoryProgress)
 }
@@ -172,11 +172,11 @@ func TestDetectBlockers_InconsistentState(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
 	setupCompletedEpicWithActiveStory(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	// Should detect inconsistent state: epic is done but story is in progress
 	hasInconsistentStateBlocker := false
 	for _, blocker := range analysis.Blockers {
@@ -195,11 +195,11 @@ func TestDetectBlockers_BlockedTasks(t *testing.T) {
 	setupCurrentEpic(t, tempDir)
 	setupCurrentStory(t, tempDir)
 	setupBlockedTasks(t, tempDir)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	analysis, err := analyzer.AnalyzeWorkflowPosition()
 	require.NoError(t, err)
-	
+
 	// Should detect blocked task
 	hasBlockedTaskBlocker := false
 	for _, blocker := range analysis.Blockers {
@@ -214,35 +214,35 @@ func TestDetectBlockers_BlockedTasks(t *testing.T) {
 
 func TestGetWorkflowCapabilities(t *testing.T) {
 	tests := []struct {
-		name                string
-		position           WorkflowPosition
+		name                 string
+		position             WorkflowPosition
 		expectedCapabilities []string
-		mustContain        []string
+		mustContain          []string
 	}{
 		{
-			name:         "not initialized",
-			position:     PositionNotInitialized,
-			mustContain:  []string{"init-project", "help"},
+			name:        "not initialized",
+			position:    PositionNotInitialized,
+			mustContain: []string{"init-project", "help"},
 		},
 		{
-			name:         "project level",
-			position:     PositionProjectLevel,
-			mustContain:  []string{"create-epic", "list-epics", "status", "help"},
+			name:        "project level",
+			position:    PositionProjectLevel,
+			mustContain: []string{"create-epic", "list-epics", "status", "help"},
 		},
 		{
-			name:         "epic level",
-			position:     PositionEpicLevel,
-			mustContain:  []string{"create-story", "start-epic", "list-stories", "help"},
+			name:        "epic level",
+			position:    PositionEpicLevel,
+			mustContain: []string{"create-story", "start-epic", "list-stories", "help"},
 		},
 		{
-			name:         "story level",
-			position:     PositionStoryLevel,
-			mustContain:  []string{"create-task", "continue-story", "list-tasks", "help"},
+			name:        "story level",
+			position:    PositionStoryLevel,
+			mustContain: []string{"create-task", "continue-story", "list-tasks", "help"},
 		},
 		{
-			name:         "task level",
-			position:     PositionTaskLevel,
-			mustContain:  []string{"continue-task", "complete-task", "create-task", "help"},
+			name:        "task level",
+			position:    PositionTaskLevel,
+			mustContain: []string{"continue-task", "complete-task", "create-task", "help"},
 		},
 	}
 
@@ -250,11 +250,11 @@ func TestGetWorkflowCapabilities(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			analyzer := NewWorkflowAnalyzer("/test")
 			analysis := &WorkflowAnalysis{Position: tt.position}
-			
+
 			capabilities := analyzer.GetWorkflowCapabilities(analysis)
-			
+
 			for _, expectedCap := range tt.mustContain {
-				assert.Contains(t, capabilities, expectedCap, 
+				assert.Contains(t, capabilities, expectedCap,
 					"Capabilities should contain %s for position %s", expectedCap, tt.position)
 			}
 		})
@@ -264,7 +264,7 @@ func TestGetWorkflowCapabilities(t *testing.T) {
 func TestLoadCurrentTasks_TodoFormat(t *testing.T) {
 	tempDir := t.TempDir()
 	setupCompleteProjectStructure(t, tempDir)
-	
+
 	// Create a todo file in the expected format
 	todoData := map[string]interface{}{
 		"todos": []map[string]interface{}{
@@ -288,15 +288,15 @@ func TestLoadCurrentTasks_TodoFormat(t *testing.T) {
 			},
 		},
 	}
-	
+
 	todoJSON, _ := json.Marshal(todoData)
 	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo.json")
 	os.WriteFile(todoPath, todoJSON, 0644)
-	
+
 	analyzer := NewWorkflowAnalyzer(tempDir)
 	tasks, err := analyzer.loadCurrentTasks()
 	require.NoError(t, err)
-	
+
 	// Should only load todo and in_progress tasks, not completed ones
 	assert.Len(t, tasks, 2)
 	assert.Equal(t, "TASK-001", tasks[0].Metadata.ID)

@@ -51,19 +51,19 @@ func (md *MenuDisplay) Show(menu *Menu) (*MenuResult, error) {
 	for {
 		// Display the menu
 		md.displayMenu(menu)
-		
+
 		// Get user input
 		input, err := md.getUserInput()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get user input: %w", err)
 		}
-		
+
 		// Process the input
 		result := md.processInput(menu, input)
 		if result != nil {
 			return result, nil
 		}
-		
+
 		// If we reach here, input was invalid - show error and retry
 		fmt.Println("\n❌ Invalid selection. Please try again.")
 	}
@@ -73,19 +73,19 @@ func (md *MenuDisplay) Show(menu *Menu) (*MenuResult, error) {
 func (md *MenuDisplay) displayMenu(menu *Menu) {
 	// Clear screen (optional - can be made configurable)
 	// fmt.Print("\033[2J\033[H")
-	
+
 	// Display title
 	if menu.Title != "" {
 		fmt.Printf("\n═══ %s ═══\n\n", menu.Title)
 	}
-	
+
 	// Display options
 	if menu.ShowNumbers {
 		for i, option := range menu.Options {
 			if !option.Enabled {
 				continue
 			}
-			
+
 			fmt.Printf("  %d) %s", i+1, option.Label)
 			if option.Description != "" {
 				fmt.Printf(" - %s", option.Description)
@@ -97,7 +97,7 @@ func (md *MenuDisplay) displayMenu(menu *Menu) {
 			if !option.Enabled {
 				continue
 			}
-			
+
 			fmt.Printf("  • %s", option.Label)
 			if option.Description != "" {
 				fmt.Printf(" - %s", option.Description)
@@ -105,11 +105,11 @@ func (md *MenuDisplay) displayMenu(menu *Menu) {
 			fmt.Println()
 		}
 	}
-	
+
 	// Display navigation options
 	fmt.Println()
 	var navOptions []string
-	
+
 	if menu.AllowBack {
 		navOptions = append(navOptions, "b) Back")
 	}
@@ -119,11 +119,11 @@ func (md *MenuDisplay) displayMenu(menu *Menu) {
 	if menu.ShowHelp {
 		navOptions = append(navOptions, "h) Help")
 	}
-	
+
 	if len(navOptions) > 0 {
 		fmt.Printf("  %s\n", strings.Join(navOptions, "  "))
 	}
-	
+
 	fmt.Print("\nSelect an option: ")
 }
 
@@ -133,14 +133,14 @@ func (md *MenuDisplay) getUserInput() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return strings.TrimSpace(input), nil
 }
 
 // processInput processes user input and returns appropriate result
 func (md *MenuDisplay) processInput(menu *Menu, input string) *MenuResult {
 	input = strings.ToLower(strings.TrimSpace(input))
-	
+
 	// Handle special shortcuts
 	switch input {
 	case "q", "quit", "exit":
@@ -159,7 +159,7 @@ func (md *MenuDisplay) processInput(menu *Menu, input string) *MenuResult {
 		// Empty input - show error
 		return nil
 	}
-	
+
 	// Try to parse as number (for numbered menus)
 	if menu.ShowNumbers {
 		if num, err := strconv.Atoi(input); err == nil {
@@ -175,15 +175,15 @@ func (md *MenuDisplay) processInput(menu *Menu, input string) *MenuResult {
 			}
 		}
 	}
-	
+
 	// Try to match by option ID or label (case-insensitive)
 	for i, option := range menu.Options {
 		if !option.Enabled {
 			continue
 		}
-		
+
 		if strings.EqualFold(option.ID, input) ||
-		   strings.EqualFold(option.Label, input) {
+			strings.EqualFold(option.Label, input) {
 			return &MenuResult{
 				SelectedOption: &menu.Options[i],
 				Action:         option.Action,
@@ -191,7 +191,7 @@ func (md *MenuDisplay) processInput(menu *Menu, input string) *MenuResult {
 			}
 		}
 	}
-	
+
 	return nil // Invalid input
 }
 
@@ -218,12 +218,12 @@ func (md *MenuDisplay) ShowWarning(message string) {
 // Confirm asks the user for yes/no confirmation
 func (md *MenuDisplay) Confirm(message string) (bool, error) {
 	fmt.Printf("%s (y/N): ", message)
-	
+
 	input, err := md.getUserInput()
 	if err != nil {
 		return false, err
 	}
-	
+
 	input = strings.ToLower(strings.TrimSpace(input))
 	return input == "y" || input == "yes", nil
 }
@@ -241,16 +241,16 @@ func (md *MenuDisplay) PromptStringWithDefault(prompt, defaultValue string) (str
 	} else {
 		fmt.Printf("%s: ", prompt)
 	}
-	
+
 	input, err := md.getUserInput()
 	if err != nil {
 		return "", err
 	}
-	
+
 	if input == "" && defaultValue != "" {
 		return defaultValue, nil
 	}
-	
+
 	return input, nil
 }
 
@@ -259,7 +259,7 @@ func (md *MenuDisplay) WaitForKeyPress(message string) error {
 	if message == "" {
 		message = "Press any key to continue..."
 	}
-	
+
 	fmt.Printf("\n%s ", message)
 	_, err := md.reader.ReadString('\n')
 	return err

@@ -48,7 +48,7 @@ func (g *Generator) GenerateStoriesFromEpic(epicID string) error {
 	// Generate stories from epic user stories
 	for _, userStory := range ep.UserStories {
 		storyID := g.generateStoryID(userStory.Title, collection)
-		
+
 		// Skip if story already exists
 		if _, exists := collection.Stories[storyID]; exists {
 			continue
@@ -218,9 +218,9 @@ func (g *Generator) UpdateStory(storyID string, options StoryUpdateOptions) (*St
 		if err := g.validateStatusTransition(story, *options.Status); err != nil {
 			return nil, err
 		}
-		
+
 		story.Status = *options.Status
-		
+
 		// Set timestamps for status changes
 		if *options.Status == epic.StatusInProgress && story.StartedAt == nil {
 			story.StartedAt = &now
@@ -376,26 +376,26 @@ func (g *Generator) loadStoryCollection() (*StoryCollection, error) {
 	}
 
 	var collection StoryCollection
-	
+
 	// Try to unmarshal as the new format first
 	if err := json.Unmarshal(data, &collection); err != nil {
 		// If that fails, try to parse the old format and migrate
 		var oldFormat struct {
 			Stories []struct {
-				ID          string   `json:"id"`
-				Title       string   `json:"title"`
-				Description string   `json:"description"`
-				Priority    string   `json:"priority"`
-				Status      string   `json:"status"`
-				StoryPoints int      `json:"storyPoints"`
+				ID          string `json:"id"`
+				Title       string `json:"title"`
+				Description string `json:"description"`
+				Priority    string `json:"priority"`
+				Status      string `json:"status"`
+				StoryPoints int    `json:"storyPoints"`
 				// Add other fields as needed for migration
 			} `json:"stories"`
 		}
-		
+
 		if err := json.Unmarshal(data, &oldFormat); err != nil {
 			return nil, fmt.Errorf("failed to parse stories file: %w", err)
 		}
-		
+
 		// Migrate from old format to new format
 		collection = StoryCollection{
 			Stories:      make(map[string]*Story),
@@ -407,7 +407,7 @@ func (g *Generator) loadStoryCollection() (*StoryCollection, error) {
 				TotalTasks:   0,
 			},
 		}
-		
+
 		// Convert old stories to new format (but skip since they are not in our expected format)
 		// For now, we'll just create an empty collection and let users create new stories
 		fmt.Printf("Warning: Old stories.json format detected. Creating new story collection.\n")
@@ -498,7 +498,7 @@ func (g *Generator) validateStatusTransition(story *Story, newStatus Status) err
 		epic.StatusPlanned:    {epic.StatusInProgress, epic.StatusCancelled},
 		epic.StatusInProgress: {epic.StatusCompleted, epic.StatusOnHold, epic.StatusCancelled},
 		epic.StatusOnHold:     {epic.StatusInProgress, epic.StatusCancelled},
-		epic.StatusCompleted:  {}, // Cannot transition from completed
+		epic.StatusCompleted:  {},                   // Cannot transition from completed
 		epic.StatusCancelled:  {epic.StatusPlanned}, // Can restart cancelled stories
 	}
 

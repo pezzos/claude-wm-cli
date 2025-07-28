@@ -41,43 +41,43 @@ func (ws WorkflowState) String() string {
 
 // ProjectContext contains information about the current project state
 type ProjectContext struct {
-	State           WorkflowState
-	ProjectPath     string
-	CurrentEpic     *EpicContext
-	CurrentStory    *StoryContext
-	CurrentTask     *TaskContext
+	State            WorkflowState
+	ProjectPath      string
+	CurrentEpic      *EpicContext
+	CurrentStory     *StoryContext
+	CurrentTask      *TaskContext
 	AvailableActions []string
-	Issues          []string // List of issues or warnings about project state
+	Issues           []string // List of issues or warnings about project state
 }
 
 // EpicContext contains information about the current epic
 type EpicContext struct {
-	ID          string
-	Title       string
-	Status      string
-	Priority    string
-	Progress    float64 // 0.0 to 1.0
-	TotalStories int
+	ID               string
+	Title            string
+	Status           string
+	Priority         string
+	Progress         float64 // 0.0 to 1.0
+	TotalStories     int
 	CompletedStories int
 }
 
 // StoryContext contains information about the current story
 type StoryContext struct {
-	ID          string
-	Title       string
-	Status      string
-	Priority    string
-	Progress    float64
-	TotalTasks  int
+	ID             string
+	Title          string
+	Status         string
+	Priority       string
+	Progress       float64
+	TotalTasks     int
 	CompletedTasks int
 }
 
 // TaskContext contains information about the current task
 type TaskContext struct {
-	ID         string
-	Title      string
-	Status     string
-	Priority   string
+	ID             string
+	Title          string
+	Status         string
+	Priority       string
 	EstimatedHours int
 }
 
@@ -98,7 +98,7 @@ func (cd *ContextDetector) DetectContext() (*ProjectContext, error) {
 	ctx := &ProjectContext{
 		ProjectPath:      cd.projectPath,
 		AvailableActions: []string{},
-		Issues:          []string{},
+		Issues:           []string{},
 	}
 
 	// Check if docs directory exists
@@ -135,7 +135,7 @@ func (cd *ContextDetector) pathExists(path string) bool {
 func (cd *ContextDetector) validateProjectStructure(ctx *ProjectContext) error {
 	requiredDirs := []string{
 		"docs/1-project",
-		"docs/2-current-epic", 
+		"docs/2-current-epic",
 		"docs/3-current-task",
 	}
 
@@ -156,12 +156,12 @@ func (cd *ContextDetector) detectCurrentState(ctx *ProjectContext) error {
 	epicsPath := filepath.Join(cd.projectPath, "docs/1-project/epics.json")
 	if cd.pathExists(epicsPath) {
 		ctx.State = StateHasEpics
-		
+
 		// Validate epics.json file
 		if err := cd.validateEpicsFile(epicsPath); err != nil {
 			ctx.Issues = append(ctx.Issues, fmt.Sprintf("Invalid epics.json: %v", err))
 		}
-		
+
 		// Try to load epic context
 		if epicCtx, err := cd.loadEpicContext(); err != nil {
 			ctx.Issues = append(ctx.Issues, fmt.Sprintf("Failed to load epic context: %v", err))
@@ -306,7 +306,7 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 // loadTaskContext loads the current task context from todo files
 func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 	taskDir := filepath.Join(cd.projectPath, "docs/3-current-task")
-	
+
 	// Look for todo files in current task directory
 	entries, err := os.ReadDir(taskDir)
 	if err != nil {
@@ -316,8 +316,8 @@ func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 	// Find the most recent todo file
 	var todoFile string
 	for _, entry := range entries {
-		if filepath.Ext(entry.Name()) == ".json" && 
-		   (entry.Name() == "todo.json" || entry.Name() == "todo-epic-001.json") {
+		if filepath.Ext(entry.Name()) == ".json" &&
+			(entry.Name() == "todo.json" || entry.Name() == "todo-epic-001.json") {
 			todoFile = filepath.Join(taskDir, entry.Name())
 			break
 		}
@@ -334,11 +334,11 @@ func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 
 	var todoData struct {
 		Todos []struct {
-			ID       string `json:"id"`
-			Title    string `json:"title"`
-			Status   string `json:"status"`
-			Priority string `json:"priority"`
-			EstimatedHours int `json:"estimatedHours"`
+			ID             string `json:"id"`
+			Title          string `json:"title"`
+			Status         string `json:"status"`
+			Priority       string `json:"priority"`
+			EstimatedHours int    `json:"estimatedHours"`
 		} `json:"todos"`
 	}
 
@@ -410,7 +410,7 @@ func (cd *ContextDetector) determineAvailableActions(ctx *ProjectContext) {
 	}
 
 	// Always add common actions
-	commonActions := []string{"status", "navigate", "exit"}
+	commonActions := []string{"status", "interactive", "exit"}
 	ctx.AvailableActions = append(ctx.AvailableActions, commonActions...)
 }
 

@@ -43,7 +43,7 @@ func init() {
 	// Set custom templates
 	rootCmd.SetHelpTemplate(helpTemplate)
 	rootCmd.SetUsageTemplate(usageTemplate)
-	
+
 	// Add completion command help
 	completionCmd := rootCmd.Commands()
 	for _, cmd := range completionCmd {
@@ -80,7 +80,7 @@ configuration options, and troubleshooting tips.`,
 			rootCmd.Help()
 			return
 		}
-		
+
 		// Find the command and show its help
 		cmdName := args[0]
 		targetCmd, _, err := rootCmd.Find(args)
@@ -89,7 +89,7 @@ configuration options, and troubleshooting tips.`,
 			suggestSimilarCommands(cmdName)
 			return
 		}
-		
+
 		targetCmd.Help()
 	},
 }
@@ -97,10 +97,10 @@ configuration options, and troubleshooting tips.`,
 // suggestSimilarCommands suggests commands similar to the mistyped one
 func suggestSimilarCommands(input string) {
 	fmt.Println("💡 Did you mean one of these?")
-	
+
 	commands := []string{"status", "execute", "init", "help", "completion"}
 	suggestions := findSimilarCommands(input, commands)
-	
+
 	if len(suggestions) == 0 {
 		fmt.Println("   No similar commands found.")
 		fmt.Println("\n📋 Available commands:")
@@ -112,7 +112,7 @@ func suggestSimilarCommands(input string) {
 			fmt.Printf("   %s\n", suggestion)
 		}
 	}
-	
+
 	fmt.Println("\n📖 Use 'claude-wm-cli help' to see all available commands.")
 }
 
@@ -120,14 +120,14 @@ func suggestSimilarCommands(input string) {
 func findSimilarCommands(input string, commands []string) []string {
 	var suggestions []string
 	input = strings.ToLower(input)
-	
+
 	// First pass: exact substring matches
 	for _, cmd := range commands {
 		if strings.Contains(strings.ToLower(cmd), input) || strings.Contains(input, strings.ToLower(cmd)) {
 			suggestions = append(suggestions, cmd)
 		}
 	}
-	
+
 	// Second pass: similar starting characters (if no exact matches)
 	if len(suggestions) == 0 && len(input) > 0 {
 		firstChar := input[0:1]
@@ -137,7 +137,7 @@ func findSimilarCommands(input string, commands []string) []string {
 			}
 		}
 	}
-	
+
 	return suggestions
 }
 

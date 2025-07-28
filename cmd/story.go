@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package cmd
 
@@ -12,6 +11,7 @@ import (
 
 	"claude-wm-cli/internal/epic"
 	"claude-wm-cli/internal/story"
+
 	"github.com/spf13/cobra"
 )
 
@@ -132,16 +132,16 @@ Examples:
 
 // Flag variables
 var (
-	storyEpicID         string
-	storyPriority       string
-	storyDescription    string
-	storyPoints         int
-	storyCriteria       []string
-	storyStatus         string
-	storyTitle          string
-	listStoryEpic       string
-	listStoryStatus     string
-	dependencies        []string
+	storyEpicID      string
+	storyPriority    string
+	storyDescription string
+	storyPoints      int
+	storyCriteria    []string
+	storyStatus      string
+	storyTitle       string
+	listStoryEpic    string
+	listStoryStatus  string
+	dependencies     []string
 )
 
 func init() {

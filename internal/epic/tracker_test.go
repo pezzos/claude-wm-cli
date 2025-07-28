@@ -99,7 +99,7 @@ func TestEpicTracker_AutoTransitions(t *testing.T) {
 			StoryPoints: 5,
 		},
 		{
-			ID:          "STORY-2", 
+			ID:          "STORY-2",
 			Status:      StatusCompleted,
 			StoryPoints: 5,
 		},
@@ -245,13 +245,13 @@ func TestEpicTracker_ValidationRules(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "progress is")
 
-	// Try backward transition - should fail  
+	// Try backward transition - should fail
 	err = tracker.ValidateAndTransitionState(epic.ID, StatusPlanned, ReasonManual, "manual")
 	assert.Error(t, err)
 	// The error message might come from the basic validation or tracker validation
-	assert.True(t, 
+	assert.True(t,
 		err.Error() == "backward transitions not allowed: in_progress -> planned" ||
-		err.Error() == "invalid status transition from in_progress to planned")
+			err.Error() == "invalid status transition from in_progress to planned")
 
 	// Test valid transition to on_hold
 	err = tracker.ValidateAndTransitionState(epic.ID, StatusOnHold, ReasonManual, "manual")
@@ -299,7 +299,7 @@ func TestEpicTracker_SubscriberNotification(t *testing.T) {
 	// Create a test subscriber
 	var notificationReceived bool
 	var receivedTransition StateTransition
-	
+
 	subscriber := &TestSubscriber{
 		OnStateChange: func(epicID string, transition StateTransition) error {
 			notificationReceived = true

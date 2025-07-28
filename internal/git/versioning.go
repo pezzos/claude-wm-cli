@@ -11,11 +11,11 @@ import (
 
 // StateVersionManager manages versioning of state files using Git
 type StateVersionManager struct {
-	repository    *Repository
-	config        *GitConfig
-	atomicWriter  *state.AtomicWriter
-	templates     map[StateCommitType]CommitTemplate
-	autoCommit    bool
+	repository   *Repository
+	config       *GitConfig
+	atomicWriter *state.AtomicWriter
+	templates    map[StateCommitType]CommitTemplate
+	autoCommit   bool
 }
 
 // NewStateVersionManager creates a new state version manager
@@ -23,16 +23,16 @@ func NewStateVersionManager(workingDir string, config *GitConfig, atomicWriter *
 	if config == nil {
 		config = DefaultGitConfig()
 	}
-	
+
 	repo := NewRepository(workingDir, config)
-	
+
 	// Initialize repository if enabled
 	if config.Enabled {
 		if err := repo.Initialize(); err != nil {
 			return nil, fmt.Errorf("failed to initialize Git repository: %w", err)
 		}
 	}
-	
+
 	return &StateVersionManager{
 		repository:   repo,
 		config:       config,
@@ -47,26 +47,26 @@ func (svm *StateVersionManager) VersionState(commitType StateCommitType, descrip
 	if !svm.config.Enabled {
 		return nil, nil // Git integration disabled
 	}
-	
+
 	if len(files) == 0 {
 		return nil, fmt.Errorf("no files specified for versioning")
 	}
-	
+
 	// Validate that all files exist
 	for _, file := range files {
 		if !svm.atomicWriter.Exists(file) {
 			return nil, fmt.Errorf("file does not exist: %s", file)
 		}
 	}
-	
+
 	// Add files to Git
 	if err := svm.repository.Add(files...); err != nil {
 		return nil, fmt.Errorf("failed to add files to Git: %w", err)
 	}
-	
+
 	// Generate commit message
 	message := svm.generateCommitMessage(commitType, description)
-	
+
 	// Create commit
 	commit, err := svm.repository.Commit(message)
 	if err != nil {
@@ -76,7 +76,7 @@ func (svm *StateVersionManager) VersionState(commitType StateCommitType, descrip
 		}
 		return nil, fmt.Errorf("failed to create commit: %w", err)
 	}
-	
+
 	return commit, nil
 }
 
@@ -85,12 +85,12 @@ func (svm *StateVersionManager) AutoVersionOnWrite(filePath string, commitType S
 	if !svm.autoCommit || !svm.config.Enabled {
 		return nil
 	}
-	
+
 	// Extract meaningful description from file path if not provided
 	if description == "" {
 		description = svm.generateDescriptionFromPath(filePath)
 	}
-	
+
 	_, err := svm.VersionState(commitType, description, filePath)
 	return err
 }
@@ -100,26 +100,26 @@ func (svm *StateVersionManager) CreateRecoveryPoint(name, description string, fi
 	if !svm.config.Enabled {
 		return nil, fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	// Version the current state
 	commit, err := svm.VersionState(CommitTypeBackup, description, files...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create recovery commit: %w", err)
 	}
-	
+
 	if commit == nil {
 		return nil, fmt.Errorf("no changes to create recovery point")
 	}
-	
+
 	// Create tag for easy recovery
 	tagName := fmt.Sprintf("recovery/%s/%d", name, time.Now().Unix())
 	if err := svm.createTag(tagName, commit.Hash, description); err != nil {
 		return nil, fmt.Errorf("failed to create recovery tag: %w", err)
 	}
-	
+
 	// Verify state integrity
 	verified := svm.verifyStateIntegrity(files...)
-	
+
 	recoveryPoint := &RecoveryPoint{
 		Commit:      *commit,
 		Description: description,
@@ -128,7 +128,7 @@ func (svm *StateVersionManager) CreateRecoveryPoint(name, description string, fi
 		Safe:        verified,
 		Automatic:   false,
 	}
-	
+
 	return recoveryPoint, nil
 }
 
@@ -137,25 +137,25 @@ func (svm *StateVersionManager) GetRecoveryPoints(limit int) ([]*RecoveryPoint, 
 	if !svm.config.Enabled {
 		return nil, fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	// Get commit history
 	commits, err := svm.repository.GetLog(limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commit history: %w", err)
 	}
-	
+
 	var recoveryPoints []*RecoveryPoint
-	
+
 	for _, commit := range commits {
 		// Determine if this is a recovery-suitable commit
 		isRecovery := strings.Contains(commit.Message, "backup:") ||
 			strings.Contains(commit.Message, "chore(state):") ||
 			strings.Contains(commit.Message, "feat(")
-		
+
 		if !isRecovery {
 			continue
 		}
-		
+
 		recoveryPoint := &RecoveryPoint{
 			Commit:      *commit,
 			Description: commit.Message,
@@ -164,10 +164,10 @@ func (svm *StateVersionManager) GetRecoveryPoints(limit int) ([]*RecoveryPoint, 
 			Safe:        true,  // Assume safe unless proven otherwise
 			Automatic:   strings.Contains(commit.Message, "backup:"),
 		}
-		
+
 		recoveryPoints = append(recoveryPoints, recoveryPoint)
 	}
-	
+
 	return recoveryPoints, nil
 }
 
@@ -176,13 +176,13 @@ func (svm *StateVersionManager) RecoverToPoint(recoveryPoint *RecoveryPoint, fil
 	if !svm.config.Enabled {
 		return fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	// Create backup of current state before recovery
 	backupCommit, err := svm.VersionState(CommitTypeBackup, "pre-recovery backup", files...)
 	if err != nil {
 		return fmt.Errorf("failed to create pre-recovery backup: %w", err)
 	}
-	
+
 	// Checkout specific files from the recovery point
 	for _, file := range files {
 		if err := svm.checkoutFile(recoveryPoint.Commit.Hash, file); err != nil {
@@ -193,7 +193,7 @@ func (svm *StateVersionManager) RecoverToPoint(recoveryPoint *RecoveryPoint, fil
 			return fmt.Errorf("failed to recover file %s: %w", file, err)
 		}
 	}
-	
+
 	// Verify recovered state integrity
 	if !svm.verifyStateIntegrity(files...) {
 		// Recovery failed, restore from backup
@@ -204,15 +204,15 @@ func (svm *StateVersionManager) RecoverToPoint(recoveryPoint *RecoveryPoint, fil
 		}
 		return fmt.Errorf("recovered state failed integrity check")
 	}
-	
+
 	// Commit the recovery
-	message := fmt.Sprintf("recover: restore from %s (%s)", 
+	message := fmt.Sprintf("recover: restore from %s (%s)",
 		recoveryPoint.Commit.ShortHash, recoveryPoint.Description)
-	
+
 	if err := svm.repository.Add(files...); err == nil {
 		svm.repository.Commit(message)
 	}
-	
+
 	return nil
 }
 
@@ -221,7 +221,7 @@ func (svm *StateVersionManager) GetStateDiff(ref string) (*DiffInfo, error) {
 	if !svm.config.Enabled {
 		return nil, fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	return svm.repository.GetDiff(ref, "HEAD")
 }
 
@@ -230,21 +230,21 @@ func (svm *StateVersionManager) CleanupOldVersions() error {
 	if !svm.config.Enabled || svm.config.MaxCommits <= 0 {
 		return nil
 	}
-	
+
 	commits, err := svm.repository.GetLog(0) // Get all commits
 	if err != nil {
 		return fmt.Errorf("failed to get commit history: %w", err)
 	}
-	
+
 	if len(commits) <= svm.config.MaxCommits {
 		return nil // Nothing to clean up
 	}
-	
+
 	// For now, just log that cleanup is needed
 	// In a full implementation, you might use git filter-branch or similar
-	fmt.Printf("Cleanup needed: %d commits exceed limit of %d\n", 
+	fmt.Printf("Cleanup needed: %d commits exceed limit of %d\n",
 		len(commits), svm.config.MaxCommits)
-	
+
 	return nil
 }
 
@@ -253,7 +253,7 @@ func (svm *StateVersionManager) GetRepositoryStatus() (*GitStatus, error) {
 	if !svm.config.Enabled {
 		return nil, fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	return svm.repository.GetStatus()
 }
 
@@ -264,14 +264,14 @@ func (svm *StateVersionManager) generateCommitMessage(commitType StateCommitType
 	if !exists {
 		template = svm.templates[CommitTypeState] // Default
 	}
-	
+
 	return fmt.Sprintf(template.Template, description)
 }
 
 func (svm *StateVersionManager) generateDescriptionFromPath(filePath string) string {
 	filename := filepath.Base(filePath)
 	dir := filepath.Base(filepath.Dir(filePath))
-	
+
 	// Generate meaningful description based on file patterns
 	switch {
 	case strings.Contains(filename, "project"):
@@ -327,13 +327,13 @@ func (svm *StateVersionManager) getCorruptionDetector() *state.CorruptionDetecto
 func (svm *StateVersionManager) UpdateConfig(config *GitConfig) error {
 	svm.config = config
 	svm.autoCommit = config.AutoCommit
-	
+
 	// Update repository configuration
 	if config.Username != "" && config.Email != "" {
 		svm.repository.config = config
 		return svm.repository.configureUser()
 	}
-	
+
 	return nil
 }
 
@@ -358,12 +358,12 @@ func (svm *StateVersionManager) GetLastCommit() (*CommitInfo, error) {
 	if !svm.config.Enabled {
 		return nil, fmt.Errorf("Git integration is disabled")
 	}
-	
+
 	hash, err := svm.repository.getLastCommitHash()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return svm.repository.GetCommitInfo(hash)
 }
 
@@ -372,11 +372,11 @@ func (svm *StateVersionManager) HasUncommittedChanges() (bool, error) {
 	if !svm.config.Enabled {
 		return false, nil
 	}
-	
+
 	status, err := svm.repository.GetStatus()
 	if err != nil {
 		return false, err
 	}
-	
+
 	return !status.Clean, nil
 }

@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 Claude WM CLI Team
-
 */
 package cmd
 
@@ -11,6 +10,7 @@ import (
 	"text/tabwriter"
 
 	"claude-wm-cli/internal/workflow"
+
 	"github.com/spf13/cobra"
 )
 
@@ -133,40 +133,40 @@ Examples:
 // Flag variables
 var (
 	// Start flags
-	interruptName         string
-	interruptDescription  string
-	interruptType         string
-	interruptNotes        string
-	interruptTags         []string
-	includeFileState      bool
-	includeGitState       bool
-	
+	interruptName        string
+	interruptDescription string
+	interruptType        string
+	interruptNotes       string
+	interruptTags        []string
+	includeFileState     bool
+	includeGitState      bool
+
 	// Resume flags
-	resumeForce           bool
-	restoreFiles          bool
-	restoreGitState       bool
-	restoreTickets        bool
-	restoreEpics          bool
-	backupCurrent         bool
-	
+	resumeForce     bool
+	restoreFiles    bool
+	restoreGitState bool
+	restoreTickets  bool
+	restoreEpics    bool
+	backupCurrent   bool
+
 	// Status flags
-	statusVerbose         bool
-	statusFormat          string
-	
+	statusVerbose bool
+	statusFormat  string
+
 	// Clear flags
-	clearConfirm          bool
-	clearBackup           bool
+	clearConfirm bool
+	clearBackup  bool
 )
 
 func init() {
 	rootCmd.AddCommand(interruptCmd)
-	
+
 	// Add subcommands
 	interruptCmd.AddCommand(interruptStartCmd)
 	interruptCmd.AddCommand(interruptResumeCmd)
 	interruptCmd.AddCommand(interruptStatusCmd)
 	interruptCmd.AddCommand(interruptClearCmd)
-	
+
 	// interrupt start flags
 	interruptStartCmd.Flags().StringVar(&interruptName, "name", "", "Name for the interruption context (required)")
 	interruptStartCmd.Flags().StringVar(&interruptDescription, "description", "", "Description of the interruption")
@@ -176,7 +176,7 @@ func init() {
 	interruptStartCmd.Flags().BoolVar(&includeFileState, "include-files", true, "Include file state in context")
 	interruptStartCmd.Flags().BoolVar(&includeGitState, "include-git", true, "Include git state in context")
 	interruptStartCmd.MarkFlagRequired("name")
-	
+
 	// interrupt resume flags
 	interruptResumeCmd.Flags().BoolVar(&resumeForce, "force", false, "Force resume even with conflicts")
 	interruptResumeCmd.Flags().BoolVar(&restoreFiles, "restore-files", true, "Restore file state")
@@ -184,11 +184,11 @@ func init() {
 	interruptResumeCmd.Flags().BoolVar(&restoreTickets, "restore-tickets", true, "Restore ticket state")
 	interruptResumeCmd.Flags().BoolVar(&restoreEpics, "restore-epics", true, "Restore epic state")
 	interruptResumeCmd.Flags().BoolVar(&backupCurrent, "backup-current", true, "Backup current context before resuming")
-	
+
 	// interrupt status flags
 	interruptStatusCmd.Flags().BoolVar(&statusVerbose, "verbose", false, "Show verbose context information")
 	interruptStatusCmd.Flags().StringVar(&statusFormat, "format", "table", "Output format (table, json)")
-	
+
 	// interrupt clear flags
 	interruptClearCmd.Flags().BoolVar(&clearConfirm, "confirm", false, "Confirm clearing the interruption stack")
 	interruptClearCmd.Flags().BoolVar(&clearBackup, "backup", false, "Create backup before clearing")
@@ -202,17 +202,17 @@ func startInterruption(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create interruption stack
 	stack := workflow.NewInterruptionStack(wd)
-	
+
 	// Validate interruption type
 	contextType, err := parseContextType(interruptType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Invalid interruption type '%s': %v\n", interruptType, err)
 		os.Exit(1)
 	}
-	
+
 	// Build save options
 	saveOptions := workflow.ContextSaveOptions{
 		Name:             interruptName,
@@ -223,18 +223,18 @@ func startInterruption(cmd *cobra.Command) {
 		IncludeFileState: includeFileState,
 		IncludeGitState:  includeGitState,
 	}
-	
+
 	// Check current stack depth for warnings
 	currentDepth, err := stack.GetStackDepth()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to check stack depth: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	if currentDepth >= 3 {
 		fmt.Printf("⚠️  Warning: Deep nesting detected (%d levels). Consider completing some interruptions first.\n\n", currentDepth)
 	}
-	
+
 	fmt.Printf("💾 Starting interruption workflow...\n")
 	fmt.Printf("   Name:        %s\n", interruptName)
 	fmt.Printf("   Type:        %s\n", interruptType)
@@ -243,14 +243,14 @@ func startInterruption(cmd *cobra.Command) {
 	}
 	fmt.Printf("   Stack depth: %d → %d\n", currentDepth, currentDepth+1)
 	fmt.Printf("\n")
-	
+
 	// Save current context
 	context, err := stack.SaveCurrentContext(saveOptions)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to start interruption: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Display success
 	fmt.Printf("✅ Interruption started successfully!\n\n")
 	fmt.Printf("📝 Context Details:\n")
@@ -259,7 +259,7 @@ func startInterruption(cmd *cobra.Command) {
 	if context.ParentContextID != "" {
 		fmt.Printf("   Parent:      %s\n", context.ParentContextID)
 	}
-	
+
 	// Show preserved state
 	fmt.Printf("\n🔒 Preserved State:\n")
 	if context.CurrentEpicID != "" {
@@ -274,7 +274,7 @@ func startInterruption(cmd *cobra.Command) {
 	if includeGitState {
 		fmt.Printf("   Git state:   Captured\n")
 	}
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Work on your interruption task\n")
 	fmt.Printf("   • When finished: claude-wm-cli interrupt resume\n")
@@ -288,17 +288,17 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create interruption stack
 	stack := workflow.NewInterruptionStack(wd)
-	
+
 	// Check if stack is empty
 	stackDepth, err := stack.GetStackDepth()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to check stack depth: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	if stackDepth == 0 {
 		fmt.Printf("ℹ️  No interruptions to resume. The stack is empty.\n")
 		fmt.Printf("\n💡 Available actions:\n")
@@ -306,7 +306,7 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 		fmt.Printf("   • Check status:     claude-wm-cli interrupt status\n")
 		return
 	}
-	
+
 	// Build restore options
 	restoreOptions := workflow.ContextRestoreOptions{
 		RestoreFiles:    restoreFiles,
@@ -316,11 +316,11 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 		Force:           resumeForce,
 		BackupCurrent:   backupCurrent,
 	}
-	
+
 	fmt.Printf("🔄 Resuming workflow...\n")
-	
+
 	var restoredContext *workflow.WorkflowContext
-	
+
 	if contextID != "" {
 		// Resume specific context
 		fmt.Printf("   Target:      Context %s\n", contextID)
@@ -332,7 +332,7 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 			}
 			os.Exit(1)
 		}
-		
+
 		// Get the restored context for display
 		currentCtx, _ := stack.GetCurrentContext()
 		restoredContext = currentCtx
@@ -349,12 +349,12 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 			os.Exit(1)
 		}
 	}
-	
+
 	// Get updated stack depth
 	newDepth, _ := stack.GetStackDepth()
 	fmt.Printf("   Stack depth: %d → %d\n", stackDepth, newDepth)
 	fmt.Printf("\n")
-	
+
 	// Display success
 	fmt.Printf("✅ Workflow resumed successfully!\n\n")
 	fmt.Printf("📝 Resumed Context:\n")
@@ -362,7 +362,7 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 	fmt.Printf("   Name:        %s\n", restoredContext.Name)
 	fmt.Printf("   Type:        %s\n", restoredContext.Type)
 	fmt.Printf("   Saved:       %s\n", restoredContext.SavedAt.Format("2006-01-02 15:04:05"))
-	
+
 	// Show restored state
 	fmt.Printf("\n🔓 Restored State:\n")
 	if restoredContext.CurrentEpicID != "" {
@@ -377,7 +377,7 @@ func resumeInterruption(cmd *cobra.Command, contextID string) {
 	if restoreGitState && restoredContext.Metadata["git_state_captured"] == true {
 		fmt.Printf("   Git state:   Restored\n")
 	}
-	
+
 	if newDepth > 0 {
 		fmt.Printf("\n💡 Next steps:\n")
 		fmt.Printf("   • Continue work or resume again: claude-wm-cli interrupt resume\n")
@@ -394,26 +394,26 @@ func showInterruptionStatus(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create interruption stack
 	stack := workflow.NewInterruptionStack(wd)
-	
+
 	// Get stack data
 	stackData, err := stack.ListContexts()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get interruption status: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	if statusFormat == "json" {
 		displayStatusJSON(stackData)
 		return
 	}
-	
+
 	// Display header
 	fmt.Printf("📊 Interruption Stack Status\n")
 	fmt.Printf("============================\n\n")
-	
+
 	// Current context
 	fmt.Printf("🎯 Current Context:\n")
 	if stackData.CurrentContext != nil {
@@ -423,7 +423,7 @@ func showInterruptionStatus(cmd *cobra.Command) {
 		fmt.Printf("   Type:         %s\n", ctx.Type)
 		fmt.Printf("   Created:      %s\n", ctx.CreatedAt.Format("2006-01-02 15:04:05"))
 		fmt.Printf("   Last Access:  %s\n", ctx.LastAccessedAt.Format("2006-01-02 15:04:05"))
-		
+
 		if statusVerbose {
 			if ctx.Description != "" {
 				fmt.Printf("   Description:  %s\n", ctx.Description)
@@ -444,7 +444,7 @@ func showInterruptionStatus(cmd *cobra.Command) {
 	} else {
 		fmt.Printf("   No current context\n")
 	}
-	
+
 	// Stack information
 	fmt.Printf("\n📚 Stack Information:\n")
 	fmt.Printf("   Stack depth:        %d\n", stackData.Metadata.CurrentStackDepth)
@@ -452,14 +452,14 @@ func showInterruptionStatus(cmd *cobra.Command) {
 	fmt.Printf("   Total interruptions:  %d\n", stackData.Metadata.TotalInterruptions)
 	fmt.Printf("   Max depth reached:    %d\n", stackData.Metadata.MaxStackDepth)
 	fmt.Printf("   Last updated:         %s\n", stackData.Metadata.LastUpdated.Format("2006-01-02 15:04:05"))
-	
+
 	// Interruption stack
 	if len(stackData.ContextStack) > 0 {
 		fmt.Printf("\n⬆️  Interruption Stack (most recent first):\n")
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "POSITION\tCONTEXT ID\tNAME\tTYPE\tCREATED\n")
 		fmt.Fprintf(w, "────────\t──────────\t────\t────\t───────\n")
-		
+
 		for i := len(stackData.ContextStack) - 1; i >= 0; i-- {
 			ctx := stackData.ContextStack[i]
 			position := len(stackData.ContextStack) - i
@@ -474,19 +474,19 @@ func showInterruptionStatus(cmd *cobra.Command) {
 	} else {
 		fmt.Printf("\n⬆️  Interruption Stack: Empty\n")
 	}
-	
+
 	// Context history (if verbose)
 	if statusVerbose && len(stackData.ContextHistory) > 0 {
 		fmt.Printf("\n📜 Context History (last 10):\n")
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "CONTEXT ID\tNAME\tTYPE\tCREATED\tPARENT\n")
 		fmt.Fprintf(w, "──────────\t────\t────\t───────\t──────\n")
-		
+
 		start := len(stackData.ContextHistory) - 10
 		if start < 0 {
 			start = 0
 		}
-		
+
 		for i := start; i < len(stackData.ContextHistory); i++ {
 			ctx := stackData.ContextHistory[i]
 			parentID := truncateInterruptString(ctx.ParentContextID, 8)
@@ -502,7 +502,7 @@ func showInterruptionStatus(cmd *cobra.Command) {
 		}
 		w.Flush()
 	}
-	
+
 	// Available actions
 	fmt.Printf("\n💡 Available Actions:\n")
 	if stackData.Metadata.CurrentStackDepth > 0 {
@@ -521,49 +521,49 @@ func clearInterruptionStack(cmd *cobra.Command) {
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Create interruption stack
 	stack := workflow.NewInterruptionStack(wd)
-	
+
 	// Get current stack status
 	stackDepth, err := stack.GetStackDepth()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to check stack depth: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	if stackDepth == 0 {
 		fmt.Printf("ℹ️  Interruption stack is already empty.\n")
 		return
 	}
-	
+
 	// Create backup if requested
 	if clearBackup {
 		fmt.Printf("💾 Creating backup before clearing...\n")
 		// TODO: Implement backup functionality
 		fmt.Printf("   Backup functionality not yet implemented\n")
 	}
-	
+
 	fmt.Printf("⚠️  WARNING: This will permanently clear %d interruptions from the stack.\n", stackDepth)
 	fmt.Printf("   This action cannot be undone!\n\n")
-	
+
 	if !clearConfirm {
 		fmt.Printf("❌ Operation cancelled. Use --confirm to proceed.\n")
 		return
 	}
-	
+
 	// Clear the stack
 	err = stack.ClearStack()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to clear interruption stack: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Printf("✅ Interruption stack cleared successfully!\n\n")
 	fmt.Printf("📝 Summary:\n")
 	fmt.Printf("   Cleared contexts: %d\n", stackDepth)
 	fmt.Printf("   Current state:    Clean\n")
-	
+
 	fmt.Printf("\n💡 Next steps:\n")
 	fmt.Printf("   • Start new work:   claude-wm-cli interrupt start --name \"Task Name\"\n")
 	fmt.Printf("   • Check status:     claude-wm-cli interrupt status\n")
@@ -592,7 +592,7 @@ func displayStatusJSON(stackData *workflow.InterruptionStackData) {
 	// TODO: Implement JSON marshaling and output
 	// Convert to a more user-friendly JSON structure when implemented
 	_ = stackData // Suppress unused parameter warning
-	
+
 	fmt.Printf("JSON output not yet implemented\n")
 	fmt.Printf("Use 'claude-wm-cli interrupt status' for table format\n")
 }

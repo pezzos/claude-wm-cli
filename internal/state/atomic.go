@@ -45,11 +45,11 @@ type AtomicWriteOptions struct {
 	Permissions os.FileMode
 	Backup      bool
 	Compress    bool
-	Verify      bool // Verify write by reading back and comparing
-	GitCommit   bool // Whether to create Git commit after write
-	CommitType  interface{} // Git commit type for versioning
-	CommitMsg   string // Custom commit message
-	UseLocking  bool // Whether to use file locking for this operation
+	Verify      bool          // Verify write by reading back and comparing
+	GitCommit   bool          // Whether to create Git commit after write
+	CommitType  interface{}   // Git commit type for versioning
+	CommitMsg   string        // Custom commit message
+	UseLocking  bool          // Whether to use file locking for this operation
 	LockTimeout time.Duration // Timeout for lock acquisition
 }
 
@@ -58,7 +58,7 @@ func NewAtomicWriter(tempDir string) *AtomicWriter {
 	if tempDir == "" {
 		tempDir = os.TempDir()
 	}
-	
+
 	return &AtomicWriter{
 		tempDir:        tempDir,
 		permissions:    0644,
@@ -75,7 +75,7 @@ func NewAtomicWriter(tempDir string) *AtomicWriter {
 func (aw *AtomicWriter) WriteJSON(filePath string, data interface{}, opts *AtomicWriteOptions) error {
 	aw.mu.Lock()
 	defer aw.mu.Unlock()
-	
+
 	if opts == nil {
 		opts = &AtomicWriteOptions{
 			Permissions: aw.permissions,
@@ -84,7 +84,7 @@ func (aw *AtomicWriter) WriteJSON(filePath string, data interface{}, opts *Atomi
 			Verify:      true,
 		}
 	}
-	
+
 	// Serialize data to JSON
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -92,7 +92,7 @@ func (aw *AtomicWriter) WriteJSON(filePath string, data interface{}, opts *Atomi
 			WithDetails(err.Error()).
 			WithContext("file", filePath)
 	}
-	
+
 	return aw.writeBytes(filePath, jsonData, opts)
 }
 
@@ -100,7 +100,7 @@ func (aw *AtomicWriter) WriteJSON(filePath string, data interface{}, opts *Atomi
 func (aw *AtomicWriter) WriteBytes(filePath string, data []byte, opts *AtomicWriteOptions) error {
 	aw.mu.Lock()
 	defer aw.mu.Unlock()
-	
+
 	if opts == nil {
 		opts = &AtomicWriteOptions{
 			Permissions: aw.permissions,
@@ -109,7 +109,7 @@ func (aw *AtomicWriter) WriteBytes(filePath string, data []byte, opts *AtomicWri
 			Verify:      true,
 		}
 	}
-	
+
 	return aw.writeBytes(filePath, data, opts)
 }
 
@@ -125,13 +125,13 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 		if opts.LockTimeout == 0 {
 			lockOptions["timeout"] = 30 * time.Second // Default proven timeout
 		}
-		
+
 		_, lockResult := aw.lockManager.LockFile(filePath, lockOptions)
 		if lockResult != nil {
 			// Check if lock was acquired (implementation dependent)
 			lockAcquired = true
 		}
-		
+
 		// Defer unlock if we acquired the lock
 		if lockAcquired {
 			defer func() {
@@ -141,7 +141,7 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 			}()
 		}
 	}
-	
+
 	// Ensure target directory exists
 	targetDir := filepath.Dir(filePath)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
@@ -149,26 +149,26 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 			WithDetails(err.Error()).
 			WithSuggestion("Check directory permissions or run with appropriate privileges")
 	}
-	
+
 	// Create backup if requested and file exists
 	if opts.Backup && fileExists(filePath) {
 		if err := aw.createBackup(filePath); err != nil {
 			return fmt.Errorf("failed to create backup: %w", err)
 		}
 	}
-	
+
 	// Generate temporary file name in the same directory as target
 	// This ensures atomic rename works (same filesystem)
-	tempFile := filepath.Join(targetDir, fmt.Sprintf(".tmp_%s_%d", 
+	tempFile := filepath.Join(targetDir, fmt.Sprintf(".tmp_%s_%d",
 		filepath.Base(filePath), time.Now().UnixNano()))
-	
+
 	// Write to temporary file
 	if err := aw.writeToTempFile(tempFile, data, opts); err != nil {
 		// Clean up temp file on error
 		os.Remove(tempFile)
 		return err
 	}
-	
+
 	// Verify write if requested
 	if opts.Verify {
 		if err := aw.verifyWrite(tempFile, data); err != nil {
@@ -176,7 +176,7 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 			return fmt.Errorf("write verification failed: %w", err)
 		}
 	}
-	
+
 	// Atomic rename - this is the critical atomic operation
 	if err := os.Rename(tempFile, filePath); err != nil {
 		os.Remove(tempFile)
@@ -184,25 +184,25 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 			WithDetails(err.Error()).
 			WithSuggestion("Check file permissions and ensure target directory is writable")
 	}
-	
+
 	// Update checksum for integrity tracking
 	checksum := calculateMD5(data)
 	aw.checksums[filePath] = checksum
-	
+
 	// Trigger Git versioning if enabled and requested
 	if opts.GitCommit && aw.gitManager != nil && aw.gitManager.IsEnabled() {
 		commitMsg := opts.CommitMsg
 		if commitMsg == "" {
 			commitMsg = fmt.Sprintf("update %s", filepath.Base(filePath))
 		}
-		
+
 		if err := aw.gitManager.AutoVersionOnWrite(filePath, opts.CommitType, commitMsg); err != nil {
 			// Git versioning failure is non-critical for atomic writes
 			// Log the error but don't fail the operation
 			fmt.Fprintf(os.Stderr, "Warning: Git versioning failed: %v\n", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -215,7 +215,7 @@ func (aw *AtomicWriter) writeToTempFile(tempFile string, data []byte, opts *Atom
 			WithContext("operation", "create_temp_file")
 	}
 	defer file.Close()
-	
+
 	// Write data with proper error handling
 	written := 0
 	for written < len(data) {
@@ -225,12 +225,12 @@ func (aw *AtomicWriter) writeToTempFile(tempFile string, data []byte, opts *Atom
 		}
 		written += n
 	}
-	
+
 	// Ensure data is flushed to disk
 	if err := file.Sync(); err != nil {
 		return fmt.Errorf("failed to sync temp file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -240,45 +240,45 @@ func (aw *AtomicWriter) verifyWrite(tempFile string, originalData []byte) error 
 	if err != nil {
 		return fmt.Errorf("failed to read temp file for verification: %w", err)
 	}
-	
+
 	if len(readData) != len(originalData) {
-		return fmt.Errorf("verification failed: data size mismatch (expected %d, got %d)", 
+		return fmt.Errorf("verification failed: data size mismatch (expected %d, got %d)",
 			len(originalData), len(readData))
 	}
-	
+
 	originalChecksum := calculateMD5(originalData)
 	readChecksum := calculateMD5(readData)
-	
+
 	if originalChecksum != readChecksum {
 		return fmt.Errorf("verification failed: checksum mismatch (expected %s, got %s)",
 			originalChecksum, readChecksum)
 	}
-	
+
 	return nil
 }
 
 // createBackup creates a backup of the existing file
 func (aw *AtomicWriter) createBackup(filePath string) error {
 	backupPath := filePath + fmt.Sprintf(".backup.%d", time.Now().Unix())
-	
+
 	sourceFile, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file for backup: %w", err)
 	}
 	defer sourceFile.Close()
-	
+
 	backupFile, err := os.Create(backupPath)
 	if err != nil {
 		return fmt.Errorf("failed to create backup file: %w", err)
 	}
 	defer backupFile.Close()
-	
+
 	_, err = io.Copy(backupFile, sourceFile)
 	if err != nil {
 		os.Remove(backupPath) // Clean up failed backup
 		return fmt.Errorf("failed to copy data to backup file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -286,19 +286,19 @@ func (aw *AtomicWriter) createBackup(filePath string) error {
 func (aw *AtomicWriter) ReadJSON(filePath string, target interface{}) error {
 	aw.mu.RLock()
 	defer aw.mu.RUnlock()
-	
+
 	data, err := aw.ReadBytes(filePath)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := json.Unmarshal(data, target); err != nil {
 		return errors.NewCLIError("Failed to parse JSON data", 1).
 			WithDetails(err.Error()).
 			WithContext("file", filePath).
 			WithSuggestion("Check if the file contains valid JSON")
 	}
-	
+
 	return nil
 }
 
@@ -307,14 +307,14 @@ func (aw *AtomicWriter) ReadBytes(filePath string) ([]byte, error) {
 	if !fileExists(filePath) {
 		return nil, errors.ErrFileNotFound(filePath)
 	}
-	
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.ErrPermissionDenied(filePath).
 			WithDetails(err.Error()).
 			WithSuggestion("Check file permissions and ensure file is readable")
 	}
-	
+
 	// Verify integrity if we have a stored checksum
 	if expectedChecksum, exists := aw.checksums[filePath]; exists {
 		actualChecksum := calculateMD5(data)
@@ -325,7 +325,7 @@ func (aw *AtomicWriter) ReadBytes(filePath string) ([]byte, error) {
 				WithSuggestion("File may have been corrupted or modified externally")
 		}
 	}
-	
+
 	return data, nil
 }
 
@@ -338,26 +338,26 @@ func (aw *AtomicWriter) Exists(filePath string) bool {
 func (aw *AtomicWriter) Delete(filePath string, createBackup bool) error {
 	aw.mu.Lock()
 	defer aw.mu.Unlock()
-	
+
 	if !fileExists(filePath) {
 		return nil // Already deleted
 	}
-	
+
 	if createBackup {
 		if err := aw.createBackup(filePath); err != nil {
 			return fmt.Errorf("failed to create backup before deletion: %w", err)
 		}
 	}
-	
+
 	if err := os.Remove(filePath); err != nil {
 		return errors.ErrPermissionDenied(filePath).
 			WithDetails(err.Error()).
 			WithSuggestion("Check file permissions")
 	}
-	
+
 	// Remove from checksum tracking
 	delete(aw.checksums, filePath)
-	
+
 	return nil
 }
 
@@ -365,7 +365,7 @@ func (aw *AtomicWriter) Delete(filePath string, createBackup bool) error {
 func (aw *AtomicWriter) GetChecksum(filePath string) (string, bool) {
 	aw.mu.RLock()
 	defer aw.mu.RUnlock()
-	
+
 	checksum, exists := aw.checksums[filePath]
 	return checksum, exists
 }
@@ -374,15 +374,15 @@ func (aw *AtomicWriter) GetChecksum(filePath string) (string, bool) {
 func (aw *AtomicWriter) UpdateChecksum(filePath string) error {
 	aw.mu.Lock()
 	defer aw.mu.Unlock()
-	
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
-	
+
 	checksum := calculateMD5(data)
 	aw.checksums[filePath] = checksum
-	
+
 	return nil
 }
 
@@ -390,21 +390,21 @@ func (aw *AtomicWriter) UpdateChecksum(filePath string) error {
 func (aw *AtomicWriter) ListBackups(filePath string) ([]string, error) {
 	dir := filepath.Dir(filePath)
 	base := filepath.Base(filePath)
-	
+
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var backups []string
 	prefix := base + ".backup."
-	
+
 	for _, entry := range entries {
 		if !entry.IsDir() && filepath.HasPrefix(entry.Name(), prefix) {
 			backups = append(backups, filepath.Join(dir, entry.Name()))
 		}
 	}
-	
+
 	return backups, nil
 }
 
@@ -414,25 +414,25 @@ func (aw *AtomicWriter) RestoreFromBackup(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to list backups: %w", err)
 	}
-	
+
 	if len(backups) == 0 {
 		return fmt.Errorf("no backups found for file: %s", filePath)
 	}
-	
+
 	// Use the most recent backup (highest timestamp)
 	latestBackup := backups[len(backups)-1]
-	
+
 	data, err := os.ReadFile(latestBackup)
 	if err != nil {
 		return fmt.Errorf("failed to read backup file: %w", err)
 	}
-	
+
 	opts := &AtomicWriteOptions{
 		Permissions: aw.permissions,
 		Backup:      false, // Don't backup when restoring
 		Verify:      true,
 	}
-	
+
 	return aw.writeBytes(filePath, data, opts)
 }
 
@@ -442,21 +442,21 @@ func (aw *AtomicWriter) CleanupBackups(filePath string, keepCount int) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if len(backups) <= keepCount {
 		return nil // Nothing to clean up
 	}
-	
+
 	// Remove oldest backups
 	toRemove := backups[:len(backups)-keepCount]
-	
+
 	for _, backup := range toRemove {
 		if err := os.Remove(backup); err != nil {
 			// Log warning but don't fail the operation
 			fmt.Fprintf(os.Stderr, "Warning: failed to remove backup %s: %v\n", backup, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -473,7 +473,7 @@ func calculateMD5(data []byte) string {
 
 // AtomicOperation represents a batch of atomic operations
 type AtomicOperation struct {
-	writer *AtomicWriter
+	writer     *AtomicWriter
 	operations []atomicOp
 }
 
@@ -487,7 +487,7 @@ type atomicOp struct {
 // NewAtomicOperation creates a new batch operation
 func (aw *AtomicWriter) NewAtomicOperation() *AtomicOperation {
 	return &AtomicOperation{
-		writer: aw,
+		writer:     aw,
 		operations: make([]atomicOp, 0),
 	}
 }
@@ -508,7 +508,7 @@ func (ao *AtomicOperation) AddWriteJSON(filePath string, data interface{}, opts 
 	if err != nil {
 		return err
 	}
-	
+
 	ao.AddWrite(filePath, jsonData, opts)
 	return nil
 }
@@ -526,7 +526,7 @@ func (ao *AtomicOperation) AddDelete(filePath string) {
 func (ao *AtomicOperation) Execute() error {
 	// Create backups for all files that will be modified
 	backupPaths := make(map[string]string)
-	
+
 	for _, op := range ao.operations {
 		if op.opType == "write" && fileExists(op.filePath) {
 			backupPath := op.filePath + fmt.Sprintf(".tx_backup.%d", time.Now().UnixNano())
@@ -540,10 +540,10 @@ func (ao *AtomicOperation) Execute() error {
 			backupPaths[op.filePath] = backupPath
 		}
 	}
-	
+
 	// Execute all operations
 	executedOps := make([]string, 0)
-	
+
 	for _, op := range ao.operations {
 		switch op.opType {
 		case "write":
@@ -553,7 +553,7 @@ func (ao *AtomicOperation) Execute() error {
 				return fmt.Errorf("atomic operation failed at write %s: %w", op.filePath, err)
 			}
 			executedOps = append(executedOps, op.filePath)
-			
+
 		case "delete":
 			if err := os.Remove(op.filePath); err != nil && !os.IsNotExist(err) {
 				ao.rollback(executedOps, backupPaths)
@@ -562,12 +562,12 @@ func (ao *AtomicOperation) Execute() error {
 			executedOps = append(executedOps, op.filePath)
 		}
 	}
-	
+
 	// Success - clean up backup files
 	for _, backupPath := range backupPaths {
 		os.Remove(backupPath)
 	}
-	
+
 	return nil
 }
 
@@ -582,7 +582,7 @@ func (ao *AtomicOperation) rollback(executedOps []string, backupPaths map[string
 			os.Remove(filePath)
 		}
 	}
-	
+
 	// Clean up backup files
 	for _, backupPath := range backupPaths {
 		os.Remove(backupPath)
@@ -596,13 +596,13 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	defer sourceFile.Close()
-	
+
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
 	defer destFile.Close()
-	
+
 	_, err = io.Copy(destFile, sourceFile)
 	return err
 }
@@ -631,9 +631,9 @@ func (aw *AtomicWriter) IsGitEnabled() bool {
 }
 
 // WriteJSONWithGit atomically writes JSON data and creates a Git commit
-func (aw *AtomicWriter) WriteJSONWithGit(filePath string, data interface{}, 
+func (aw *AtomicWriter) WriteJSONWithGit(filePath string, data interface{},
 	commitType interface{}, commitMessage string) error {
-	
+
 	opts := &AtomicWriteOptions{
 		Permissions: aw.permissions,
 		Backup:      aw.backup,
@@ -643,14 +643,14 @@ func (aw *AtomicWriter) WriteJSONWithGit(filePath string, data interface{},
 		CommitType:  commitType,
 		CommitMsg:   commitMessage,
 	}
-	
+
 	return aw.WriteJSON(filePath, data, opts)
 }
 
 // WriteBytesWithGit atomically writes raw bytes and creates a Git commit
-func (aw *AtomicWriter) WriteBytesWithGit(filePath string, data []byte, 
+func (aw *AtomicWriter) WriteBytesWithGit(filePath string, data []byte,
 	commitType interface{}, commitMessage string) error {
-	
+
 	opts := &AtomicWriteOptions{
 		Permissions: aw.permissions,
 		Backup:      aw.backup,
@@ -660,7 +660,7 @@ func (aw *AtomicWriter) WriteBytesWithGit(filePath string, data []byte,
 		CommitType:  commitType,
 		CommitMsg:   commitMessage,
 	}
-	
+
 	return aw.WriteBytes(filePath, data, opts)
 }
 
@@ -695,9 +695,9 @@ func (aw *AtomicWriter) IsLockingEnabled() bool {
 }
 
 // WriteJSONWithLock atomically writes JSON data with file locking
-func (aw *AtomicWriter) WriteJSONWithLock(filePath string, data interface{}, 
+func (aw *AtomicWriter) WriteJSONWithLock(filePath string, data interface{},
 	lockTimeout time.Duration) error {
-	
+
 	opts := &AtomicWriteOptions{
 		Permissions: aw.permissions,
 		Backup:      aw.backup,
@@ -706,14 +706,14 @@ func (aw *AtomicWriter) WriteJSONWithLock(filePath string, data interface{},
 		UseLocking:  true,
 		LockTimeout: lockTimeout,
 	}
-	
+
 	return aw.WriteJSON(filePath, data, opts)
 }
 
 // WriteBytesWithLock atomically writes raw bytes with file locking
-func (aw *AtomicWriter) WriteBytesWithLock(filePath string, data []byte, 
+func (aw *AtomicWriter) WriteBytesWithLock(filePath string, data []byte,
 	lockTimeout time.Duration) error {
-	
+
 	opts := &AtomicWriteOptions{
 		Permissions: aw.permissions,
 		Backup:      aw.backup,
@@ -722,7 +722,7 @@ func (aw *AtomicWriter) WriteBytesWithLock(filePath string, data []byte,
 		UseLocking:  true,
 		LockTimeout: lockTimeout,
 	}
-	
+
 	return aw.WriteBytes(filePath, data, opts)
 }
 
@@ -730,7 +730,7 @@ func (aw *AtomicWriter) WriteBytesWithLock(filePath string, data []byte,
 func (aw *AtomicWriter) IsFileLocked(filePath string) bool {
 	aw.mu.RLock()
 	defer aw.mu.RUnlock()
-	
+
 	if aw.lockManager != nil {
 		return aw.lockManager.IsLocked(filePath)
 	}

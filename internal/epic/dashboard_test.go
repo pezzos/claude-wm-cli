@@ -13,7 +13,7 @@ import (
 func TestDashboard_NewDashboard(t *testing.T) {
 	tempDir := t.TempDir()
 	setupTestDirs(t, tempDir)
-	
+
 	manager := NewManager(tempDir)
 	dashboard := NewDashboard(manager)
 
@@ -147,8 +147,8 @@ func TestDashboard_AssessRiskLevel(t *testing.T) {
 	}
 	lowRiskProgress := ProgressSummary{
 		CompletionPercentage: 80.0,
-		TotalStories:        5,
-		StoriesInProgress:   1,
+		TotalStories:         5,
+		StoriesInProgress:    1,
 	}
 	risk := dashboard.assessRiskLevel(lowRiskEpic, lowRiskProgress)
 	assert.Equal(t, RiskLow, risk)
@@ -162,8 +162,8 @@ func TestDashboard_AssessRiskLevel(t *testing.T) {
 	}
 	highRiskProgress := ProgressSummary{
 		CompletionPercentage: 30.0,
-		TotalStories:        5,
-		StoriesInProgress:   0, // No active work
+		TotalStories:         5,
+		StoriesInProgress:    0, // No active work
 	}
 	risk = dashboard.assessRiskLevel(highRiskEpic, highRiskProgress)
 	assert.True(t, risk == RiskHigh || risk == RiskCritical)
@@ -177,8 +177,8 @@ func TestDashboard_AssessRiskLevel(t *testing.T) {
 	}
 	mediumRiskProgress := ProgressSummary{
 		CompletionPercentage: 15.0,
-		TotalStories:        3,
-		StoriesInProgress:   1,
+		TotalStories:         3,
+		StoriesInProgress:    1,
 	}
 	risk = dashboard.assessRiskLevel(mediumRiskEpic, mediumRiskProgress)
 	assert.True(t, risk == RiskMedium || risk == RiskHigh)
@@ -211,9 +211,9 @@ func TestDashboard_CalculateVelocityMetrics(t *testing.T) {
 
 	velocity = dashboard.calculateVelocityMetrics(epicWithVelocity)
 	assert.True(t, velocity.StoriesPerDay > 0)
-	assert.InDelta(t, 2.0/10.0, velocity.StoriesPerDay, 0.01) // 2 completed stories over 10 days
+	assert.InDelta(t, 2.0/10.0, velocity.StoriesPerDay, 0.01)     // 2 completed stories over 10 days
 	assert.InDelta(t, 8.0/10.0, velocity.StoryPointsPerDay, 0.01) // 8 points over 10 days
-	assert.InDelta(t, 5.0, velocity.AverageStoryDays, 0.01) // 10 days / 2 stories
+	assert.InDelta(t, 5.0, velocity.AverageStoryDays, 0.01)       // 10 days / 2 stories
 	assert.NotEqual(t, "", velocity.CompletionTrend)
 }
 
@@ -252,7 +252,7 @@ func TestDashboard_CalculateTimelineMetrics(t *testing.T) {
 	assert.Equal(t, "1 weeks", timeline.OriginalEstimate)
 	assert.Equal(t, 5, timeline.DaysActive)
 	assert.Equal(t, 4, timeline.EstimatedDaysRemaining) // 2 remaining stories / 0.5 per day
-	assert.False(t, timeline.IsOverdue) // 5 days < 7 days (1 week)
+	assert.False(t, timeline.IsOverdue)                 // 5 days < 7 days (1 week)
 }
 
 func TestDashboard_CreateProgressBar(t *testing.T) {
@@ -317,7 +317,7 @@ func TestDashboard_HelperFunctions(t *testing.T) {
 	assert.Equal(t, "Hello", truncateText("Hello", 10))
 	assert.Equal(t, "Hello W...", truncateText("Hello World", 10))
 	assert.Equal(t, "Hello", truncateText("Hello", 5)) // Same length, no truncation needed
-	assert.Equal(t, "H...", truncateText("Hello", 4)) // Truncation needed
+	assert.Equal(t, "H...", truncateText("Hello", 4))  // Truncation needed
 }
 
 // Helper function to setup test directories

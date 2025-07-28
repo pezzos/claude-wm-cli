@@ -118,15 +118,15 @@
       "dependsOn": ["TASK-US004-004"],
       "blocks": [],
       "acceptanceCriteria": [
-        "Add 'navigate' or 'menu' subcommand to root CLI",
+        "Add 'interactive' or 'menu' subcommand to root CLI",
         "Integration with existing state management",
         "Consistent error handling with other commands",
         "Help text and usage documentation"
       ],
       "implementation": {
-        "location": "cmd/claude-wm/navigate.go",
+        "location": "cmd/claude-wm/interactive.go",
         "dependencies": ["github.com/spf13/cobra"],
-        "testFile": "cmd/claude-wm/navigate_test.go"
+        "testFile": "cmd/claude-wm/interactive_test.go"
       }
     },
     {

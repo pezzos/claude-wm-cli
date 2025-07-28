@@ -7,12 +7,12 @@ import (
 
 // ContextualCommand represents a command that's appropriate for the current workflow state
 type ContextualCommand struct {
-	Action       *WorkflowAction `json:"action"`
-	Priority     Priority        `json:"priority"`
-	Reasoning    string          `json:"reasoning"`
-	Prerequisites []string       `json:"prerequisites,omitempty"`
-	NextActions  []string        `json:"next_actions,omitempty"`
-	Warnings     []string        `json:"warnings,omitempty"`
+	Action        *WorkflowAction `json:"action"`
+	Priority      Priority        `json:"priority"`
+	Reasoning     string          `json:"reasoning"`
+	Prerequisites []string        `json:"prerequisites,omitempty"`
+	NextActions   []string        `json:"next_actions,omitempty"`
+	Warnings      []string        `json:"warnings,omitempty"`
 }
 
 // CommandGenerator generates contextual commands based on workflow analysis
@@ -138,8 +138,8 @@ func (cg *CommandGenerator) generatePrimaryCommands(analysis *WorkflowAnalysis) 
 		}
 
 		// Check if all tasks are completed
-		if analysis.CompletionMetrics.CompletedTasks == analysis.CompletionMetrics.TotalTasks && 
-		   analysis.CompletionMetrics.TotalTasks > 0 {
+		if analysis.CompletionMetrics.CompletedTasks == analysis.CompletionMetrics.TotalTasks &&
+			analysis.CompletionMetrics.TotalTasks > 0 {
 			commands = append(commands, cg.createCommand("complete-story", PriorityP0,
 				"All tasks completed - mark story as complete",
 				[]string{}, []string{"create-story", "complete-epic"}))
@@ -222,7 +222,7 @@ func (cg *CommandGenerator) generateUtilityCommands(analysis *WorkflowAnalysis) 
 }
 
 // createCommand creates a contextual command with the given parameters
-func (cg *CommandGenerator) createCommand(actionID string, priority Priority, reasoning string, 
+func (cg *CommandGenerator) createCommand(actionID string, priority Priority, reasoning string,
 	prerequisites []string, nextActions []string) *ContextualCommand {
 	return cg.createCommandWithWarnings(actionID, priority, reasoning, prerequisites, nextActions, []string{})
 }
@@ -335,11 +335,11 @@ func (cg *CommandGenerator) isPrerequisiteMet(prerequisite string, analysis *Wor
 	case "task_in_progress":
 		return len(analysis.CurrentTasks) > 0
 	case "all_tasks_complete":
-		return analysis.CompletionMetrics.TotalTasks > 0 && 
-			   analysis.CompletionMetrics.CompletedTasks == analysis.CompletionMetrics.TotalTasks
+		return analysis.CompletionMetrics.TotalTasks > 0 &&
+			analysis.CompletionMetrics.CompletedTasks == analysis.CompletionMetrics.TotalTasks
 	case "all_stories_complete":
-		return analysis.CompletionMetrics.TotalStories > 0 && 
-			   analysis.CompletionMetrics.CompletedStories == analysis.CompletionMetrics.TotalStories
+		return analysis.CompletionMetrics.TotalStories > 0 &&
+			analysis.CompletionMetrics.CompletedStories == analysis.CompletionMetrics.TotalStories
 	default:
 		// Unknown prerequisite - assume it's not met
 		return false

@@ -14,19 +14,19 @@ import (
 	"claude-wm-cli/internal/workflow"
 )
 
-func TestNavigateCmd_Basic(t *testing.T) {
+func TestInteractiveCmd_Basic(t *testing.T) {
 	// Test that the command is properly configured
-	assert.Equal(t, "navigate", navigateCmd.Use)
-	assert.Contains(t, navigateCmd.Aliases, "nav")
-	assert.Contains(t, navigateCmd.Aliases, "menu")
-	assert.NotEmpty(t, navigateCmd.Short)
-	assert.NotEmpty(t, navigateCmd.Long)
+	assert.Equal(t, "interactive", InteractiveCmd.Use)
+	assert.Contains(t, InteractiveCmd.Aliases, "nav")
+	assert.Contains(t, InteractiveCmd.Aliases, "menu")
+	assert.NotEmpty(t, InteractiveCmd.Short)
+	assert.NotEmpty(t, InteractiveCmd.Long)
 }
 
-func TestNavigateCmd_Flags(t *testing.T) {
+func TestInteractiveCmd_Flags(t *testing.T) {
 	// Test that all expected flags are defined
-	flags := navigateCmd.Flags()
-	
+	flags := InteractiveCmd.Flags()
+
 	assert.NotNil(t, flags.Lookup("status"))
 	assert.NotNil(t, flags.Lookup("suggest"))
 	assert.NotNil(t, flags.Lookup("quick"))
@@ -35,33 +35,33 @@ func TestNavigateCmd_Flags(t *testing.T) {
 	assert.NotNil(t, flags.Lookup("max-suggestions"))
 }
 
-func TestNavigateCmd_FlagDefaults(t *testing.T) {
+func TestInteractiveCmd_FlagDefaults(t *testing.T) {
 	// Test flag default values
-	flags := navigateCmd.Flags()
-	
+	flags := InteractiveCmd.Flags()
+
 	statusFlag := flags.Lookup("status")
 	assert.Equal(t, "false", statusFlag.DefValue)
-	
+
 	widthFlag := flags.Lookup("width")
 	assert.Equal(t, "80", widthFlag.DefValue)
-	
+
 	maxSuggestionsFlag := flags.Lookup("max-suggestions")
 	assert.Equal(t, "5", maxSuggestionsFlag.DefValue)
 }
 
-func TestRunNavigate_StatusOnly(t *testing.T) {
+func TestRunInteractive_StatusOnly(t *testing.T) {
 	// Create temporary directory with project structure
 	tempDir := t.TempDir()
 	createTestProjectStructure(t, tempDir)
-	
+
 	// Change to temp directory
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(originalDir)
-	
+
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
-	
+
 	// Create command with status flag
 	cmd := &cobra.Command{}
 	showStatusOnly = true
@@ -70,39 +70,39 @@ func TestRunNavigate_StatusOnly(t *testing.T) {
 	noInteractive = true
 	displayWidth = 80
 	maxSuggestions = 5
-	
+
 	// Capture output
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	// Run command
-	err = runNavigate(cmd, []string{})
-	
+	err = runInteractive(cmd, []string{})
+
 	// Restore stdout and get output
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	// Reset flags
 	showStatusOnly = false
-	
+
 	assert.NoError(t, err)
 	assert.Contains(t, output.String(), "Project")
 }
 
-func TestRunNavigate_QuickStatus(t *testing.T) {
+func TestRunInteractive_QuickStatus(t *testing.T) {
 	tempDir := t.TempDir()
 	createTestProjectStructure(t, tempDir)
-	
+
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(originalDir)
-	
+
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
-	
+
 	cmd := &cobra.Command{}
 	showStatusOnly = false
 	showSuggestOnly = false
@@ -110,37 +110,37 @@ func TestRunNavigate_QuickStatus(t *testing.T) {
 	noInteractive = true
 	displayWidth = 80
 	maxSuggestions = 5
-	
+
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
-	err = runNavigate(cmd, []string{})
-	
+
+	err = runInteractive(cmd, []string{})
+
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	showQuickStatus = false
-	
+
 	assert.NoError(t, err)
 	// Should contain state information
 	outputStr := output.String()
 	assert.NotEmpty(t, outputStr)
 }
 
-func TestRunNavigate_SuggestOnly(t *testing.T) {
+func TestRunInteractive_SuggestOnly(t *testing.T) {
 	tempDir := t.TempDir()
 	createTestProjectStructure(t, tempDir)
-	
+
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(originalDir)
-	
+
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
-	
+
 	cmd := &cobra.Command{}
 	showStatusOnly = false
 	showSuggestOnly = true
@@ -148,36 +148,36 @@ func TestRunNavigate_SuggestOnly(t *testing.T) {
 	noInteractive = true
 	displayWidth = 80
 	maxSuggestions = 3
-	
+
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
-	err = runNavigate(cmd, []string{})
-	
+
+	err = runInteractive(cmd, []string{})
+
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	showSuggestOnly = false
-	
+
 	assert.NoError(t, err)
 	outputStr := output.String()
 	assert.Contains(t, outputStr, "Suggestions")
 }
 
-func TestRunNavigate_NonInteractive(t *testing.T) {
+func TestRunInteractive_NonInteractive(t *testing.T) {
 	tempDir := t.TempDir()
 	createTestProjectStructure(t, tempDir)
-	
+
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(originalDir)
-	
+
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
-	
+
 	cmd := &cobra.Command{}
 	showStatusOnly = false
 	showSuggestOnly = false
@@ -185,35 +185,35 @@ func TestRunNavigate_NonInteractive(t *testing.T) {
 	noInteractive = true
 	displayWidth = 80
 	maxSuggestions = 5
-	
+
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
-	err = runNavigate(cmd, []string{})
-	
+
+	err = runInteractive(cmd, []string{})
+
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	assert.NoError(t, err)
 	outputStr := output.String()
 	assert.NotEmpty(t, outputStr)
 	// Should show project state and suggestions without interactive menu
 }
 
-func TestRunNavigate_InvalidDirectory(t *testing.T) {
+func TestRunInteractive_InvalidDirectory(t *testing.T) {
 	// Change to a non-existent directory (this should work as os.Getwd() will succeed)
 	// We'll test the error case by mocking, but for now test the basic error handling
-	
+
 	cmd := &cobra.Command{}
-	
+
 	// Test with valid directory but ensure error handling works
 	// The error cases are harder to test without dependency injection
 	// For now, we verify the command doesn't panic
 	assert.NotPanics(t, func() {
-		runNavigate(cmd, []string{})
+		runInteractive(cmd, []string{})
 	})
 }
 
@@ -221,7 +221,7 @@ func TestCreateMainMenu(t *testing.T) {
 	ctx := &navigation.ProjectContext{
 		State: navigation.StateNotInitialized,
 	}
-	
+
 	suggestions := []*navigation.Suggestion{
 		{
 			Action: &workflow.WorkflowAction{
@@ -240,16 +240,16 @@ func TestCreateMainMenu(t *testing.T) {
 			Reasoning: "Get help with commands",
 		},
 	}
-	
+
 	menu := createMainMenu(ctx, suggestions)
-	
+
 	assert.NotNil(t, menu)
 	assert.Equal(t, "🧭 Project Navigation", menu.Title)
 	assert.True(t, menu.ShowNumbers)
 	assert.True(t, menu.AllowBack)
 	assert.True(t, menu.AllowQuit)
 	assert.NotEmpty(t, menu.Options)
-	
+
 	// Should have suggestions plus standard options
 	assert.GreaterOrEqual(t, len(menu.Options), 3) // At least standard options
 }
@@ -258,7 +258,7 @@ func TestCreateMainMenu_ManySuggestions(t *testing.T) {
 	ctx := &navigation.ProjectContext{
 		State: navigation.StateNotInitialized,
 	}
-	
+
 	// Create more than 3 suggestions
 	suggestions := []*navigation.Suggestion{}
 	for i := 0; i < 5; i++ {
@@ -271,31 +271,31 @@ func TestCreateMainMenu_ManySuggestions(t *testing.T) {
 			Reasoning: "Test suggestion",
 		})
 	}
-	
+
 	menu := createMainMenu(ctx, suggestions)
-	
+
 	// Should limit to top 3 suggestions plus standard options
 	suggestionCount := 0
 	for _, option := range menu.Options {
-		if option.Action != "status" && option.Action != "suggestions" && 
-		   option.Action != "refresh" && option.Enabled {
+		if option.Action != "status" && option.Action != "suggestions" &&
+			option.Action != "refresh" && option.Enabled {
 			suggestionCount++
 		}
 	}
-	
+
 	assert.LessOrEqual(t, suggestionCount, 3, "Should limit to 3 suggestions in menu")
 }
 
 func TestExecuteAction_DirectoryCreation(t *testing.T) {
 	// Test the basic directory creation logic that would be used in init
 	tempDir := t.TempDir()
-	
+
 	expectedDirs := []string{
 		"docs/1-project",
-		"docs/2-current-epic", 
+		"docs/2-current-epic",
 		"docs/3-current-task",
 	}
-	
+
 	// Test creating directories (simulates what executeInitProject would do)
 	for _, dir := range expectedDirs {
 		fullPath := filepath.Join(tempDir, dir)
@@ -315,7 +315,7 @@ func TestGetPriorityIcon(t *testing.T) {
 		{workflow.PriorityP2, "🟢 "},
 		{workflow.Priority("unknown"), "⚪ "},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(string(tt.priority), func(t *testing.T) {
 			result := getPriorityIcon(tt.priority)
@@ -331,12 +331,12 @@ func TestTruncateString(t *testing.T) {
 		expected string
 	}{
 		{"short", 10, "short"},
-		{"exactly10c", 10, "exactly10c"},  // Actually 10 chars
+		{"exactly10c", 10, "exactly10c"}, // Actually 10 chars
 		{"this is a very long string", 10, "this is..."},
 		{"", 5, ""},
 		{"test", 5, "test"}, // Actually shorter than maxLen
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
 			result := truncateString(tt.input, tt.maxLen)
@@ -360,21 +360,21 @@ func TestDisplaySuggestions(t *testing.T) {
 			NextActions: []string{"next-action"},
 		},
 	}
-	
+
 	engine := navigation.NewSuggestionEngine()
-	
+
 	// Capture output
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	displaySuggestions(suggestions, engine)
-	
+
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	outputStr := output.String()
 	assert.Contains(t, outputStr, "Action Suggestions")
 	assert.Contains(t, outputStr, "Test Action")
@@ -384,18 +384,18 @@ func TestDisplaySuggestions(t *testing.T) {
 
 func TestDisplaySuggestions_Empty(t *testing.T) {
 	engine := navigation.NewSuggestionEngine()
-	
+
 	var output bytes.Buffer
 	originalStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	displaySuggestions([]*navigation.Suggestion{}, engine)
-	
+
 	w.Close()
 	os.Stdout = originalStdout
 	output.ReadFrom(r)
-	
+
 	outputStr := output.String()
 	assert.Contains(t, outputStr, "No suggestions available")
 }
@@ -408,7 +408,7 @@ func createTestProjectStructure(t *testing.T, tempDir string) {
 		"docs/2-current-epic",
 		"docs/3-current-task",
 	}
-	
+
 	for _, dir := range dirs {
 		err := os.MkdirAll(filepath.Join(tempDir, dir), 0755)
 		require.NoError(t, err)

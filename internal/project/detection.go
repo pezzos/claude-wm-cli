@@ -65,8 +65,8 @@ var OptionalFiles = []string{
 // if it contains a properly initialized Claude WM project
 func DetectProjectInitialization(rootPath string) (*ProjectDetectionResult, error) {
 	result := &ProjectDetectionResult{
-		RootPath: rootPath,
-		Issues:   []string{},
+		RootPath:     rootPath,
+		Issues:       []string{},
 		MissingFiles: []string{},
 	}
 
@@ -134,7 +134,7 @@ func checkDocsStructure(rootPath string) (bool, []string) {
 
 	// Structure is considered present if at least half the directories exist
 	hasStructure := missingDirs <= len(RequiredDirectories)/2
-	
+
 	return hasStructure, issues
 }
 
@@ -144,7 +144,7 @@ func validateRequiredFiles(rootPath string) (bool, []string) {
 
 	for _, file := range RequiredFiles {
 		fullPath := filepath.Join(rootPath, file)
-		
+
 		// Check if file exists
 		if _, err := os.Stat(fullPath); err != nil {
 			if os.IsNotExist(err) {

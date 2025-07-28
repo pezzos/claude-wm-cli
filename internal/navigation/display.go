@@ -28,23 +28,23 @@ func (psd *ProjectStateDisplay) SetWidth(width int) {
 func (psd *ProjectStateDisplay) DisplayProjectOverview(ctx *ProjectContext) {
 	psd.displayHeader(ctx)
 	psd.displayCurrentState(ctx)
-	
+
 	if ctx.State >= StateHasEpics {
 		psd.displayEpicProgress(ctx)
 	}
-	
+
 	if ctx.State >= StateStoryInProgress {
 		psd.displayStoryProgress(ctx)
 	}
-	
+
 	if ctx.State >= StateTaskInProgress {
 		psd.displayTaskProgress(ctx)
 	}
-	
+
 	if len(ctx.Issues) > 0 {
 		psd.displayIssues(ctx)
 	}
-	
+
 	psd.displayFooter(ctx)
 }
 
@@ -52,11 +52,11 @@ func (psd *ProjectStateDisplay) DisplayProjectOverview(ctx *ProjectContext) {
 func (psd *ProjectStateDisplay) displayHeader(ctx *ProjectContext) {
 	fmt.Println()
 	psd.printSeparator("═")
-	
+
 	projectName := psd.getProjectName(ctx)
 	title := fmt.Sprintf("  🚀 %s - %s  ", projectName, ctx.State.String())
 	psd.printCentered(title)
-	
+
 	psd.printSeparator("═")
 	fmt.Println()
 }
@@ -64,11 +64,11 @@ func (psd *ProjectStateDisplay) displayHeader(ctx *ProjectContext) {
 // displayCurrentState shows the current workflow state and context
 func (psd *ProjectStateDisplay) displayCurrentState(ctx *ProjectContext) {
 	fmt.Printf("📍 Current State: %s\n", psd.getStateIcon(ctx.State)+ctx.State.String())
-	
+
 	if ctx.ProjectPath != "" {
 		fmt.Printf("📂 Project Path: %s\n", ctx.ProjectPath)
 	}
-	
+
 	fmt.Println()
 }
 
@@ -79,43 +79,43 @@ func (psd *ProjectStateDisplay) displayEpicProgress(ctx *ProjectContext) {
 		fmt.Println()
 		return
 	}
-	
+
 	epic := ctx.CurrentEpic
-	
+
 	fmt.Printf("📚 Epic: %s (%s)\n", epic.Title, epic.ID)
 	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(epic.Status), epic.Status)
 	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(epic.Priority)+epic.Priority)
-	
+
 	// Progress bar
 	progressBar := psd.createProgressBar(epic.Progress, 30)
-	fmt.Printf("   Progress: %s %.1f%% (%d/%d stories)\n", 
+	fmt.Printf("   Progress: %s %.1f%% (%d/%d stories)\n",
 		progressBar, epic.Progress*100, epic.CompletedStories, epic.TotalStories)
-	
+
 	fmt.Println()
 }
 
-// displayStoryProgress shows current story information and progress  
+// displayStoryProgress shows current story information and progress
 func (psd *ProjectStateDisplay) displayStoryProgress(ctx *ProjectContext) {
 	if ctx.CurrentStory == nil {
 		fmt.Println("📖 Story: No active story")
 		fmt.Println()
 		return
 	}
-	
+
 	story := ctx.CurrentStory
-	
+
 	fmt.Printf("📖 Story: %s (%s)\n", story.Title, story.ID)
 	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(story.Status), story.Status)
 	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(story.Priority)+story.Priority)
-	
+
 	// Progress bar for story
 	if story.TotalTasks > 0 {
 		progress := float64(story.CompletedTasks) / float64(story.TotalTasks)
 		progressBar := psd.createProgressBar(progress, 30)
-		fmt.Printf("   Progress: %s %.1f%% (%d/%d tasks)\n", 
+		fmt.Printf("   Progress: %s %.1f%% (%d/%d tasks)\n",
 			progressBar, progress*100, story.CompletedTasks, story.TotalTasks)
 	}
-	
+
 	fmt.Println()
 }
 
@@ -126,17 +126,17 @@ func (psd *ProjectStateDisplay) displayTaskProgress(ctx *ProjectContext) {
 		fmt.Println()
 		return
 	}
-	
+
 	task := ctx.CurrentTask
-	
+
 	fmt.Printf("✓ Task: %s (%s)\n", task.Title, task.ID)
 	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(task.Status), task.Status)
 	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(task.Priority)+task.Priority)
-	
+
 	if task.EstimatedHours > 0 {
 		fmt.Printf("   Estimated: %d hours\n", task.EstimatedHours)
 	}
-	
+
 	fmt.Println()
 }
 
@@ -145,7 +145,7 @@ func (psd *ProjectStateDisplay) displayIssues(ctx *ProjectContext) {
 	if len(ctx.Issues) == 0 {
 		return
 	}
-	
+
 	fmt.Printf("⚠️  Issues (%d):\n", len(ctx.Issues))
 	for i, issue := range ctx.Issues {
 		if i >= 5 { // Limit to first 5 issues
@@ -160,16 +160,16 @@ func (psd *ProjectStateDisplay) displayIssues(ctx *ProjectContext) {
 // displayFooter shows summary and next steps
 func (psd *ProjectStateDisplay) displayFooter(ctx *ProjectContext) {
 	psd.printSeparator("─")
-	
+
 	// Show available actions count
 	if len(ctx.AvailableActions) > 0 {
-		fmt.Printf("💡 %d actions available | Use 'navigate' or 'menu' to explore\n", 
+		fmt.Printf("💡 %d actions available | Use 'interactive' or 'menu' to explore\n",
 			len(ctx.AvailableActions))
 	}
-	
+
 	// Show timestamp
 	fmt.Printf("🕐 Last updated: %s\n", time.Now().Format("15:04:05"))
-	
+
 	fmt.Println()
 }
 
@@ -183,13 +183,13 @@ func (psd *ProjectStateDisplay) createProgressBar(progress float64, width int) s
 	if progress > 1 {
 		progress = 1
 	}
-	
+
 	filled := int(math.Round(progress * float64(width)))
 	empty := width - filled
-	
+
 	filledBar := strings.Repeat("█", filled)
 	emptyBar := strings.Repeat("░", empty)
-	
+
 	return fmt.Sprintf("[%s%s]", filledBar, emptyBar)
 }
 
@@ -256,7 +256,7 @@ func (psd *ProjectStateDisplay) getProjectName(ctx *ProjectContext) string {
 			return parts[len(parts)-1]
 		}
 	}
-	
+
 	// Fallback name
 	return "Claude WM Project"
 }
@@ -273,11 +273,11 @@ func (psd *ProjectStateDisplay) printCentered(text string) {
 		fmt.Println(text)
 		return
 	}
-	
+
 	padding := (psd.width - textLen) / 2
-	fmt.Printf("%s%s%s\n", 
-		strings.Repeat(" ", padding), 
-		text, 
+	fmt.Printf("%s%s%s\n",
+		strings.Repeat(" ", padding),
+		text,
 		strings.Repeat(" ", psd.width-textLen-padding))
 }
 
@@ -285,44 +285,44 @@ func (psd *ProjectStateDisplay) printCentered(text string) {
 func (psd *ProjectStateDisplay) DisplayQuickStatus(ctx *ProjectContext) {
 	icon := psd.getStateIcon(ctx.State)
 	fmt.Printf("%s%s", icon, ctx.State.String())
-	
+
 	if ctx.CurrentEpic != nil {
 		fmt.Printf(" | Epic: %s (%.0f%%)", ctx.CurrentEpic.Title, ctx.CurrentEpic.Progress*100)
 	}
-	
+
 	if ctx.CurrentStory != nil {
 		fmt.Printf(" | Story: %s", ctx.CurrentStory.Title)
 	}
-	
+
 	if ctx.CurrentTask != nil {
 		fmt.Printf(" | Task: %s", ctx.CurrentTask.Title)
 	}
-	
+
 	fmt.Println()
 }
 
 // DisplayProgressSummary shows a summary of progress across all levels
 func (psd *ProjectStateDisplay) DisplayProgressSummary(ctx *ProjectContext) {
 	fmt.Println("\n📊 Progress Summary:")
-	
+
 	if ctx.CurrentEpic != nil {
 		epic := ctx.CurrentEpic
-		fmt.Printf("   Epic: %s %.1f%% complete\n", 
+		fmt.Printf("   Epic: %s %.1f%% complete\n",
 			psd.createProgressBar(epic.Progress, 20), epic.Progress*100)
 	}
-	
+
 	if ctx.CurrentStory != nil && ctx.CurrentStory.TotalTasks > 0 {
 		story := ctx.CurrentStory
 		progress := float64(story.CompletedTasks) / float64(story.TotalTasks)
-		fmt.Printf("   Story: %s %.1f%% complete\n", 
+		fmt.Printf("   Story: %s %.1f%% complete\n",
 			psd.createProgressBar(progress, 20), progress*100)
 	}
-	
+
 	// Show next milestone
 	if ctx.State < StateTaskInProgress {
 		fmt.Printf("   Next: %s\n", psd.getNextMilestone(ctx))
 	}
-	
+
 	fmt.Println()
 }
 
@@ -348,45 +348,45 @@ func (psd *ProjectStateDisplay) DisplayActionSummary(ctx *ProjectContext) {
 		fmt.Println("No actions available")
 		return
 	}
-	
+
 	fmt.Printf("\n💡 Available Actions (%d):\n", len(ctx.AvailableActions))
-	
+
 	for i, action := range ctx.AvailableActions {
 		if i >= 8 { // Limit display
-			fmt.Printf("   ... and %d more (use 'navigate' to see all)\n", 
+			fmt.Printf("   ... and %d more (use 'interactive' to see all)\n",
 				len(ctx.AvailableActions)-8)
 			break
 		}
 		fmt.Printf("   • %s\n", action)
 	}
-	
+
 	fmt.Println()
 }
 
 // DisplayWithSuggestions combines state display with suggestions
 func (psd *ProjectStateDisplay) DisplayWithSuggestions(ctx *ProjectContext, suggestions []*Suggestion) {
 	psd.DisplayProjectOverview(ctx)
-	
+
 	if len(suggestions) > 0 {
 		fmt.Println("🎯 Recommended Actions:")
-		
+
 		for i, suggestion := range suggestions {
 			if i >= 3 { // Show top 3 suggestions
 				break
 			}
-			
+
 			icon := psd.getPriorityIcon(string(suggestion.Priority))
 			fmt.Printf("   %d. %s%s\n", i+1, icon, suggestion.Action.Name)
-			
+
 			if suggestion.Reasoning != "" {
 				fmt.Printf("      %s\n", suggestion.Reasoning)
 			}
 		}
-		
+
 		if len(suggestions) > 3 {
 			fmt.Printf("   ... and %d more suggestions\n", len(suggestions)-3)
 		}
-		
+
 		fmt.Println()
 	}
 }

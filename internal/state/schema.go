@@ -31,25 +31,25 @@ const (
 
 // Metadata contains common fields for all state entities
 type Metadata struct {
-	ID          string    `json:"id"`
-	Version     string    `json:"version"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedBy   string    `json:"created_by,omitempty"`
-	UpdatedBy   string    `json:"updated_by,omitempty"`
-	SchemaVersion string  `json:"schema_version"`
+	ID            string    `json:"id"`
+	Version       string    `json:"version"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	CreatedBy     string    `json:"created_by,omitempty"`
+	UpdatedBy     string    `json:"updated_by,omitempty"`
+	SchemaVersion string    `json:"schema_version"`
 }
 
 // ProjectState represents the overall project configuration and status
 type ProjectState struct {
-	Metadata    Metadata           `json:"metadata"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Repository  string             `json:"repository,omitempty"`
-	Status      Status             `json:"status"`
-	Settings    ProjectSettings    `json:"settings"`
-	Metrics     ProjectMetrics     `json:"metrics"`
-	Tags        []string           `json:"tags,omitempty"`
+	Metadata     Metadata               `json:"metadata"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	Repository   string                 `json:"repository,omitempty"`
+	Status       Status                 `json:"status"`
+	Settings     ProjectSettings        `json:"settings"`
+	Metrics      ProjectMetrics         `json:"metrics"`
+	Tags         []string               `json:"tags,omitempty"`
 	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
@@ -66,37 +66,37 @@ type ProjectSettings struct {
 
 // ProjectMetrics tracks project progress and performance
 type ProjectMetrics struct {
-	TotalEpics      int     `json:"total_epics"`
-	CompletedEpics  int     `json:"completed_epics"`
-	TotalStories    int     `json:"total_stories"`
-	CompletedStories int    `json:"completed_stories"`
-	TotalTasks      int     `json:"total_tasks"`
-	CompletedTasks  int     `json:"completed_tasks"`
-	ProgressPercent float64 `json:"progress_percent"`
-	LastActivity    time.Time `json:"last_activity"`
-	EstimatedHours  float64 `json:"estimated_hours"`
-	ActualHours     float64 `json:"actual_hours"`
+	TotalEpics       int       `json:"total_epics"`
+	CompletedEpics   int       `json:"completed_epics"`
+	TotalStories     int       `json:"total_stories"`
+	CompletedStories int       `json:"completed_stories"`
+	TotalTasks       int       `json:"total_tasks"`
+	CompletedTasks   int       `json:"completed_tasks"`
+	ProgressPercent  float64   `json:"progress_percent"`
+	LastActivity     time.Time `json:"last_activity"`
+	EstimatedHours   float64   `json:"estimated_hours"`
+	ActualHours      float64   `json:"actual_hours"`
 }
 
 // EpicState represents a major feature or initiative
 type EpicState struct {
-	Metadata       Metadata           `json:"metadata"`
-	ProjectID      string             `json:"project_id"`
-	Title          string             `json:"title"`
-	Description    string             `json:"description"`
-	Priority       Priority           `json:"priority"`
-	Status         Status             `json:"status"`
-	StartDate      *time.Time         `json:"start_date,omitempty"`
-	EndDate        *time.Time         `json:"end_date,omitempty"`
-	EstimatedHours float64            `json:"estimated_hours"`
-	ActualHours    float64            `json:"actual_hours"`
-	Assignee       string             `json:"assignee,omitempty"`
-	Reporter       string             `json:"reporter,omitempty"`
-	Labels         []string           `json:"labels,omitempty"`
-	Dependencies   []string           `json:"dependencies,omitempty"` // Epic IDs
-	Blocks         []string           `json:"blocks,omitempty"`        // Epic IDs
-	Stories        []string           `json:"stories,omitempty"`       // Story IDs
-	Metrics        EpicMetrics        `json:"metrics"`
+	Metadata       Metadata               `json:"metadata"`
+	ProjectID      string                 `json:"project_id"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	Priority       Priority               `json:"priority"`
+	Status         Status                 `json:"status"`
+	StartDate      *time.Time             `json:"start_date,omitempty"`
+	EndDate        *time.Time             `json:"end_date,omitempty"`
+	EstimatedHours float64                `json:"estimated_hours"`
+	ActualHours    float64                `json:"actual_hours"`
+	Assignee       string                 `json:"assignee,omitempty"`
+	Reporter       string                 `json:"reporter,omitempty"`
+	Labels         []string               `json:"labels,omitempty"`
+	Dependencies   []string               `json:"dependencies,omitempty"` // Epic IDs
+	Blocks         []string               `json:"blocks,omitempty"`       // Epic IDs
+	Stories        []string               `json:"stories,omitempty"`      // Story IDs
+	Metrics        EpicMetrics            `json:"metrics"`
 	CustomFields   map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
@@ -113,26 +113,26 @@ type EpicMetrics struct {
 
 // StoryState represents a user story or feature requirement
 type StoryState struct {
-	Metadata         Metadata           `json:"metadata"`
-	EpicID           string             `json:"epic_id"`
-	Title            string             `json:"title"`
-	Description      string             `json:"description"`
-	UserStory        string             `json:"user_story,omitempty"` // As a... I want... So that...
-	Priority         Priority           `json:"priority"`
-	Status           Status             `json:"status"`
-	StoryPoints      int                `json:"story_points,omitempty"`
-	EstimatedHours   float64            `json:"estimated_hours"`
-	ActualHours      float64            `json:"actual_hours"`
-	Assignee         string             `json:"assignee,omitempty"`
-	Reporter         string             `json:"reporter,omitempty"`
-	Labels           []string           `json:"labels,omitempty"`
-	Dependencies     []string           `json:"dependencies,omitempty"` // Story IDs
-	Blocks           []string           `json:"blocks,omitempty"`        // Story IDs
-	Tasks            []string           `json:"tasks,omitempty"`         // Task IDs
-	AcceptanceCriteria []AcceptanceCriterion `json:"acceptance_criteria,omitempty"`
-	TestCases        []TestCase         `json:"test_cases,omitempty"`
-	Metrics          StoryMetrics       `json:"metrics"`
-	CustomFields     map[string]interface{} `json:"custom_fields,omitempty"`
+	Metadata           Metadata               `json:"metadata"`
+	EpicID             string                 `json:"epic_id"`
+	Title              string                 `json:"title"`
+	Description        string                 `json:"description"`
+	UserStory          string                 `json:"user_story,omitempty"` // As a... I want... So that...
+	Priority           Priority               `json:"priority"`
+	Status             Status                 `json:"status"`
+	StoryPoints        int                    `json:"story_points,omitempty"`
+	EstimatedHours     float64                `json:"estimated_hours"`
+	ActualHours        float64                `json:"actual_hours"`
+	Assignee           string                 `json:"assignee,omitempty"`
+	Reporter           string                 `json:"reporter,omitempty"`
+	Labels             []string               `json:"labels,omitempty"`
+	Dependencies       []string               `json:"dependencies,omitempty"` // Story IDs
+	Blocks             []string               `json:"blocks,omitempty"`       // Story IDs
+	Tasks              []string               `json:"tasks,omitempty"`        // Task IDs
+	AcceptanceCriteria []AcceptanceCriterion  `json:"acceptance_criteria,omitempty"`
+	TestCases          []TestCase             `json:"test_cases,omitempty"`
+	Metrics            StoryMetrics           `json:"metrics"`
+	CustomFields       map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
 // AcceptanceCriterion defines when a story is considered complete
@@ -145,49 +145,49 @@ type AcceptanceCriterion struct {
 
 // TestCase represents a test scenario for a story
 type TestCase struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
 	Steps       []string `json:"steps,omitempty"`
-	Expected    string `json:"expected"`
-	Actual      string `json:"actual,omitempty"`
-	Status      Status `json:"status"`
-	Automated   bool   `json:"automated"`
-	Command     string `json:"command,omitempty"`
+	Expected    string   `json:"expected"`
+	Actual      string   `json:"actual,omitempty"`
+	Status      Status   `json:"status"`
+	Automated   bool     `json:"automated"`
+	Command     string   `json:"command,omitempty"`
 }
 
 // StoryMetrics tracks story-specific progress
 type StoryMetrics struct {
-	TotalTasks           int     `json:"total_tasks"`
-	CompletedTasks       int     `json:"completed_tasks"`
-	ProgressPercent      float64 `json:"progress_percent"`
-	CompletedCriteria    int     `json:"completed_criteria"`
-	TotalCriteria        int     `json:"total_criteria"`
-	PassedTests          int     `json:"passed_tests"`
-	TotalTests           int     `json:"total_tests"`
-	CycleTime            float64 `json:"cycle_time"` // Hours from start to done
+	TotalTasks        int     `json:"total_tasks"`
+	CompletedTasks    int     `json:"completed_tasks"`
+	ProgressPercent   float64 `json:"progress_percent"`
+	CompletedCriteria int     `json:"completed_criteria"`
+	TotalCriteria     int     `json:"total_criteria"`
+	PassedTests       int     `json:"passed_tests"`
+	TotalTests        int     `json:"total_tests"`
+	CycleTime         float64 `json:"cycle_time"` // Hours from start to done
 }
 
 // TaskState represents an individual work item
 type TaskState struct {
-	Metadata       Metadata           `json:"metadata"`
-	StoryID        string             `json:"story_id"`
-	Title          string             `json:"title"`
-	Description    string             `json:"description"`
-	Priority       Priority           `json:"priority"`
-	Status         Status             `json:"status"`
-	Type           TaskType           `json:"type"`
-	EstimatedHours float64            `json:"estimated_hours"`
-	ActualHours    float64            `json:"actual_hours"`
-	Assignee       string             `json:"assignee,omitempty"`
-	Reporter       string             `json:"reporter,omitempty"`
-	Labels         []string           `json:"labels,omitempty"`
-	Dependencies   []string           `json:"dependencies,omitempty"` // Task IDs
-	Blocks         []string           `json:"blocks,omitempty"`        // Task IDs
-	Commands       []TaskCommand      `json:"commands,omitempty"`
-	Notes          []TaskNote         `json:"notes,omitempty"`
-	Attachments    []TaskAttachment   `json:"attachments,omitempty"`
-	Metrics        TaskMetrics        `json:"metrics"`
+	Metadata       Metadata               `json:"metadata"`
+	StoryID        string                 `json:"story_id"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	Priority       Priority               `json:"priority"`
+	Status         Status                 `json:"status"`
+	Type           TaskType               `json:"type"`
+	EstimatedHours float64                `json:"estimated_hours"`
+	ActualHours    float64                `json:"actual_hours"`
+	Assignee       string                 `json:"assignee,omitempty"`
+	Reporter       string                 `json:"reporter,omitempty"`
+	Labels         []string               `json:"labels,omitempty"`
+	Dependencies   []string               `json:"dependencies,omitempty"` // Task IDs
+	Blocks         []string               `json:"blocks,omitempty"`       // Task IDs
+	Commands       []TaskCommand          `json:"commands,omitempty"`
+	Notes          []TaskNote             `json:"notes,omitempty"`
+	Attachments    []TaskAttachment       `json:"attachments,omitempty"`
+	Metrics        TaskMetrics            `json:"metrics"`
 	CustomFields   map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
@@ -195,13 +195,13 @@ type TaskState struct {
 type TaskType string
 
 const (
-	TaskTypeDevelopment TaskType = "development"
-	TaskTypeBug         TaskType = "bug"
-	TaskTypeTesting     TaskType = "testing"
-	TaskTypeResearch    TaskType = "research"
+	TaskTypeDevelopment   TaskType = "development"
+	TaskTypeBug           TaskType = "bug"
+	TaskTypeTesting       TaskType = "testing"
+	TaskTypeResearch      TaskType = "research"
 	TaskTypeDocumentation TaskType = "documentation"
-	TaskTypeDeployment  TaskType = "deployment"
-	TaskTypeRefactoring TaskType = "refactoring"
+	TaskTypeDeployment    TaskType = "deployment"
+	TaskTypeRefactoring   TaskType = "refactoring"
 )
 
 // TaskCommand represents a command to execute for this task
@@ -255,11 +255,11 @@ type TaskAttachment struct {
 
 // TaskMetrics tracks task-specific metrics
 type TaskMetrics struct {
-	CommandsExecuted     int     `json:"commands_executed"`
-	SuccessfulCommands   int     `json:"successful_commands"`
-	FailedCommands       int     `json:"failed_commands"`
-	TotalExecutionTime   float64 `json:"total_execution_time"` // seconds
-	AverageExecutionTime float64 `json:"average_execution_time"` // seconds
+	CommandsExecuted     int        `json:"commands_executed"`
+	SuccessfulCommands   int        `json:"successful_commands"`
+	FailedCommands       int        `json:"failed_commands"`
+	TotalExecutionTime   float64    `json:"total_execution_time"`   // seconds
+	AverageExecutionTime float64    `json:"average_execution_time"` // seconds
 	LastExecutedAt       *time.Time `json:"last_executed_at,omitempty"`
 }
 
@@ -275,34 +275,34 @@ type StateCollection struct {
 
 // StateIndex provides quick lookups and relationships
 type StateIndex struct {
-	ProjectEpics  map[string][]string `json:"project_epics"`  // project_id -> epic_ids
-	EpicStories   map[string][]string `json:"epic_stories"`   // epic_id -> story_ids
-	StoryTasks    map[string][]string `json:"story_tasks"`    // story_id -> task_ids
-	Dependencies  map[string][]string `json:"dependencies"`   // entity_id -> dependency_ids
-	Assignees     map[string][]string `json:"assignees"`      // assignee -> entity_ids
-	Labels        map[string][]string `json:"labels"`         // label -> entity_ids
-	StatusCounts  map[Status]int      `json:"status_counts"`  // status -> count
-	PriorityCounts map[Priority]int   `json:"priority_counts"` // priority -> count
+	ProjectEpics   map[string][]string `json:"project_epics"`   // project_id -> epic_ids
+	EpicStories    map[string][]string `json:"epic_stories"`    // epic_id -> story_ids
+	StoryTasks     map[string][]string `json:"story_tasks"`     // story_id -> task_ids
+	Dependencies   map[string][]string `json:"dependencies"`    // entity_id -> dependency_ids
+	Assignees      map[string][]string `json:"assignees"`       // assignee -> entity_ids
+	Labels         map[string][]string `json:"labels"`          // label -> entity_ids
+	StatusCounts   map[Status]int      `json:"status_counts"`   // status -> count
+	PriorityCounts map[Priority]int    `json:"priority_counts"` // priority -> count
 }
 
 // ValidationRule represents a validation constraint
 type ValidationRule struct {
-	Field       string      `json:"field"`
-	Type        string      `json:"type"`        // required, format, range, enum
-	Value       interface{} `json:"value,omitempty"`
-	Message     string      `json:"message"`
-	Severity    string      `json:"severity"`    // error, warning, info
+	Field    string      `json:"field"`
+	Type     string      `json:"type"` // required, format, range, enum
+	Value    interface{} `json:"value,omitempty"`
+	Message  string      `json:"message"`
+	Severity string      `json:"severity"` // error, warning, info
 }
 
 // SchemaDefinition contains the complete schema with validation rules
 type SchemaDefinition struct {
-	Version     string                     `json:"version"`
-	Entities    map[string]interface{}     `json:"entities"`
-	Rules       map[string][]ValidationRule `json:"rules"`
-	Indexes     []string                   `json:"indexes"`
-	Migrations  []SchemaMigration          `json:"migrations"`
-	CreatedAt   time.Time                  `json:"created_at"`
-	UpdatedAt   time.Time                  `json:"updated_at"`
+	Version    string                      `json:"version"`
+	Entities   map[string]interface{}      `json:"entities"`
+	Rules      map[string][]ValidationRule `json:"rules"`
+	Indexes    []string                    `json:"indexes"`
+	Migrations []SchemaMigration           `json:"migrations"`
+	CreatedAt  time.Time                   `json:"created_at"`
+	UpdatedAt  time.Time                   `json:"updated_at"`
 }
 
 // SchemaMigration represents a schema change
@@ -320,7 +320,7 @@ func (p *ProjectState) MarshalJSON() ([]byte, error) {
 	// Update metadata before marshaling
 	p.Metadata.UpdatedAt = time.Now()
 	p.Metadata.SchemaVersion = SchemaVersion
-	
+
 	type Alias ProjectState
 	return json.Marshal((*Alias)(p))
 }
@@ -328,7 +328,7 @@ func (p *ProjectState) MarshalJSON() ([]byte, error) {
 func (e *EpicState) MarshalJSON() ([]byte, error) {
 	e.Metadata.UpdatedAt = time.Now()
 	e.Metadata.SchemaVersion = SchemaVersion
-	
+
 	type Alias EpicState
 	return json.Marshal((*Alias)(e))
 }
@@ -336,7 +336,7 @@ func (e *EpicState) MarshalJSON() ([]byte, error) {
 func (s *StoryState) MarshalJSON() ([]byte, error) {
 	s.Metadata.UpdatedAt = time.Now()
 	s.Metadata.SchemaVersion = SchemaVersion
-	
+
 	type Alias StoryState
 	return json.Marshal((*Alias)(s))
 }
@@ -344,7 +344,7 @@ func (s *StoryState) MarshalJSON() ([]byte, error) {
 func (t *TaskState) MarshalJSON() ([]byte, error) {
 	t.Metadata.UpdatedAt = time.Now()
 	t.Metadata.SchemaVersion = SchemaVersion
-	
+
 	type Alias TaskState
 	return json.Marshal((*Alias)(t))
 }

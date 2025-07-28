@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -11,6 +10,7 @@ import (
 
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/validation"
+
 	"github.com/spf13/cobra"
 )
 
@@ -49,11 +49,11 @@ func initializeProject(projectName string) {
 		validation.HandleValidationError(err, "claude-wm-cli init my-project")
 		return
 	}
-	
+
 	fmt.Printf("🚀 Initializing Claude WM CLI project: %s\n", projectName)
 	fmt.Println("================================")
 	fmt.Println()
-	
+
 	// Get current directory or create project directory
 	var projectDir string
 	if projectName == filepath.Base(projectName) && projectName != "." {
@@ -69,15 +69,15 @@ func initializeProject(projectName string) {
 	} else {
 		projectDir = "."
 	}
-	
+
 	// Create basic directory structure
 	dirs := []string{
 		"docs/1-project",
-		"docs/2-current-epic", 
+		"docs/2-current-epic",
 		"docs/3-current-task",
 		"docs/archive",
 	}
-	
+
 	fmt.Println("📂 Creating directory structure...")
 	for _, dir := range dirs {
 		fullPath := filepath.Join(projectDir, dir)
@@ -90,7 +90,7 @@ func initializeProject(projectName string) {
 		}
 		fmt.Printf("  ✓ %s\n", dir)
 	}
-	
+
 	// Create basic configuration file
 	fmt.Println("\n⚙️  Creating configuration files...")
 	configPath := filepath.Join(projectDir, ".claude-wm-cli.yaml")
@@ -107,7 +107,7 @@ defaults:
   timeout: 30
   retries: 2
 `, projectName)
-		
+
 		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 			cliErr := errors.ErrPermissionDenied(configPath).
 				WithDetails(err.Error()).
@@ -119,7 +119,7 @@ defaults:
 	} else {
 		errors.PrintWarning(".claude-wm-cli.yaml already exists (use --force to overwrite)")
 	}
-	
+
 	fmt.Println()
 	errors.PrintSuccess(fmt.Sprintf("Project '%s' initialized successfully!", projectName))
 	fmt.Println()
