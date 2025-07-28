@@ -156,7 +156,7 @@ func importFeedback() error {
 	}
 
 	// Execute Claude command to process feedback
-	prompt := "/1-project:2-update:1-ImportFeedback"
+	prompt := "/1-project:2-update:1-Import-feedback"
 	description := "Import and process feedback with AI analysis for actionable insights"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
@@ -267,7 +267,7 @@ func updateProjectStatus() error {
 	}
 
 	// Execute Claude command to update project status
-	prompt := "/1-project:2-update:4-StatusUpdate"
+	prompt := "/1-project:2-update:4-Status"
 	description := "Update overall project status with comprehensive analysis"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
@@ -297,7 +297,7 @@ func reviewImplementationStatus() error {
 	}
 
 	// Execute Claude command to review implementation status
-	prompt := "/1-project:2-update:5-ImplementationStatus"
+	prompt := "/1-project:2-update:5-Implementation-Status"
 	description := "Review implementation status across all epics and stories with detailed analysis"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
@@ -351,7 +351,7 @@ func planEpics() error {
 	}
 
 	// Execute Claude command to plan epics
-	prompt := "/1-project:1-epics:PlanEpics"
+	prompt := "/1-project:3-epics:1-Plan-Epics"
 	description := "Plan epic roadmap with AI-powered analysis and strategic planning"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {

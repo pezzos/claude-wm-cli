@@ -4,8 +4,10 @@ Copyright © 2025 Claude WM CLI Team
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -240,7 +242,7 @@ func init() {
 
 var epicTitle string
 
-func createEpic(title string, cmd *cobra.Command) {
+func createEpic(title string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -302,7 +304,7 @@ func createEpic(title string, cmd *cobra.Command) {
 	fmt.Printf("   • Update this epic:  claude-wm-cli epic update %s --status in_progress\n", newEpic.ID)
 }
 
-func listEpics(cmd *cobra.Command) {
+func listEpics(_ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -319,130 +321,19 @@ func listEpics(cmd *cobra.Command) {
 		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
 		fmt.Println("📋 Falling back to basic epic listing...")
 	} else {
-		// Execute Claude command for enhanced epic listing
-		prompt := "/2-current-epic:1-epics:ListEpics"
-		description := "List epics with AI-powered analysis and recommendations"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("EPIC", "listEpics", fmt.Sprintf("Enhanced epic listing failed: %v", err))
-			fmt.Printf("⚠️  Enhanced listing failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic epic listing...")
-		} else {
-			fmt.Println("✅ Enhanced epic listing complete")
-			return
-		}
+		// Note: No specific Claude prompt for epic listing - use basic implementation
+		debug.LogStub("EPIC", "listEpics", "Enhanced epic listing not implemented - no matching Claude prompt")
+		fmt.Println("📋 Using standard epic listing...")
 	}
 
-	// Create epic manager for fallback
-	manager := epic.NewManager(wd)
-
-	// Parse filter options
-	var statusFilter epic.Status
-	if listStatus != "" {
-		statusFilter = epic.Status(listStatus)
-		if !statusFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid status '%s'. Valid values: planned, in_progress, on_hold, completed, cancelled\n", listStatus)
-			os.Exit(1)
-		}
-	}
-
-	var priorityFilter epic.Priority
-	if listPriority != "" {
-		priorityFilter = epic.Priority(listPriority)
-		if !priorityFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid priority '%s'. Valid values: low, medium, high, critical\n", listPriority)
-			os.Exit(1)
-		}
-	}
-
-	// Create list options
-	options := epic.EpicListOptions{
-		Status:   statusFilter,
-		Priority: priorityFilter,
-		ShowAll:  listAll,
-	}
-
-	// Get epics
-	epics, err := manager.ListEpics(options)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to list epics: %v\n", err)
+	// Read and display epics from epics.json file
+	if err := displayEpicsFromFile(wd, listStatus, listPriority, listAll); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to display epics: %v\n", err)
 		os.Exit(1)
-	}
-
-	// Get current epic
-	currentEpic, _ := manager.GetCurrentEpic()
-	var currentEpicID string
-	if currentEpic != nil {
-		currentEpicID = currentEpic.ID
-	}
-
-	// Display header
-	fmt.Printf("📋 Project Epics\n")
-	fmt.Printf("================\n\n")
-
-	if len(epics) == 0 {
-		fmt.Printf("No epics found")
-		if listStatus != "" || listPriority != "" {
-			fmt.Printf(" matching the specified filters")
-		}
-		fmt.Printf(".\n\n")
-		fmt.Printf("💡 Create your first epic: claude-wm-cli epic create \"Epic Title\"\n")
-		return
-	}
-
-	// Create table writer
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-
-	// Print header
-	fmt.Fprintf(w, "ID\tTITLE\tSTATUS\tPRIORITY\tPROGRESS\tCREATED\tCURRENT\n")
-	fmt.Fprintf(w, "──\t─────\t──────\t────────\t────────\t───────\t───────\n")
-
-	// Print each epic
-	for _, ep := range epics {
-		isCurrent := ""
-		if ep.ID == currentEpicID {
-			isCurrent = "→"
-		}
-
-		// Format status with emoji
-		statusIcon := getEpicStatusIcon(ep.Status)
-		priorityIcon := getEpicPriorityIcon(ep.Priority)
-
-		progressStr := fmt.Sprintf("%.0f%%", ep.Progress.CompletionPercentage)
-		if ep.Progress.TotalStories > 0 {
-			progressStr += fmt.Sprintf(" (%d/%d)", ep.Progress.CompletedStories, ep.Progress.TotalStories)
-		}
-
-		createdStr := ep.CreatedAt.Format("Jan 02")
-
-		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s\t%s\t%s\n",
-			ep.ID,
-			truncateEpicString(ep.Title, 30),
-			statusIcon, ep.Status,
-			priorityIcon, ep.Priority,
-			progressStr,
-			createdStr,
-			isCurrent)
-	}
-
-	w.Flush()
-
-	// Show summary
-	fmt.Printf("\n📊 Summary: %d epic(s)", len(epics))
-	if currentEpicID != "" {
-		fmt.Printf(" • Current: %s", currentEpicID)
-	}
-	fmt.Printf("\n\n")
-
-	// Show next actions
-	if len(epics) > 0 && currentEpicID == "" {
-		fmt.Printf("💡 Next steps:\n")
-		fmt.Printf("   • Select an epic:  claude-wm-cli epic select <epic-id>\n")
-		fmt.Printf("   • View details:    claude-wm-cli epic show <epic-id>\n")
 	}
 }
 
-func updateEpic(epicID string, cmd *cobra.Command) {
+func updateEpic(epicID string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -860,6 +751,172 @@ func formatDuration(d time.Duration) string {
 	}
 }
 
+// JSON structure for epics.json file
+type EpicsJSON struct {
+	Epics []struct {
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Priority    string `json:"priority"`
+		Status      string `json:"status"`
+		Description string `json:"description"`
+		UserStories []struct {
+			ID       string `json:"id"`
+			Title    string `json:"title"`
+			Status   string `json:"status"`
+			Priority string `json:"priority"`
+		} `json:"userStories"`
+	} `json:"epics"`
+	Metadata struct {
+		TotalEpics int `json:"totalEpics"`
+	} `json:"metadata"`
+}
+
+// displayEpicsFromFile reads epics.json and displays formatted epic list
+func displayEpicsFromFile(wd, statusFilter, priorityFilter string, showAll bool) error {
+	// Read epics.json file
+	epicsPath := filepath.Join(wd, "docs/1-project/epics.json")
+	data, err := os.ReadFile(epicsPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("📋 No epics found. Run 'project plan-epics' to create epics.")
+			return nil
+		}
+		return fmt.Errorf("failed to read epics.json: %w", err)
+	}
+
+	// Parse JSON
+	var epicsData EpicsJSON
+	if err := json.Unmarshal(data, &epicsData); err != nil {
+		return fmt.Errorf("failed to parse epics.json: %w", err)
+	}
+
+	// Filter epics
+	filteredEpics := make([]struct {
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Priority    string `json:"priority"`
+		Status      string `json:"status"`
+		Description string `json:"description"`
+		UserStories []struct {
+			ID       string `json:"id"`
+			Title    string `json:"title"`
+			Status   string `json:"status"`
+			Priority string `json:"priority"`
+		} `json:"userStories"`
+	}, 0)
+
+	for _, epic := range epicsData.Epics {
+		// Apply filters
+		if statusFilter != "" && epic.Status != statusFilter {
+			continue
+		}
+		if priorityFilter != "" && epic.Priority != priorityFilter {
+			continue
+		}
+		// Skip completed/cancelled epics unless showAll is true
+		if !showAll && (epic.Status == "completed" || epic.Status == "cancelled") {
+			continue
+		}
+		filteredEpics = append(filteredEpics, epic)
+	}
+
+	// Display header
+	fmt.Printf("📋 Project Epics\n")
+	fmt.Printf("================\n\n")
+
+	if len(filteredEpics) == 0 {
+		fmt.Printf("No epics found")
+		if statusFilter != "" || priorityFilter != "" {
+			fmt.Printf(" matching the specified filters")
+		}
+		fmt.Printf(".\n\n")
+		fmt.Printf("💡 Create epics with: claude-wm-cli project plan-epics\n")
+		return nil
+	}
+
+	// Create table writer
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	// Print header
+	fmt.Fprintf(w, "ID\tTITLE\tSTATUS\tPRIORITY\tSTORIES\n")
+	fmt.Fprintf(w, "──\t─────\t──────\t────────\t───────\n")
+
+	// Print each epic
+	for _, epic := range filteredEpics {
+		// Format status and priority with emoji
+		statusIcon := getEpicStatusIconFromString(epic.Status)
+		priorityIcon := getEpicPriorityIconFromString(epic.Priority)
+
+		// Calculate story progress
+		totalStories := len(epic.UserStories)
+		completedStories := 0
+		for _, story := range epic.UserStories {
+			if story.Status == "completed" || story.Status == "done" {
+				completedStories++
+			}
+		}
+		storiesStr := fmt.Sprintf("%d/%d", completedStories, totalStories)
+		if totalStories > 0 {
+			progress := float64(completedStories) / float64(totalStories) * 100
+			storiesStr += fmt.Sprintf(" (%.0f%%)", progress)
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s\n",
+			epic.ID,
+			truncateEpicString(epic.Title, 40),
+			statusIcon, epic.Status,
+			priorityIcon, epic.Priority,
+			storiesStr)
+	}
+
+	w.Flush()
+
+	// Show summary
+	fmt.Printf("\n📊 Summary: %d epic(s) displayed\n\n", len(filteredEpics))
+
+	// Show next actions
+	fmt.Printf("💡 Next steps:\n")
+	fmt.Printf("   • View epic details:  claude-wm-cli epic show <epic-id>\n")
+	fmt.Printf("   • Select current epic: claude-wm-cli epic select <epic-id>\n")
+
+	return nil
+}
+
+// Helper functions for string-based status/priority icons
+func getEpicStatusIconFromString(status string) string {
+	switch status {
+	case "planned", "todo":
+		return "📋"
+	case "in_progress":
+		return "🚧"
+	case "on_hold":
+		return "⏸️"
+	case "completed", "done":
+		return "✅"
+	case "cancelled":
+		return "❌"
+	case "backlog":
+		return "📦"
+	default:
+		return "❓"
+	}
+}
+
+func getEpicPriorityIconFromString(priority string) string {
+	switch priority {
+	case "low":
+		return "🟢"
+	case "medium":
+		return "🟡"
+	case "high":
+		return "🟠"
+	case "critical":
+		return "🔴"
+	default:
+		return "⚪"
+	}
+}
+
 func showEpicDashboard() {
 	// Get current working directory
 	wd, err := os.Getwd()
@@ -868,28 +925,9 @@ func showEpicDashboard() {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced dashboard
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("EPIC", "showEpicDashboard", "Show epic dashboard with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic epic dashboard...")
-	} else {
-		// Execute Claude command for enhanced dashboard
-		prompt := "/2-current-epic:1-epics:Dashboard"
-		description := "Display epic dashboard with AI-powered analysis and insights"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("EPIC", "showEpicDashboard", fmt.Sprintf("Enhanced dashboard failed: %v", err))
-			fmt.Printf("⚠️  Enhanced dashboard failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic epic dashboard...")
-		} else {
-			fmt.Println("✅ Enhanced epic dashboard complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for epic dashboard - using basic implementation
+	debug.LogStub("EPIC", "showEpicDashboard", "Epic dashboard - no matching Claude prompt available")
+	fmt.Println("📋 Displaying epic dashboard...")
 
 	// Create epic manager and dashboard for fallback
 	manager := epic.NewManager(wd)

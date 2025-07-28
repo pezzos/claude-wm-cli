@@ -4,14 +4,15 @@ Copyright © 2025 Claude WM CLI Team
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/epic"
-	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/story"
 
 	"github.com/spf13/cobra"
@@ -185,7 +186,7 @@ func init() {
 	storyUpdateCmd.Flags().StringSliceVar(&dependencies, "dependencies", []string{}, "Update story dependencies")
 }
 
-func createStory(title string, cmd *cobra.Command) {
+func createStory(title string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -193,28 +194,9 @@ func createStory(title string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced story creation
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("STORY", "createStory", "Create story with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic story creation...")
-	} else {
-		// Execute Claude command for enhanced story creation
-		prompt := "/2-current-epic:2-stories:CreateStory"
-		description := "Create story with AI-powered analysis and task breakdown"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("STORY", "createStory", fmt.Sprintf("Enhanced story creation failed: %v", err))
-			fmt.Printf("⚠️  Enhanced story creation failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic story creation...")
-		} else {
-			fmt.Println("✅ Enhanced story creation complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for story creation - using basic implementation
+	debug.LogStub("STORY", "createStory", "Story creation - no matching Claude prompt available")
+	fmt.Println("📋 Creating story...")
 
 	// Create story generator for fallback
 	generator := story.NewGenerator(wd)
@@ -273,7 +255,7 @@ func createStory(title string, cmd *cobra.Command) {
 	fmt.Printf("   • List all stories:   claude-wm-cli story list\n")
 }
 
-func listStories(cmd *cobra.Command) {
+func listStories(_ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -281,104 +263,15 @@ func listStories(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced story listing
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("STORY", "listStories", "List stories with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic story listing...")
-	} else {
-		// Execute Claude command for enhanced story listing
-		prompt := "/2-current-epic:2-stories:ListStories"
-		description := "List stories with AI-powered analysis and progress insights"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("STORY", "listStories", fmt.Sprintf("Enhanced story listing failed: %v", err))
-			fmt.Printf("⚠️  Enhanced story listing failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic story listing...")
-		} else {
-			fmt.Println("✅ Enhanced story listing complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for story listing - using basic implementation
+	debug.LogStub("STORY", "listStories", "Story listing - no matching Claude prompt available")
+	fmt.Println("📋 Listing stories...")
 
-	// Create story generator
-	generator := story.NewGenerator(wd)
-
-	// Parse filter options
-	var statusFilter epic.Status
-	if listStoryStatus != "" {
-		statusFilter = epic.Status(listStoryStatus)
-		if !statusFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid status '%s'. Valid values: planned, in_progress, on_hold, completed, cancelled\n", listStoryStatus)
-			os.Exit(1)
-		}
-	}
-
-	// Get stories
-	stories, err := generator.ListStories(listStoryEpic, statusFilter)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to list stories: %v\n", err)
+	// Read and display stories from current epic stories.json file
+	if err := displayStoriesFromFile(wd, listStoryStatus); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to display stories: %v\n", err)
 		os.Exit(1)
 	}
-
-	// Display header
-	fmt.Printf("📋 Project Stories\n")
-	fmt.Printf("==================\n\n")
-
-	if len(stories) == 0 {
-		fmt.Printf("No stories found")
-		if listStoryEpic != "" || listStoryStatus != "" {
-			fmt.Printf(" matching the specified filters")
-		}
-		fmt.Printf(".\n\n")
-		fmt.Printf("💡 Create your first story: claude-wm-cli story create \"Story Title\"\n")
-		return
-	}
-
-	// Create table writer
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-
-	// Print header
-	fmt.Fprintf(w, "ID\tTITLE\tEPIC\tSTATUS\tPRIORITY\tPOINTS\tPROGRESS\tCREATED\n")
-	fmt.Fprintf(w, "──\t─────\t────\t──────\t────────\t──────\t────────\t───────\n")
-
-	// Print each story
-	for _, st := range stories {
-		// Format status with emoji
-		statusIcon := getStoryStatusIcon(st.Status)
-		priorityIcon := getStoryPriorityIcon(st.Priority)
-
-		// Calculate progress
-		progress := st.CalculateProgress()
-		progressStr := fmt.Sprintf("%.0f%%", progress.CompletionPercentage)
-		if progress.TotalTasks > 0 {
-			progressStr += fmt.Sprintf(" (%d/%d)", progress.CompletedTasks, progress.TotalTasks)
-		}
-
-		createdStr := st.CreatedAt.Format("Jan 02")
-		epicStr := st.EpicID
-		if epicStr == "" {
-			epicStr = "-"
-		}
-
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s %s\t%s %s\t%d\t%s\t%s\n",
-			st.ID,
-			truncateStoryString(st.Title, 25),
-			epicStr,
-			statusIcon, st.Status,
-			priorityIcon, st.Priority,
-			st.StoryPoints,
-			progressStr,
-			createdStr)
-	}
-
-	w.Flush()
-
-	// Show summary
-	fmt.Printf("\n📊 Summary: %d story(ies)\n\n", len(stories))
 }
 
 func updateStory(storyID string, cmd *cobra.Command) {
@@ -632,4 +525,167 @@ func truncateStoryString(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// JSON structure for stories.json file
+type StoriesJSON struct {
+	Stories map[string]struct {
+		ID               string `json:"id"`
+		Title            string `json:"title"`
+		Description      string `json:"description"`
+		EpicID           string `json:"epic_id"`
+		Status           string `json:"status"`
+		Priority         string `json:"priority"`
+		StoryPoints      int    `json:"story_points"`
+		AcceptanceCriteria []string `json:"acceptance_criteria"`
+		Tasks            []struct {
+			ID     string `json:"id"`
+			Title  string `json:"title"`
+			Status string `json:"status"`
+		} `json:"tasks"`
+	} `json:"stories"`
+	Metadata struct {
+		TotalStories int `json:"total_stories"`
+		TotalTasks   int `json:"total_tasks"`
+	} `json:"metadata"`
+}
+
+// displayStoriesFromFile reads stories.json and displays formatted story list
+func displayStoriesFromFile(wd, statusFilter string) error {
+	// Read stories.json file
+	storiesPath := filepath.Join(wd, "docs/2-current-epic/stories.json")
+	data, err := os.ReadFile(storiesPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("📋 No stories found. Create stories with 'story create' or 'story generate'.")
+			return nil
+		}
+		return fmt.Errorf("failed to read stories.json: %w", err)
+	}
+
+	// Parse JSON
+	var storiesData StoriesJSON
+	if err := json.Unmarshal(data, &storiesData); err != nil {
+		return fmt.Errorf("failed to parse stories.json: %w", err)
+	}
+
+	// Filter stories
+	filteredStories := make([]struct {
+		ID               string `json:"id"`
+		Title            string `json:"title"`
+		Description      string `json:"description"`
+		EpicID           string `json:"epic_id"`
+		Status           string `json:"status"`
+		Priority         string `json:"priority"`
+		StoryPoints      int    `json:"story_points"`
+		AcceptanceCriteria []string `json:"acceptance_criteria"`
+		Tasks            []struct {
+			ID     string `json:"id"`
+			Title  string `json:"title"`
+			Status string `json:"status"`
+		} `json:"tasks"`
+	}, 0)
+
+	for _, story := range storiesData.Stories {
+		// Apply status filter
+		if statusFilter != "" && story.Status != statusFilter {
+			continue
+		}
+		filteredStories = append(filteredStories, story)
+	}
+
+	// Display header
+	fmt.Printf("📋 Current Epic Stories\n")
+	fmt.Printf("======================\n\n")
+
+	if len(filteredStories) == 0 {
+		fmt.Printf("No stories found")
+		if statusFilter != "" {
+			fmt.Printf(" matching status filter '%s'", statusFilter)
+		}
+		fmt.Printf(".\n\n")
+		fmt.Printf("💡 Create stories with: claude-wm-cli story create \"Story Title\"\n")
+		return nil
+	}
+
+	// Create table writer
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	// Print header
+	fmt.Fprintf(w, "ID\tTITLE\tSTATUS\tPRIORITY\tPOINTS\tTASKS\n")
+	fmt.Fprintf(w, "──\t─────\t──────\t────────\t──────\t─────\n")
+
+	// Print each story
+	for _, story := range filteredStories {
+		// Format status and priority with emoji
+		statusIcon := getStoryStatusIconFromString(story.Status)
+		priorityIcon := getStoryPriorityIconFromString(story.Priority)
+
+		// Calculate task progress
+		totalTasks := len(story.Tasks)
+		completedTasks := 0
+		for _, task := range story.Tasks {
+			if task.Status == "completed" || task.Status == "done" {
+				completedTasks++
+			}
+		}
+		tasksStr := fmt.Sprintf("%d/%d", completedTasks, totalTasks)
+		if totalTasks > 0 {
+			progress := float64(completedTasks) / float64(totalTasks) * 100
+			tasksStr += fmt.Sprintf(" (%.0f%%)", progress)
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%d\t%s\n",
+			story.ID,
+			truncateStoryString(story.Title, 30),
+			statusIcon, story.Status,
+			priorityIcon, story.Priority,
+			story.StoryPoints,
+			tasksStr)
+	}
+
+	w.Flush()
+
+	// Show summary
+	fmt.Printf("\n📊 Summary: %d story(ies) displayed\n\n", len(filteredStories))
+
+	// Show next actions
+	fmt.Printf("💡 Next steps:\n")
+	fmt.Printf("   • View story details: claude-wm-cli story show <story-id>\n")
+	fmt.Printf("   • Update story:       claude-wm-cli story update <story-id> --status <status>\n")
+
+	return nil
+}
+
+// Helper functions for string-based status/priority icons
+func getStoryStatusIconFromString(status string) string {
+	switch status {
+	case "planned", "todo":
+		return "📋"
+	case "in_progress":
+		return "🚧"
+	case "on_hold":
+		return "⏸️"
+	case "completed", "done":
+		return "✅"
+	case "cancelled":
+		return "❌"
+	default:
+		return "❓"
+	}
+}
+
+func getStoryPriorityIconFromString(priority string) string {
+	switch priority {
+	case "low":
+		return "🟢"
+	case "medium":
+		return "🟡"
+	case "high":
+		return "🟠"
+	case "critical":
+		return "🔴"
+	default:
+		return "⚪"
+	}
 }

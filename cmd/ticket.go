@@ -4,14 +4,15 @@ Copyright © 2025 Claude WM CLI Team
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"claude-wm-cli/internal/debug"
-	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/ticket"
 
 	"github.com/spf13/cobra"
@@ -261,7 +262,7 @@ func init() {
 
 var ticketTitle string
 
-func createTicket(title string, cmd *cobra.Command) {
+func createTicket(title string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -269,28 +270,9 @@ func createTicket(title string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced ticket creation
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("TICKET", "createTicket", "Create ticket with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic ticket creation...")
-	} else {
-		// Execute Claude command for enhanced ticket creation
-		prompt := "/3-current-task:1-tickets:CreateTicket"
-		description := "Create ticket with AI-powered analysis and categorization"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("TICKET", "createTicket", fmt.Sprintf("Enhanced ticket creation failed: %v", err))
-			fmt.Printf("⚠️  Enhanced ticket creation failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic ticket creation...")
-		} else {
-			fmt.Println("✅ Enhanced ticket creation complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for ticket creation - using basic implementation
+	debug.LogStub("TICKET", "createTicket", "Ticket creation - no matching Claude prompt available")
+	fmt.Println("📋 Creating ticket...")
 
 	// Create ticket manager for fallback
 	manager := ticket.NewManager(wd)
@@ -379,7 +361,7 @@ func createTicket(title string, cmd *cobra.Command) {
 	fmt.Printf("   • Update ticket:     claude-wm-cli ticket update %s --status in_progress\n", newTicket.ID)
 }
 
-func listTickets(cmd *cobra.Command) {
+func listTickets(_ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -387,149 +369,14 @@ func listTickets(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced ticket listing
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("TICKET", "listTickets", "List tickets with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic ticket listing...")
-	} else {
-		// Execute Claude command for enhanced ticket listing
-		prompt := "/3-current-task:1-tickets:ListTickets"
-		description := "List tickets with AI-powered analysis and prioritization"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("TICKET", "listTickets", fmt.Sprintf("Enhanced ticket listing failed: %v", err))
-			fmt.Printf("⚠️  Enhanced ticket listing failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic ticket listing...")
-		} else {
-			fmt.Println("✅ Enhanced ticket listing complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for ticket listing - using basic implementation
+	debug.LogStub("TICKET", "listTickets", "Ticket listing - no matching Claude prompt available")
+	fmt.Println("📋 Listing tickets...")
 
-	// Create ticket manager for fallback
-	manager := ticket.NewManager(wd)
-
-	// Parse filter options
-	var statusFilter ticket.TicketStatus
-	if listTicketStatus != "" {
-		statusFilter = ticket.TicketStatus(listTicketStatus)
-		if !statusFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid status '%s'. Valid values: open, in_progress, resolved, closed\n", listTicketStatus)
-			os.Exit(1)
-		}
-	}
-
-	var priorityFilter ticket.TicketPriority
-	if listTicketPriority != "" {
-		priorityFilter = ticket.TicketPriority(listTicketPriority)
-		if !priorityFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid priority '%s'. Valid values: low, medium, high, critical, urgent\n", listTicketPriority)
-			os.Exit(1)
-		}
-	}
-
-	var typeFilter ticket.TicketType
-	if listTicketType != "" {
-		typeFilter = ticket.TicketType(listTicketType)
-		if !typeFilter.IsValid() {
-			fmt.Fprintf(os.Stderr, "Error: Invalid type '%s'. Valid values: bug, feature, interruption, task, support\n", listTicketType)
-			os.Exit(1)
-		}
-	}
-
-	// Create list options
-	options := ticket.TicketListOptions{
-		Status:     statusFilter,
-		Priority:   priorityFilter,
-		Type:       typeFilter,
-		AssignedTo: listTicketAssignedTo,
-		ShowClosed: listTicketAll,
-		Limit:      listTicketLimit,
-	}
-
-	// Get tickets
-	tickets, err := manager.ListTickets(options)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to list tickets: %v\n", err)
+	// Read and display tickets from current epic tickets.json file
+	if err := displayTicketsFromFile(wd, listTicketStatus, listTicketPriority, listTicketType, listTicketAll); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Failed to display tickets: %v\n", err)
 		os.Exit(1)
-	}
-
-	// Get current ticket
-	currentTicket, _ := manager.GetCurrentTicket()
-	var currentTicketID string
-	if currentTicket != nil {
-		currentTicketID = currentTicket.ID
-	}
-
-	// Display header
-	fmt.Printf("🎫 Tickets\n")
-	fmt.Printf("==========\n\n")
-
-	if len(tickets) == 0 {
-		fmt.Printf("No tickets found")
-		if listTicketStatus != "" || listTicketPriority != "" || listTicketType != "" {
-			fmt.Printf(" matching the specified filters")
-		}
-		fmt.Printf(".\n\n")
-		fmt.Printf("💡 Create your first ticket: claude-wm-cli ticket create \"Ticket Title\"\n")
-		return
-	}
-
-	// Create table writer
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-
-	// Print header
-	fmt.Fprintf(w, "ID\tTITLE\tTYPE\tSTATUS\tPRIORITY\tASSIGNED\tCREATED\tCURRENT\n")
-	fmt.Fprintf(w, "──\t─────\t────\t──────\t────────\t────────\t───────\t───────\n")
-
-	// Print each ticket
-	for _, t := range tickets {
-		isCurrent := ""
-		if t.ID == currentTicketID {
-			isCurrent = "→"
-		}
-
-		// Format icons
-		typeIcon := getTicketTypeIcon(t.Type)
-		statusIcon := getTicketStatusIcon(t.Status)
-		priorityIcon := getTicketPriorityIcon(t.Priority)
-
-		assignedTo := t.AssignedTo
-		if assignedTo == "" {
-			assignedTo = "-"
-		}
-
-		createdStr := t.CreatedAt.Format("Jan 02")
-
-		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s %s\t%s\t%s\t%s\n",
-			t.ID,
-			truncateTicketString(t.Title, 30),
-			typeIcon, t.Type,
-			statusIcon, t.Status,
-			priorityIcon, t.Priority,
-			assignedTo,
-			createdStr,
-			isCurrent)
-	}
-
-	w.Flush()
-
-	// Show summary
-	fmt.Printf("\n📊 Summary: %d ticket(s)", len(tickets))
-	if currentTicketID != "" {
-		fmt.Printf(" • Current: %s", currentTicketID)
-	}
-	fmt.Printf("\n\n")
-
-	// Show next actions
-	if len(tickets) > 0 && currentTicketID == "" {
-		fmt.Printf("💡 Next steps:\n")
-		fmt.Printf("   • Start working:     claude-wm-cli ticket current <ticket-id>\n")
-		fmt.Printf("   • View details:      claude-wm-cli ticket show <ticket-id>\n")
 	}
 }
 
@@ -651,7 +498,7 @@ func showTicket(ticketID string) {
 	fmt.Printf("   • List all tickets:  claude-wm-cli ticket list\n")
 }
 
-func updateTicket(ticketID string, cmd *cobra.Command) {
+func updateTicket(ticketID string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -751,7 +598,7 @@ func updateTicket(ticketID string, cmd *cobra.Command) {
 	fmt.Printf("   Updated:  %s\n", updatedTicket.UpdatedAt.Format("2006-01-02 15:04:05"))
 }
 
-func changeTicketStatus(ticketID string, cmd *cobra.Command) {
+func changeTicketStatus(ticketID string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -805,7 +652,7 @@ func changeTicketStatus(ticketID string, cmd *cobra.Command) {
 	}
 }
 
-func manageCurrentTicket(args []string, cmd *cobra.Command) {
+func manageCurrentTicket(args []string, _ *cobra.Command) {
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {
@@ -813,28 +660,9 @@ func manageCurrentTicket(args []string, cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	// Create Claude executor for enhanced current ticket management
-	claudeExecutor := executor.NewClaudeExecutor()
-	
-	// Validate Claude is available
-	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
-		debug.LogStub("TICKET", "manageCurrentTicket", "Manage current ticket with Claude analysis but Claude CLI not available")
-		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
-		fmt.Println("📋 Falling back to basic current ticket management...")
-	} else {
-		// Execute Claude command for enhanced current ticket management
-		prompt := "/3-current-task:1-tickets:CurrentTicket"
-		description := "Manage current ticket with AI-powered context switching and focus"
-		
-		if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-			debug.LogStub("TICKET", "manageCurrentTicket", fmt.Sprintf("Enhanced current ticket management failed: %v", err))
-			fmt.Printf("⚠️  Enhanced current ticket management failed: %v\n", err)
-			fmt.Println("📋 Falling back to basic current ticket management...")
-		} else {
-			fmt.Println("✅ Enhanced current ticket management complete")
-			return
-		}
-	}
+	// Note: No specific Claude prompt available for current ticket management - using basic implementation
+	debug.LogStub("TICKET", "manageCurrentTicket", "Current ticket management - no matching Claude prompt available")
+	fmt.Println("📋 Managing current ticket...")
 
 	// Create ticket manager for fallback
 	manager := ticket.NewManager(wd)
@@ -1035,5 +863,196 @@ func formatTicketDuration(d time.Duration) string {
 		return fmt.Sprintf("%dh %dm", hours, minutes)
 	} else {
 		return fmt.Sprintf("%dm", minutes)
+	}
+}
+
+// JSON structure for tickets.json file
+type TicketsJSON struct {
+	Tickets map[string]struct {
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+		Status      string `json:"status"`
+		Priority    string `json:"priority"`
+		Estimations struct {
+			EstimatedHours float64 `json:"estimated_hours"`
+			StoryPoints    int     `json:"story_points"`
+		} `json:"estimations"`
+		CreatedAt  string `json:"created_at"`
+		UpdatedAt  string `json:"updated_at"`
+		StartedAt  string `json:"started_at,omitempty"`
+		ResolvedAt string `json:"resolved_at,omitempty"`
+	} `json:"tickets"`
+	CurrentTicket string `json:"current_ticket"`
+	Metadata      struct {
+		TotalTickets    int `json:"total_tickets"`
+		OpenTickets     int `json:"open_tickets"`
+		ResolvedTickets int `json:"resolved_tickets"`
+	} `json:"metadata"`
+}
+
+// displayTicketsFromFile reads tickets.json and displays formatted ticket list
+func displayTicketsFromFile(wd, statusFilter, priorityFilter, typeFilter string, showAll bool) error {
+	// Read tickets.json file
+	ticketsPath := filepath.Join(wd, "docs/2-current-epic/tickets.json")
+	data, err := os.ReadFile(ticketsPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("🎫 No tickets found. Create tickets with 'ticket create'.")
+			return nil
+		}
+		return fmt.Errorf("failed to read tickets.json: %w", err)
+	}
+
+	// Parse JSON
+	var ticketsData TicketsJSON
+	if err := json.Unmarshal(data, &ticketsData); err != nil {
+		return fmt.Errorf("failed to parse tickets.json: %w", err)
+	}
+
+	// Filter tickets
+	filteredTickets := make([]struct {
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+		Status      string `json:"status"`
+		Priority    string `json:"priority"`
+		Estimations struct {
+			EstimatedHours float64 `json:"estimated_hours"`
+			StoryPoints    int     `json:"story_points"`
+		} `json:"estimations"`
+		CreatedAt  string `json:"created_at"`
+		UpdatedAt  string `json:"updated_at"`
+		StartedAt  string `json:"started_at,omitempty"`
+		ResolvedAt string `json:"resolved_at,omitempty"`
+	}, 0)
+
+	for _, ticket := range ticketsData.Tickets {
+		// Apply filters
+		if statusFilter != "" && ticket.Status != statusFilter {
+			continue
+		}
+		if priorityFilter != "" && ticket.Priority != priorityFilter {
+			continue
+		}
+		if typeFilter != "" && ticket.Type != typeFilter {
+			continue
+		}
+		// Skip closed/resolved tickets unless showAll is true
+		if !showAll && (ticket.Status == "closed" || ticket.Status == "resolved") {
+			continue
+		}
+		filteredTickets = append(filteredTickets, ticket)
+	}
+
+	// Display header
+	fmt.Printf("🎫 Current Epic Tickets\n")
+	fmt.Printf("======================\n\n")
+
+	if len(filteredTickets) == 0 {
+		fmt.Printf("No tickets found")
+		if statusFilter != "" || priorityFilter != "" || typeFilter != "" {
+			fmt.Printf(" matching the specified filters")
+		}
+		fmt.Printf(".\n\n")
+		fmt.Printf("💡 Create tickets with: claude-wm-cli ticket create \"Ticket Title\"\n")
+		return nil
+	}
+
+	// Create table writer
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	// Print header
+	fmt.Fprintf(w, "ID\tTITLE\tTYPE\tSTATUS\tPRIORITY\tCURRENT\n")
+	fmt.Fprintf(w, "──\t─────\t────\t──────\t────────\t───────\n")
+
+	// Print each ticket
+	for _, ticket := range filteredTickets {
+		// Check if this is the current ticket
+		isCurrent := ""
+		if ticket.ID == ticketsData.CurrentTicket {
+			isCurrent = "→"
+		}
+
+		// Format type, status and priority with emoji
+		typeIcon := getTicketTypeIconFromString(ticket.Type)
+		statusIcon := getTicketStatusIconFromString(ticket.Status)
+		priorityIcon := getTicketPriorityIconFromString(ticket.Priority)
+
+		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s %s\t%s\n",
+			ticket.ID,
+			truncateTicketString(ticket.Title, 30),
+			typeIcon, ticket.Type,
+			statusIcon, ticket.Status,
+			priorityIcon, ticket.Priority,
+			isCurrent)
+	}
+
+	w.Flush()
+
+	// Show summary
+	fmt.Printf("\n📊 Summary: %d ticket(s) displayed", len(filteredTickets))
+	if ticketsData.CurrentTicket != "" {
+		fmt.Printf(" • Current: %s", ticketsData.CurrentTicket)
+	}
+	fmt.Printf("\n\n")
+
+	// Show next actions
+	fmt.Printf("💡 Next steps:\n")
+	fmt.Printf("   • View ticket details: claude-wm-cli ticket show <ticket-id>\n")
+	fmt.Printf("   • Set current ticket:  claude-wm-cli ticket current <ticket-id>\n")
+
+	return nil
+}
+
+// Helper functions for string-based type/status/priority icons
+func getTicketTypeIconFromString(ticketType string) string {
+	switch ticketType {
+	case "bug":
+		return "🐛"
+	case "feature":
+		return "✨"
+	case "interruption":
+		return "⚡"
+	case "task":
+		return "📋"
+	case "support":
+		return "🆘"
+	default:
+		return "❓"
+	}
+}
+
+func getTicketStatusIconFromString(status string) string {
+	switch status {
+	case "open":
+		return "🔵"
+	case "in_progress":
+		return "🟡"
+	case "resolved":
+		return "🟢"
+	case "closed":
+		return "⚫"
+	default:
+		return "❓"
+	}
+}
+
+func getTicketPriorityIconFromString(priority string) string {
+	switch priority {
+	case "low":
+		return "🟢"
+	case "medium":
+		return "🟡"
+	case "high":
+		return "🟠"
+	case "critical":
+		return "🔴"
+	case "urgent":
+		return "🚨"
+	default:
+		return "⚪"
 	}
 }
