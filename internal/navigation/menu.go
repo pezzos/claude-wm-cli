@@ -81,20 +81,34 @@ func (md *MenuDisplay) displayMenu(menu *Menu) {
 
 	// Display options
 	if menu.ShowNumbers {
-		for i, option := range menu.Options {
+		optionNumber := 1
+		for _, option := range menu.Options {
 			if !option.Enabled {
+				// Handle disabled options (separators and section headers)
+				if option.Label != "" && option.Label != "────────────────────────" {
+					fmt.Printf("\n═══ %s ═══\n", option.Label)
+				} else {
+					fmt.Println() // Empty line for separator
+				}
 				continue
 			}
 
-			fmt.Printf("  %d) %s", i+1, option.Label)
+			fmt.Printf("  %d) %s", optionNumber, option.Label)
 			if option.Description != "" {
 				fmt.Printf(" - %s", option.Description)
 			}
 			fmt.Println()
+			optionNumber++
 		}
 	} else {
 		for _, option := range menu.Options {
 			if !option.Enabled {
+				// Handle disabled options (separators and section headers)
+				if option.Label != "" && option.Label != "────────────────────────" {
+					fmt.Printf("\n═══ %s ═══\n", option.Label)
+				} else {
+					fmt.Println() // Empty line for separator
+				}
 				continue
 			}
 
@@ -163,13 +177,17 @@ func (md *MenuDisplay) processInput(menu *Menu, input string) *MenuResult {
 	// Try to parse as number (for numbered menus)
 	if menu.ShowNumbers {
 		if num, err := strconv.Atoi(input); err == nil {
-			if num >= 1 && num <= len(menu.Options) {
-				option := &menu.Options[num-1]
+			// Count only enabled options to find the correct index
+			enabledCount := 0
+			for i, option := range menu.Options {
 				if option.Enabled {
-					return &MenuResult{
-						SelectedOption: option,
-						Action:         option.Action,
-						Input:          input,
+					enabledCount++
+					if enabledCount == num {
+						return &MenuResult{
+							SelectedOption: &menu.Options[i],
+							Action:         option.Action,
+							Input:          input,
+						}
 					}
 				}
 			}

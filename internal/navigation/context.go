@@ -275,7 +275,7 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 	}
 
 	var storiesData struct {
-		Stories []struct {
+		Stories map[string]struct {
 			ID       string `json:"id"`
 			Title    string `json:"title"`
 			Status   string `json:"status"`
