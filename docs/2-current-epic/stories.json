@@ -1,0 +1,56 @@
+{
+  "stories": {
+    "STORY-001-USER-AUTHENTICATION-SYSTEM": {
+      "id": "STORY-001-USER-AUTHENTICATION-SYSTEM",
+      "title": "User Authentication System",
+      "description": "",
+      "epic_id": "",
+      "status": "in_progress",
+      "priority": "high",
+      "story_points": 8,
+      "acceptance_criteria": [
+        "User can login with email",
+        "System validates credentials",
+        "User receives welcome message"
+      ],
+      "tasks": [
+        {
+          "id": "STORY-001-USER-AUTHENTICATION-SYSTEM-TASK-1",
+          "title": "Implement: User can login with email",
+          "description": "User can login with email",
+          "status": "planned",
+          "story_id": "STORY-001-USER-AUTHENTICATION-SYSTEM",
+          "created_at": "2025-07-25T17:22:48.556941+02:00",
+          "updated_at": "2025-07-25T17:22:48.556941+02:00"
+        },
+        {
+          "id": "STORY-001-USER-AUTHENTICATION-SYSTEM-TASK-2",
+          "title": "Implement: System validates credentials",
+          "description": "System validates credentials",
+          "status": "planned",
+          "story_id": "STORY-001-USER-AUTHENTICATION-SYSTEM",
+          "created_at": "2025-07-25T17:22:48.556941+02:00",
+          "updated_at": "2025-07-25T17:22:48.556941+02:00"
+        },
+        {
+          "id": "STORY-001-USER-AUTHENTICATION-SYSTEM-TASK-3",
+          "title": "Implement: User receives welcome message",
+          "description": "User receives welcome message",
+          "status": "planned",
+          "story_id": "STORY-001-USER-AUTHENTICATION-SYSTEM",
+          "created_at": "2025-07-25T17:22:48.556941+02:00",
+          "updated_at": "2025-07-25T17:22:48.556941+02:00"
+        }
+      ],
+      "created_at": "2025-07-25T17:22:48.556941+02:00",
+      "updated_at": "2025-07-25T17:23:13.588376+02:00",
+      "started_at": "2025-07-25T17:23:13.588376+02:00"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-07-25T17:23:13.588382+02:00",
+    "total_stories": 1,
+    "total_tasks": 3
+  }
+}

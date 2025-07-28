@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "epicId": "EPIC-001",
+    "epicTitle": "CLI Foundation & Command Execution",
+    "epicStatus": "🎯 Nearly Complete",
+    "createdDate": "2025-07-25T16:30:00+02:00",
+    "remainingWork": "Complete US-004 to finalize epic",
+    "estimatedDuration": "1-2 days",
+    "lastUpdated": "2025-07-25T16:30:00+02:00"
+  },
+  "userStory": {
+    "id": "US-004",
+    "title": "Basic Interactive Navigation",
+    "description": "As a user, I want simple prompts to guide me through available commands without memorizing syntax",
+    "priority": "medium",
+    "status": "todo",
+    "storyPoints": 4,
+    "acceptanceCriteria": [
+      "CLI presents contextual menu options based on project state",
+      "User can navigate workflow steps with simple choices",
+      "Current project state is displayed clearly",
+      "Next recommended action is suggested"
+    ]
+  },
+  "todos": [
+    {
+      "id": "TASK-US004-001",
+      "title": "Create state-based context detection system",
+      "description": "Analyze project state files to determine current workflow context and available actions",
+      "priority": "P0",
+      "status": "todo",
+      "estimatedHours": 3,
+      "dependsOn": [],
+      "blocks": ["TASK-US004-002", "TASK-US004-003"],
+      "acceptanceCriteria": [
+        "Read and parse existing state files (epics.json, current-epic.json, etc.)",
+        "Determine current workflow phase (no project, project init, epic in progress, etc.)",
+        "Identify valid next actions based on current state",
+        "Handle missing or corrupted state files gracefully"
+      ],
+      "implementation": {
+        "location": "internal/navigation/context.go",
+        "dependencies": ["internal/state package"],
+        "testFile": "internal/navigation/context_test.go"
+      }
+    },
+    {
+      "id": "TASK-US004-002", 
+      "title": "Build simple interactive menu system",
+      "description": "Create numbered menu interface with clear options and input validation",
+      "priority": "P0",
+      "status": "todo",
+      "estimatedHours": 4,
+      "dependsOn": ["TASK-US004-001"],
+      "blocks": ["TASK-US004-004"],
+      "acceptanceCriteria": [
+        "Display numbered menu options (1, 2, 3, etc.)",
+        "Clear option descriptions with context",
+        "Input validation for menu selections",
+        "Back/exit options in all menus",
+        "Support for keyboard shortcuts (q for quit, b for back)"
+      ],
+      "implementation": {
+        "location": "internal/navigation/menu.go",
+        "dependencies": ["bufio", "fmt", "strconv"],
+        "testFile": "internal/navigation/menu_test.go"
+      }
+    },
+    {
+      "id": "TASK-US004-003",
+      "title": "Implement command suggestion engine",
+      "description": "Suggest next logical actions based on current project workflow state",
+      "priority": "P0", 
+      "status": "todo",
+      "estimatedHours": 3,
+      "dependsOn": ["TASK-US004-001"],
+      "blocks": ["TASK-US004-004"],
+      "acceptanceCriteria": [
+        "Analyze workflow dependencies to suggest next steps",
+        "Prioritize suggestions by importance (P0, P1, P2)",
+        "Provide reasoning for each suggestion",
+        "Handle multiple valid next actions gracefully"
+      ],
+      "implementation": {
+        "location": "internal/navigation/suggestions.go",
+        "dependencies": ["internal/workflow"],
+        "testFile": "internal/navigation/suggestions_test.go"
+      }
+    },
+    {
+      "id": "TASK-US004-004",
+      "title": "Create project state display system",
+      "description": "Show current project status and progress indicators clearly",
+      "priority": "P1",
+      "status": "todo",
+      "estimatedHours": 2,
+      "dependsOn": ["TASK-US004-002", "TASK-US004-003"],
+      "blocks": [],
+      "acceptanceCriteria": [
+        "Display current epic and story progress",
+        "Show completed vs pending tasks with visual indicators",
+        "Display project name and current phase",
+        "Progress bars or completion percentages where appropriate"
+      ],
+      "implementation": {
+        "location": "internal/navigation/display.go",
+        "dependencies": ["internal/state"],
+        "testFile": "internal/navigation/display_test.go"
+      }
+    },
+    {
+      "id": "TASK-US004-005",
+      "title": "Integrate navigation with existing CLI commands",
+      "description": "Connect interactive navigation to existing Cobra CLI structure",
+      "priority": "P1",
+      "status": "todo", 
+      "estimatedHours": 2,
+      "dependsOn": ["TASK-US004-004"],
+      "blocks": [],
+      "acceptanceCriteria": [
+        "Add 'navigate' or 'menu' subcommand to root CLI",
+        "Integration with existing state management",
+        "Consistent error handling with other commands",
+        "Help text and usage documentation"
+      ],
+      "implementation": {
+        "location": "cmd/claude-wm/navigate.go",
+        "dependencies": ["github.com/spf13/cobra"],
+        "testFile": "cmd/claude-wm/navigate_test.go"
+      }
+    },
+    {
+      "id": "TASK-US004-006",
+      "title": "Add comprehensive testing for navigation system",
+      "description": "Test all navigation scenarios and edge cases",
+      "priority": "P1",
+      "status": "todo",
+      "estimatedHours": 3,
+      "dependsOn": ["TASK-US004-005"],
+      "blocks": [],
+      "acceptanceCriteria": [
+        "Unit tests for context detection logic",
+        "Integration tests for menu interactions",
+        "Edge case testing (missing state, corrupted files)",
+        "User input simulation and validation testing"
+      ],
+      "implementation": {
+        "location": "tests/navigation/",
+        "dependencies": ["testify", "testing"],
+        "testFile": "comprehensive test suite"
+      }
+    }
+  ],
+  "summary": {
+    "totalTasks": 6,
+    "byPriority": {
+      "P0": 3,
+      "P1": 3
+    },
+    "estimatedHours": 17,
+    "criticalPath": [
+      "TASK-US004-001",
+      "TASK-US004-002", 
+      "TASK-US004-004",
+      "TASK-US004-005"
+    ],
+    "dependencies": {
+      "internal": [
+        "State management system must be working",
+        "Existing CLI structure with Cobra"
+      ],
+      "external": [
+        "Terminal environment with proper input handling"
+      ]
+    }
+  },
+  "completionCriteria": {
+    "definition_of_done": [
+      "All acceptance criteria met for US-004",
+      "Unit and integration tests passing",
+      "Navigation integrates seamlessly with existing CLI",
+      "User can complete basic workflow without documentation",
+      "EPIC-001 marked as completed"
+    ],
+    "validation": [
+      "Manual testing of navigation flow",
+      "State detection accuracy verification", 
+      "Menu interaction usability testing"
+    ]
+  }
+}

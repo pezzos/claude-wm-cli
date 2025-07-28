@@ -1,0 +1,10 @@
+{
+  "epic": null,
+  "message": "No epic currently in progress. EPIC-002 has been completed and archived.",
+  "last_completed_epic": {
+    "id": "EPIC-002",
+    "title": "Workflow State Machine",
+    "completed_at": "2025-07-25T18:07:00+02:00",
+    "achievement": "Successfully implemented hierarchical workflow system (Project → Epic → Story → Ticket) with full state transitions and context awareness"
+  }
+}

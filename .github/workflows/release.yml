@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+        
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Download dependencies
+      run: make install
+      
+    - name: Get version from tag
+      id: get_version
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+    - name: Build all platforms
+      run: VERSION=${{ steps.get_version.outputs.version }} make build-all
+      
+    - name: Create packages
+      run: make package
+      
+    - name: Generate changelog
+      id: changelog
+      run: |
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD~1)..HEAD >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.version }}
+        release_name: Claude WM CLI ${{ steps.get_version.outputs.version }}
+        body: |
+          ## Changes in ${{ steps.get_version.outputs.version }}
+          
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ## Installation
+          
+          ### Download and Extract
+          ```bash
+          # Linux (x64)
+          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.version }}/linux-amd64.tar.gz
+          tar -xzf linux-amd64.tar.gz
+          sudo mv linux-amd64/claude-wm-cli /usr/local/bin/
+          
+          # macOS (Intel)
+          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.version }}/darwin-amd64.tar.gz
+          tar -xzf darwin-amd64.tar.gz
+          sudo mv darwin-amd64/claude-wm-cli /usr/local/bin/
+          
+          # macOS (Apple Silicon)
+          wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.version }}/darwin-arm64.tar.gz
+          tar -xzf darwin-arm64.tar.gz
+          sudo mv darwin-arm64/claude-wm-cli /usr/local/bin/
+          
+          # Windows (x64) - Download and extract the .exe from windows-amd64.tar.gz
+          ```
+          
+          ### Verify Installation
+          ```bash
+          claude-wm-cli version
+          ```
+          
+          ## Quick Start
+          ```bash
+          claude-wm-cli init my-project
+          cd my-project
+          claude-wm-cli status
+          ```
+        draft: false
+        prerelease: false
+        
+    - name: Upload Linux AMD64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/linux-amd64.tar.gz
+        asset_name: linux-amd64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload Linux ARM64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/linux-arm64.tar.gz
+        asset_name: linux-arm64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload macOS AMD64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/darwin-amd64.tar.gz
+        asset_name: darwin-amd64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload macOS ARM64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/darwin-arm64.tar.gz
+        asset_name: darwin-arm64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload Windows AMD64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/windows-amd64.tar.gz
+        asset_name: windows-amd64.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload Windows ARM64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/packages/windows-arm64.tar.gz
+        asset_name: windows-arm64.tar.gz
+        asset_content_type: application/gzip

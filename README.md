@@ -1,6 +1,6 @@
 # Claude WM CLI
 
-An intelligent Go-based command-line interface that acts as a wrapper around `claude -p "/command"` execution. Provides guided interactive workflow management for solo developers with context-aware suggestions and seamless Claude Code integration.
+A robust Go-based CLI tool for agile project management that provides guided interactive workflow management for solo developers. Features comprehensive state management, interruption handling, and integration with Git and GitHub.
 
 ## Project Structure
 
@@ -10,17 +10,49 @@ docs/
 ├── 2-current-epic/     # Current epic execution
 ├── 3-current-task/     # Current task breakdown
 └── archive/            # Completed epics backup
+
+cmd/                    # CLI commands and main entry point
+internal/               # Internal packages and business logic
+├── epic/               # Epic management and tracking
+├── story/              # Story generation and management
+├── ticket/             # Ticket/interruption handling
+├── navigation/         # Interactive menu system
+├── state/              # JSON state management with atomicity
+├── backup/             # Backup and recovery system
+├── git/                # Git integration and versioning
+├── github/             # GitHub API integration
+├── locking/            # File locking for concurrency
+└── workflow/           # Workflow analysis and validation
 ```
 
-## Features
+## Current Implementation Status
 
-- **Guided Interactive Interface**: Run `claude-wm-cli` and get contextual options - no commands to memorize
-- **Go-Based Performance**: Single binary deployment with fast JSON state parsing
-- **Solo Developer Focused**: Designed for individual developers with simple, efficient workflows
-- **Intelligent Command Orchestration**: Seamlessly wraps `claude -p "/command"` with context awareness
-- **Hierarchical Workflow Management**: PROJECT → EPIC → STORY → TICKET progression with interruption handling
-- **Dual Operation Modes**: Interactive terminal interface and headless mode for VSCode extension
-- **Optional MCP Enhancements**: Works fully without external dependencies, enhanced when available
+✅ **Fully Implemented and Tested**:
+- **Epic Management**: Create, update, track, and complete epics with dashboard
+- **Story Management**: Generate stories from epics with automated task extraction
+- **Ticket/Interruption System**: Handle urgent tasks, GitHub issues, and context switching
+- **Interactive Navigation**: Menu-driven CLI with contextual suggestions
+- **State Management**: Atomic JSON operations with corruption protection
+- **Git Integration**: Automatic versioning, backup, and recovery
+- **GitHub Integration**: Issue synchronization and OAuth support
+- **File Locking**: Multi-platform concurrent access prevention
+- **Backup/Recovery**: Automated backup with retention policies
+- **Cross-Platform Support**: Windows and Unix compatibility
+
+🔄 **Partially Complete**:
+- Interactive menu execution (some actions need completion)
+- Context restoration for interruption stack
+- Task-level CRUD operations in CLI
+
+## Key Features
+
+- **Atomic State Management**: All state changes use atomic file operations to prevent corruption
+- **Interruption Stack**: Context-aware interruption handling with full state preservation
+- **Git-Backed Versioning**: Automatic commit and backup of all project state
+- **Concurrent Access Protection**: File locking prevents multiple instances
+- **GitHub Integration**: Seamless issue import and synchronization
+- **Performance Optimized**: Efficient JSON parsing with large file support
+- **Comprehensive Testing**: High test coverage with unit and integration tests
 
 ## How It Works
 
@@ -111,30 +143,48 @@ flowchart TD
 
 ## Quick Start
 
-### Simple Usage
-1. **Install**: Download the Go binary for your platform
-2. **Run**: `claude-wm-cli` in your project directory
-3. **Follow**: Interactive prompts based on your project's current state
+### Installation & Usage
+1. **Build**: `make build` (requires Go 1.21+)
+2. **Run**: `./claude-wm-cli` or `claude-wm-cli` if installed
+3. **Navigate**: Use interactive menus or direct commands
 
-### Example Interactive Flow
+### Available Commands
+```bash
+# Core workflow commands
+claude-wm-cli epic create "Epic Name"
+claude-wm-cli story list
+claude-wm-cli ticket create --from-input "Description"
+claude-wm-cli navigate                    # Interactive menu
+
+# Management commands  
+claude-wm-cli status                      # Project status
+claude-wm-cli lock status                # Check file locks
+claude-wm-cli backup create              # Manual backup
+
+# GitHub integration
+claude-wm-cli github sync                # Sync issues
+claude-wm-cli ticket create --from-issue 123
 ```
-$ claude-wm-cli
 
-📋 Claude WM CLI - Project not initialized
-Choose an option:
-1. Initialize new project
-2. Exit
+### Example Interactive Session
+```
+$ claude-wm-cli navigate
 
-Your choice: 1
+🎯 Claude WM CLI - Current Epic: API Development
+┌─ Epic Status ─────────────────────────────┐
+│ Progress: 3/5 stories completed           │  
+│ Active: User Authentication Story         │
+│ Next: Story selection or ticket creation  │
+└───────────────────────────────────────────┘
 
-✅ Project initialized!
-Choose what to do next:
-1. Import feedback (FEEDBACK.md detected)
-2. Plan project epics
-3. Check project status
-4. Exit
+Choose an action:
+1. 📋 View epic dashboard
+2. 📝 Start new story  
+3. 🎫 Create ticket (interruption)
+4. 🔄 Continue current story
+5. ⚙️  Project settings
 
-Your choice: 1
+Your choice: 4
 ```
 
 ### Interruption Handling

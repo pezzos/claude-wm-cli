@@ -1,0 +1,11 @@
+# Claude WM CLI Configuration
+project:
+  name: "test-project"
+  initialized: true
+  
+verbose: false
+
+# Default settings
+defaults:
+  timeout: 30
+  retries: 2
