@@ -6,7 +6,7 @@ with open('/Users/a.pezzotta/repos/claude-wm-cli/docs/2-current-epic/stories.jso
     data = json.load(f)
 
 # Update STORY-004 status to completed
-for story in data['stories']:
+for story_id, story in data['stories'].items():
     if story['id'] == 'STORY-004':
         story['status'] = 'completed'
         print(f"✅ Updated {story['id']}: {story['title']} -> completed")

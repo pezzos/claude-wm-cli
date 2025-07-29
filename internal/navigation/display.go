@@ -26,26 +26,73 @@ func (psd *ProjectStateDisplay) SetWidth(width int) {
 
 // DisplayProjectOverview shows a comprehensive overview of the project state
 func (psd *ProjectStateDisplay) DisplayProjectOverview(ctx *ProjectContext) {
-	psd.displayHeader(ctx)
-	psd.displayCurrentState(ctx)
-
-	if ctx.State >= StateHasEpics {
-		psd.displayEpicProgress(ctx)
-	}
-
-	if ctx.State >= StateStoryInProgress {
-		psd.displayStoryProgress(ctx)
-	}
-
-	if ctx.State >= StateTaskInProgress {
-		psd.displayTaskProgress(ctx)
-	}
+	psd.displayCompactHeader(ctx)
 
 	if len(ctx.Issues) > 0 {
 		psd.displayIssues(ctx)
 	}
+}
 
-	psd.displayFooter(ctx)
+// displayCompactHeader shows a compact overview of the project state
+func (psd *ProjectStateDisplay) displayCompactHeader(ctx *ProjectContext) {
+	fmt.Println()
+	
+	// Top separator with title
+	projectName := psd.getProjectName(ctx)
+	title := fmt.Sprintf("  🚀 %s - %s  ", projectName, ctx.State.String())
+	separatorWidth := 65
+	titleWidth := len(title)
+	leftPadding := (separatorWidth - titleWidth) / 2
+	
+	fmt.Print("═")
+	for i := 0; i < leftPadding; i++ {
+		fmt.Print("═")
+	}
+	fmt.Print(title)
+	for i := leftPadding + titleWidth; i < separatorWidth; i++ {
+		fmt.Print("═")
+	}
+	fmt.Println()
+	
+	// Project path
+	if ctx.ProjectPath != "" {
+		fmt.Printf("📂 Project Path: %s\n", ctx.ProjectPath)
+	}
+	
+	// Epic status
+	if ctx.CurrentEpic != nil {
+		epic := ctx.CurrentEpic
+		statusIcon := psd.getStatusIcon(epic.Status)
+		priorityIcon := psd.getPriorityIcon(epic.Priority)
+		fmt.Printf("📚 Current epic status: %s %s %s (%d/%d stories)\n", 
+			statusIcon, priorityIcon, epic.Title, epic.CompletedStories, epic.TotalStories)
+	} else {
+		fmt.Printf("📚 Current epic status: No active epic\n")
+	}
+	
+	// Story status  
+	if ctx.CurrentStory != nil {
+		story := ctx.CurrentStory
+		statusIcon := psd.getStatusIcon(story.Status)
+		priorityIcon := psd.getPriorityIcon(story.Priority)
+		fmt.Printf("📖 Current story status: %s %s %s (%d/%d tasks)\n", 
+			statusIcon, priorityIcon, story.Title, story.CompletedTasks, story.TotalTasks)
+	} else if ctx.State >= StateStoryInProgress {
+		fmt.Printf("📖 Current story status: No active story\n")
+	}
+	
+	// Current step
+	fmt.Printf("📍 Current step: %s\n", ctx.State.String())
+	
+	// Timestamp
+	fmt.Printf("🕐 Last updated: %s\n", time.Now().Format("15:04:05"))
+	
+	// Bottom separator
+	for i := 0; i < separatorWidth; i++ {
+		fmt.Print("═")
+	}
+	fmt.Println()
+	fmt.Println()
 }
 
 // displayHeader shows the main project title and basic info
