@@ -204,7 +204,7 @@ func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
 	}
 
 	var storiesFile struct {
-		Stories []state.StoryState `json:"stories"`
+		Stories map[string]state.StoryState `json:"stories"`
 		Meta    struct {
 			CurrentStory string `json:"current_story,omitempty"`
 		} `json:"meta,omitempty"`
@@ -365,7 +365,7 @@ func (wa *WorkflowAnalyzer) calculateEpicMetrics(analysis *WorkflowAnalysis, met
 	}
 
 	var storiesFile struct {
-		Stories []state.StoryState `json:"stories"`
+		Stories map[string]state.StoryState `json:"stories"`
 	}
 
 	if err := json.Unmarshal(data, &storiesFile); err != nil {

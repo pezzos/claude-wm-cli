@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/executor"
@@ -151,6 +152,15 @@ func importFeedback() error {
 		debug.LogStub("PROJECT", "importFeedback", "Process feedback with Claude analysis but Claude CLI not available")
 		fmt.Printf("⚠️  Claude CLI not found: %v\n", err)
 		fmt.Println("📋 Falling back to basic feedback import...")
+		
+		// Still archive and reset feedback even without Claude
+		if err := archiveAndResetFeedback(); err != nil {
+			fmt.Printf("⚠️  Failed to archive feedback: %v\n", err)
+			fmt.Println("📋 Feedback processing complete, but manual cleanup may be needed.")
+		} else {
+			fmt.Println("📋 Feedback archived and reset with template.")
+		}
+		
 		fmt.Println("📋 Feedback processing complete. Use 'project challenge' next.")
 		return nil
 	}
@@ -163,10 +173,90 @@ func importFeedback() error {
 		return fmt.Errorf("failed to execute Claude import feedback command: %w", err)
 	}
 	
+	// Archive processed feedback and reset with template
+	if err := archiveAndResetFeedback(); err != nil {
+		fmt.Printf("⚠️  Failed to archive feedback: %v\n", err)
+		fmt.Println("📋 Feedback processing complete, but manual cleanup may be needed.")
+	} else {
+		fmt.Println("📋 Feedback archived and reset with template.")
+	}
+	
 	fmt.Println("📋 Feedback processing complete. Use 'project challenge' next.")
 	
 	return nil
 }
+
+// archiveAndResetFeedback archives the current FEEDBACK.md and replaces it with template
+func archiveAndResetFeedback() error {
+	projectPath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current directory: %w", err)
+	}
+	
+	// Archive current FEEDBACK.md
+	if err := archiveFeedbackFile(projectPath); err != nil {
+		return fmt.Errorf("failed to archive feedback file: %w", err)
+	}
+	
+	// Copy template FEEDBACK.md
+	if err := copyFeedbackTemplate(projectPath); err != nil {
+		return fmt.Errorf("failed to copy feedback template: %w", err)
+	}
+	
+	return nil
+}
+
+// archiveFeedbackFile moves FEEDBACK.md to archive with timestamp
+func archiveFeedbackFile(projectPath string) error {
+	sourcePath := filepath.Join(projectPath, "docs/1-project/FEEDBACK.md")
+	
+	// Check if FEEDBACK.md exists
+	if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+		// No file to archive
+		return nil
+	}
+	
+	// Generate timestamp for archive filename
+	timestamp := time.Now().Format("2006-01-02-15h04")
+	archiveFileName := fmt.Sprintf("FEEDBACK-%s-processed.md", timestamp)
+	archivePath := filepath.Join(projectPath, "docs/archive", archiveFileName)
+	
+	// Ensure archive directory exists
+	archiveDir := filepath.Join(projectPath, "docs/archive")
+	if err := os.MkdirAll(archiveDir, 0755); err != nil {
+		return fmt.Errorf("failed to create archive directory: %w", err)
+	}
+	
+	// Move file to archive
+	if err := os.Rename(sourcePath, archivePath); err != nil {
+		return fmt.Errorf("failed to move FEEDBACK.md to archive: %w", err)
+	}
+	
+	fmt.Printf("📁 FEEDBACK.md archived as %s\n", archiveFileName)
+	return nil
+}
+
+// copyFeedbackTemplate copies the FEEDBACK.md template to project directory
+func copyFeedbackTemplate(projectPath string) error {
+	templatePath := filepath.Join(projectPath, ".claude/commands/template/FEEDBACK.md")
+	destPath := filepath.Join(projectPath, "docs/1-project/FEEDBACK.md")
+	
+	// Check if template exists
+	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+		fmt.Println("⚠️  FEEDBACK.md template not found, skipping template copy")
+		return nil
+	}
+	
+	// Copy template file
+	if err := copyFile(templatePath, destPath); err != nil {
+		return fmt.Errorf("failed to copy template: %w", err)
+	}
+	
+	fmt.Println("📄 Fresh FEEDBACK.md template copied")
+	return nil
+}
+
+// Note: copyFile function is defined in interactive.go
 
 func challengeDocumentation() error {
 	fmt.Println("🤔 Challenging current documentation and assumptions...")

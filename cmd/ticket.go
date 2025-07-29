@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"claude-wm-cli/internal/debug"
+	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/ticket"
 
 	"github.com/spf13/cobra"
@@ -30,13 +31,17 @@ need to be handled outside of the normal epic/story workflow. Use tickets to
 capture work that interrupts your current flow and needs tracking.
 
 Available subcommands:
-  create   Create a new ticket
-  list     List tickets with filtering options
-  show     Display detailed information about a ticket
-  update   Update an existing ticket
-  status   Change ticket status
-  current  Set or show the current active ticket
-  stats    Show ticket statistics and analytics
+  create                     Create a new ticket
+  list                       List tickets with filtering options
+  show                       Display detailed information about a ticket
+  update                     Update an existing ticket
+  status                     Change ticket status
+  current                    Set or show the current active ticket
+  stats                      Show ticket statistics and analytics
+  execute-full               Execute complete workflow (Plan → Test → Implement → Validate → Review)
+  execute-full-from-story    Complete workflow from story (From Story → Plan → Test → Implement → Validate → Review)
+  execute-full-from-issue    Complete workflow from issue (From Issue → Plan → Test → Implement → Validate → Review)
+  execute-full-from-input    Complete workflow from input (From Input → Plan → Test → Implement → Validate → Review)
 
 Examples:
   claude-wm-cli ticket create "Fix critical bug" --priority urgent --type bug
@@ -181,6 +186,105 @@ Examples:
 	},
 }
 
+// ticketExecuteFullCmd represents the ticket execute-full command
+var ticketExecuteFullCmd = &cobra.Command{
+	Use:   "execute-full",
+	Short: "Execute complete ticket workflow (Plan → Test → Implement → Validate → Review)",
+	Long: `Execute the complete ticket workflow in sequence, automating all phases
+of ticket execution from planning to review.
+
+This meta-command runs the following sequence:
+  1. Plan Ticket    - Create detailed implementation plan with research
+  2. Test Design   - Design comprehensive test strategy
+  3. Implement     - Execute intelligent implementation with MCP workflow
+  4. Validate      - Validate implementation against acceptance criteria
+  5. Review        - Final code review and quality assurance
+
+The execution will stop if any phase fails, allowing you to address issues
+before continuing manually.
+
+Examples:
+  claude-wm-cli ticket execute-full`,
+	Run: func(cmd *cobra.Command, args []string) {
+		executeFullTicketWorkflow()
+	},
+}
+
+// ticketExecuteFullFromStoryCmd represents the ticket execute-full-from-story command
+var ticketExecuteFullFromStoryCmd = &cobra.Command{
+	Use:   "execute-full-from-story",
+	Short: "Complete workflow from story (From Story → Plan → Test → Implement → Validate → Review)",
+	Long: `Execute the complete ticket workflow starting from story generation, automating all phases
+from ticket creation through final review.
+
+This meta-command runs the following sequence:
+  1. From Story     - Generate implementation ticket from current story
+  2. Plan Ticket    - Create detailed implementation plan with research
+  3. Test Design   - Design comprehensive test strategy
+  4. Implement     - Execute intelligent implementation with MCP workflow
+  5. Validate      - Validate implementation against acceptance criteria
+  6. Review        - Final code review and quality assurance
+
+The execution will stop if any phase fails, allowing you to address issues
+before continuing manually.
+
+Examples:
+  claude-wm-cli ticket execute-full-from-story`,
+	Run: func(cmd *cobra.Command, args []string) {
+		executeFullTicketWorkflowFromStory()
+	},
+}
+
+// ticketExecuteFullFromIssueCmd represents the ticket execute-full-from-issue command
+var ticketExecuteFullFromIssueCmd = &cobra.Command{
+	Use:   "execute-full-from-issue",
+	Short: "Complete workflow from issue (From Issue → Plan → Test → Implement → Validate → Review)",
+	Long: `Execute the complete ticket workflow starting from GitHub issue analysis, automating all phases
+from ticket creation through final review.
+
+This meta-command runs the following sequence:
+  1. From Issue    - Create ticket from GitHub issue with analysis
+  2. Plan Ticket   - Create detailed implementation plan with research
+  3. Test Design  - Design comprehensive test strategy
+  4. Implement    - Execute intelligent implementation with MCP workflow
+  5. Validate     - Validate implementation against acceptance criteria
+  6. Review       - Final code review and quality assurance
+
+The execution will stop if any phase fails, allowing you to address issues
+before continuing manually.
+
+Examples:
+  claude-wm-cli ticket execute-full-from-issue`,
+	Run: func(cmd *cobra.Command, args []string) {
+		executeFullTicketWorkflowFromIssue()
+	},
+}
+
+// ticketExecuteFullFromInputCmd represents the ticket execute-full-from-input command
+var ticketExecuteFullFromInputCmd = &cobra.Command{
+	Use:   "execute-full-from-input",
+	Short: "Complete workflow from input (From Input → Plan → Test → Implement → Validate → Review)",
+	Long: `Execute the complete ticket workflow starting from custom user input, automating all phases
+from ticket creation through final review.
+
+This meta-command runs the following sequence:
+  1. From Input    - Create custom ticket from direct user input
+  2. Plan Ticket   - Create detailed implementation plan with research
+  3. Test Design  - Design comprehensive test strategy
+  4. Implement    - Execute intelligent implementation with MCP workflow
+  5. Validate     - Validate implementation against acceptance criteria
+  6. Review       - Final code review and quality assurance
+
+The execution will stop if any phase fails, allowing you to address issues
+before continuing manually.
+
+Examples:
+  claude-wm-cli ticket execute-full-from-input`,
+	Run: func(cmd *cobra.Command, args []string) {
+		executeFullTicketWorkflowFromInput()
+	},
+}
+
 // Flag variables
 var (
 	ticketPriority       string
@@ -218,6 +322,10 @@ func init() {
 	ticketCmd.AddCommand(ticketStatusCmd)
 	ticketCmd.AddCommand(ticketCurrentCmd)
 	ticketCmd.AddCommand(ticketStatsCmd)
+	ticketCmd.AddCommand(ticketExecuteFullCmd)
+	ticketCmd.AddCommand(ticketExecuteFullFromStoryCmd)
+	ticketCmd.AddCommand(ticketExecuteFullFromIssueCmd)
+	ticketCmd.AddCommand(ticketExecuteFullFromInputCmd)
 
 	// ticket create flags
 	ticketCreateCmd.Flags().StringVarP(&ticketPriority, "priority", "p", "medium", "Ticket priority (low, medium, high, critical, urgent)")
@@ -1055,4 +1163,360 @@ func getTicketPriorityIconFromString(priority string) string {
 	default:
 		return "⚪"
 	}
+}
+
+// executeFullTicketWorkflow executes the complete ticket workflow automatically
+func executeFullTicketWorkflow() {
+	// Enable debug mode if flag is set
+	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+	
+	fmt.Println("🚀 Starting full ticket execution workflow...")
+	fmt.Println("   This will execute: Plan → Test → Implement → Validate → Review")
+	fmt.Println()
+
+	// Import executor for Claude commands
+	claudeExecutor := executor.NewClaudeExecutor()
+
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Claude CLI not available: %v\n", err)
+		fmt.Println("💡 Please install Claude CLI to use this functionality")
+		os.Exit(1)
+	}
+
+	// Define the workflow phases
+	phases := []struct {
+		name        string
+		command     string
+		description string
+	}{
+		{
+			name:        "Plan Ticket",
+			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			description: "Creating detailed implementation plan with research",
+		},
+		{
+			name:        "Test Design", 
+			command:     "/4-ticket:2-execute:2-Test-design",
+			description: "Designing comprehensive test strategy",
+		},
+		{
+			name:        "Implement",
+			command:     "/4-ticket:2-execute:3-Implement",
+			description: "Executing intelligent implementation with MCP workflow",
+		},
+		{
+			name:        "Validate Ticket",
+			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			description: "Validating implementation against acceptance criteria",
+		},
+		{
+			name:        "Review Ticket",
+			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			description: "Final code review and quality assurance",
+		},
+	}
+
+	// Execute each phase
+	for i, phase := range phases {
+		fmt.Printf("📋 Phase %d/%d: %s\n", i+1, len(phases), phase.name)
+		fmt.Printf("   %s\n", phase.description)
+		fmt.Println()
+
+		// Execute the Claude slash command
+		description := fmt.Sprintf("Full workflow phase %d: %s", i+1, phase.name)
+		if err := claudeExecutor.ExecuteSlashCommand(phase.command, description); err != nil {
+			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
+			fmt.Printf("   Error: %v\n", err)
+			fmt.Printf("\n💡 You can continue manually with:\n")
+			
+			// Show remaining phases
+			for j := i; j < len(phases); j++ {
+				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
+			}
+			os.Exit(1)
+		}
+
+		fmt.Printf("✅ Phase %d completed: %s\n", i+1, phase.name)
+		fmt.Println()
+	}
+
+	// Success message
+	fmt.Println("🎉 Full ticket execution workflow completed successfully!")
+	fmt.Println("   All phases (Plan → Test → Implement → Validate → Review) have been executed.")
+	fmt.Println()
+	fmt.Println("💡 Next steps:")
+	fmt.Println("   • Archive ticket: claude-wm-cli ticket execute-archive") 
+	fmt.Println("   • Update status:  claude-wm-cli ticket execute-status")
+	fmt.Println("   • Or use complete workflow: /4-ticket:3-complete:1-Archive-Ticket")
+}
+
+// executeFullTicketWorkflowFromStory executes the complete ticket workflow starting from story
+func executeFullTicketWorkflowFromStory() {
+	// Enable debug mode if flag is set
+	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+	
+	fmt.Println("🚀 Starting full ticket execution workflow from story...")
+	fmt.Println("   This will execute: From Story → Plan → Test → Implement → Validate → Review")
+	fmt.Println()
+
+	// Import executor for Claude commands
+	claudeExecutor := executor.NewClaudeExecutor()
+
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Claude CLI not available: %v\n", err)
+		fmt.Println("💡 Please install Claude CLI to use this functionality")
+		os.Exit(1)
+	}
+
+	// Define the workflow phases
+	phases := []struct {
+		name        string
+		command     string
+		description string
+	}{
+		{
+			name:        "From Story",
+			command:     "/4-ticket:1-start:1-From-story",
+			description: "Generating implementation ticket from current story",
+		},
+		{
+			name:        "Plan Ticket",
+			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			description: "Creating detailed implementation plan with research",
+		},
+		{
+			name:        "Test Design", 
+			command:     "/4-ticket:2-execute:2-Test-design",
+			description: "Designing comprehensive test strategy",
+		},
+		{
+			name:        "Implement",
+			command:     "/4-ticket:2-execute:3-Implement",
+			description: "Executing intelligent implementation with MCP workflow",
+		},
+		{
+			name:        "Validate Ticket",
+			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			description: "Validating implementation against acceptance criteria",
+		},
+		{
+			name:        "Review Ticket",
+			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			description: "Final code review and quality assurance",
+		},
+	}
+
+	// Execute each phase
+	for i, phase := range phases {
+		fmt.Printf("📋 Phase %d/%d: %s\n", i+1, len(phases), phase.name)
+		fmt.Printf("   %s\n", phase.description)
+		fmt.Println()
+
+		// Execute the Claude slash command
+		description := fmt.Sprintf("Full workflow from story phase %d: %s", i+1, phase.name)
+		if err := claudeExecutor.ExecuteSlashCommand(phase.command, description); err != nil {
+			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
+			fmt.Printf("   Error: %v\n", err)
+			fmt.Printf("\n💡 You can continue manually with:\n")
+			
+			// Show remaining phases
+			for j := i; j < len(phases); j++ {
+				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
+			}
+			os.Exit(1)
+		}
+
+		fmt.Printf("✅ Phase %d completed: %s\n", i+1, phase.name)
+		fmt.Println()
+	}
+
+	// Success message
+	fmt.Println("🎉 Full ticket execution workflow from story completed successfully!")
+	fmt.Println("   All phases (From Story → Plan → Test → Implement → Validate → Review) have been executed.")
+	fmt.Println()
+	fmt.Println("💡 Next steps:")
+	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
+	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
+}
+
+// executeFullTicketWorkflowFromIssue executes the complete ticket workflow starting from GitHub issue
+func executeFullTicketWorkflowFromIssue() {
+	// Enable debug mode if flag is set
+	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+	
+	fmt.Println("🚀 Starting full ticket execution workflow from GitHub issue...")
+	fmt.Println("   This will execute: From Issue → Plan → Test → Implement → Validate → Review")
+	fmt.Println()
+
+	// Import executor for Claude commands
+	claudeExecutor := executor.NewClaudeExecutor()
+
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Claude CLI not available: %v\n", err)
+		fmt.Println("💡 Please install Claude CLI to use this functionality")
+		os.Exit(1)
+	}
+
+	// Define the workflow phases
+	phases := []struct {
+		name        string
+		command     string
+		description string
+	}{
+		{
+			name:        "From Issue",
+			command:     "/4-ticket:1-start:2-From-issue",
+			description: "Creating ticket from GitHub issue with analysis",
+		},
+		{
+			name:        "Plan Ticket",
+			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			description: "Creating detailed implementation plan with research",
+		},
+		{
+			name:        "Test Design", 
+			command:     "/4-ticket:2-execute:2-Test-design",
+			description: "Designing comprehensive test strategy",
+		},
+		{
+			name:        "Implement",
+			command:     "/4-ticket:2-execute:3-Implement",
+			description: "Executing intelligent implementation with MCP workflow",
+		},
+		{
+			name:        "Validate Ticket",
+			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			description: "Validating implementation against acceptance criteria",
+		},
+		{
+			name:        "Review Ticket",
+			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			description: "Final code review and quality assurance",
+		},
+	}
+
+	// Execute each phase
+	for i, phase := range phases {
+		fmt.Printf("📋 Phase %d/%d: %s\n", i+1, len(phases), phase.name)
+		fmt.Printf("   %s\n", phase.description)
+		fmt.Println()
+
+		// Execute the Claude slash command
+		description := fmt.Sprintf("Full workflow from issue phase %d: %s", i+1, phase.name)
+		if err := claudeExecutor.ExecuteSlashCommand(phase.command, description); err != nil {
+			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
+			fmt.Printf("   Error: %v\n", err)
+			fmt.Printf("\n💡 You can continue manually with:\n")
+			
+			// Show remaining phases
+			for j := i; j < len(phases); j++ {
+				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
+			}
+			os.Exit(1)
+		}
+
+		fmt.Printf("✅ Phase %d completed: %s\n", i+1, phase.name)
+		fmt.Println()
+	}
+
+	// Success message
+	fmt.Println("🎉 Full ticket execution workflow from issue completed successfully!")
+	fmt.Println("   All phases (From Issue → Plan → Test → Implement → Validate → Review) have been executed.")
+	fmt.Println()
+	fmt.Println("💡 Next steps:")
+	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
+	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
+}
+
+// executeFullTicketWorkflowFromInput executes the complete ticket workflow starting from user input
+func executeFullTicketWorkflowFromInput() {
+	// Enable debug mode if flag is set
+	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
+	
+	fmt.Println("🚀 Starting full ticket execution workflow from user input...")
+	fmt.Println("   This will execute: From Input → Plan → Test → Implement → Validate → Review")
+	fmt.Println()
+
+	// Import executor for Claude commands
+	claudeExecutor := executor.NewClaudeExecutor()
+
+	// Validate Claude is available
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Claude CLI not available: %v\n", err)
+		fmt.Println("💡 Please install Claude CLI to use this functionality")
+		os.Exit(1)
+	}
+
+	// Define the workflow phases
+	phases := []struct {
+		name        string
+		command     string
+		description string
+	}{
+		{
+			name:        "From Input",
+			command:     "/4-ticket:1-start:3-From-input",
+			description: "Creating custom ticket from direct user input",
+		},
+		{
+			name:        "Plan Ticket",
+			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			description: "Creating detailed implementation plan with research",
+		},
+		{
+			name:        "Test Design", 
+			command:     "/4-ticket:2-execute:2-Test-design",
+			description: "Designing comprehensive test strategy",
+		},
+		{
+			name:        "Implement",
+			command:     "/4-ticket:2-execute:3-Implement",
+			description: "Executing intelligent implementation with MCP workflow",
+		},
+		{
+			name:        "Validate Ticket",
+			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			description: "Validating implementation against acceptance criteria",
+		},
+		{
+			name:        "Review Ticket",
+			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			description: "Final code review and quality assurance",
+		},
+	}
+
+	// Execute each phase
+	for i, phase := range phases {
+		fmt.Printf("📋 Phase %d/%d: %s\n", i+1, len(phases), phase.name)
+		fmt.Printf("   %s\n", phase.description)
+		fmt.Println()
+
+		// Execute the Claude slash command
+		description := fmt.Sprintf("Full workflow from input phase %d: %s", i+1, phase.name)
+		if err := claudeExecutor.ExecuteSlashCommand(phase.command, description); err != nil {
+			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
+			fmt.Printf("   Error: %v\n", err)
+			fmt.Printf("\n💡 You can continue manually with:\n")
+			
+			// Show remaining phases
+			for j := i; j < len(phases); j++ {
+				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
+			}
+			os.Exit(1)
+		}
+
+		fmt.Printf("✅ Phase %d completed: %s\n", i+1, phase.name)
+		fmt.Println()
+	}
+
+	// Success message
+	fmt.Println("🎉 Full ticket execution workflow from input completed successfully!")
+	fmt.Println("   All phases (From Input → Plan → Test → Implement → Validate → Review) have been executed.")
+	fmt.Println()
+	fmt.Println("💡 Next steps:")
+	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
+	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
 }

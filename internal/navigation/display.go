@@ -95,98 +95,6 @@ func (psd *ProjectStateDisplay) displayCompactHeader(ctx *ProjectContext) {
 	fmt.Println()
 }
 
-// displayHeader shows the main project title and basic info
-func (psd *ProjectStateDisplay) displayHeader(ctx *ProjectContext) {
-	fmt.Println()
-	psd.printSeparator("═")
-
-	projectName := psd.getProjectName(ctx)
-	title := fmt.Sprintf("  🚀 %s - %s  ", projectName, ctx.State.String())
-	psd.printCentered(title)
-
-	psd.printSeparator("═")
-	fmt.Println()
-}
-
-// displayCurrentState shows the current workflow state and context
-func (psd *ProjectStateDisplay) displayCurrentState(ctx *ProjectContext) {
-	fmt.Printf("📍 Current State: %s\n", psd.getStateIcon(ctx.State)+ctx.State.String())
-
-	if ctx.ProjectPath != "" {
-		fmt.Printf("📂 Project Path: %s\n", ctx.ProjectPath)
-	}
-
-	fmt.Println()
-}
-
-// displayEpicProgress shows current epic information and progress
-func (psd *ProjectStateDisplay) displayEpicProgress(ctx *ProjectContext) {
-	if ctx.CurrentEpic == nil {
-		fmt.Println("📚 Epic: No active epic")
-		fmt.Println()
-		return
-	}
-
-	epic := ctx.CurrentEpic
-
-	fmt.Printf("📚 Epic: %s (%s)\n", epic.Title, epic.ID)
-	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(epic.Status), epic.Status)
-	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(epic.Priority)+epic.Priority)
-
-	// Progress bar
-	progressBar := psd.createProgressBar(epic.Progress, 30)
-	fmt.Printf("   Progress: %s %.1f%% (%d/%d stories)\n",
-		progressBar, epic.Progress*100, epic.CompletedStories, epic.TotalStories)
-
-	fmt.Println()
-}
-
-// displayStoryProgress shows current story information and progress
-func (psd *ProjectStateDisplay) displayStoryProgress(ctx *ProjectContext) {
-	if ctx.CurrentStory == nil {
-		fmt.Println("📖 Story: No active story")
-		fmt.Println()
-		return
-	}
-
-	story := ctx.CurrentStory
-
-	fmt.Printf("📖 Story: %s (%s)\n", story.Title, story.ID)
-	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(story.Status), story.Status)
-	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(story.Priority)+story.Priority)
-
-	// Progress bar for story
-	if story.TotalTasks > 0 {
-		progress := float64(story.CompletedTasks) / float64(story.TotalTasks)
-		progressBar := psd.createProgressBar(progress, 30)
-		fmt.Printf("   Progress: %s %.1f%% (%d/%d tasks)\n",
-			progressBar, progress*100, story.CompletedTasks, story.TotalTasks)
-	}
-
-	fmt.Println()
-}
-
-// displayTaskProgress shows current task information
-func (psd *ProjectStateDisplay) displayTaskProgress(ctx *ProjectContext) {
-	if ctx.CurrentTask == nil {
-		fmt.Println("✓ Task: No active task")
-		fmt.Println()
-		return
-	}
-
-	task := ctx.CurrentTask
-
-	fmt.Printf("✓ Task: %s (%s)\n", task.Title, task.ID)
-	fmt.Printf("   Status: %s %s\n", psd.getStatusIcon(task.Status), task.Status)
-	fmt.Printf("   Priority: %s\n", psd.getPriorityIcon(task.Priority)+task.Priority)
-
-	if task.EstimatedHours > 0 {
-		fmt.Printf("   Estimated: %d hours\n", task.EstimatedHours)
-	}
-
-	fmt.Println()
-}
-
 // displayIssues shows any project issues or warnings
 func (psd *ProjectStateDisplay) displayIssues(ctx *ProjectContext) {
 	if len(ctx.Issues) == 0 {
@@ -201,22 +109,6 @@ func (psd *ProjectStateDisplay) displayIssues(ctx *ProjectContext) {
 		}
 		fmt.Printf("   • %s\n", issue)
 	}
-	fmt.Println()
-}
-
-// displayFooter shows summary and next steps
-func (psd *ProjectStateDisplay) displayFooter(ctx *ProjectContext) {
-	psd.printSeparator("─")
-
-	// Show available actions count
-	if len(ctx.AvailableActions) > 0 {
-		fmt.Printf("💡 %d actions available | Use 'interactive' or 'menu' to explore\n",
-			len(ctx.AvailableActions))
-	}
-
-	// Show timestamp
-	fmt.Printf("🕐 Last updated: %s\n", time.Now().Format("15:04:05"))
-
 	fmt.Println()
 }
 

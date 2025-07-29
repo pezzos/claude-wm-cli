@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
@@ -82,9 +84,9 @@ func init() {
 func runInteractive(cmd *cobra.Command, args []string) error {
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-	
+
 	debug.LogExecution("INTERACTIVE", "start navigation", "Initialize interactive menu system")
-	
+
 	// Get current working directory
 	workDir, err := os.Getwd()
 	if err != nil {
@@ -159,7 +161,7 @@ func runInteractive(cmd *cobra.Command, args []string) error {
 	return runInteractiveNavigation(projectContext, suggestions, menuDisplay, stateDisplay, suggestionEngine)
 }
 
-// runInteractiveNavigation handles the interactive menu navigation
+// runInteractiveNavigation handles the interactive menu navigation with hierarchical support
 func runInteractiveNavigation(
 	ctx *navigation.ProjectContext,
 	suggestions []*navigation.Suggestion,
@@ -167,12 +169,35 @@ func runInteractiveNavigation(
 	stateDisplay *navigation.ProjectStateDisplay,
 	suggestionEngine *navigation.SuggestionEngine,
 ) error {
+	// Stack to track menu navigation
+	var menuStack []string
+	currentMenu := "main"
+
 	for {
 		// Display current state
 		stateDisplay.DisplayProjectOverview(ctx)
 
-		// Create main menu
-		menu := createMainMenu(ctx, suggestions)
+		// Create appropriate menu based on current location
+		var menu *navigation.Menu
+		switch currentMenu {
+		case "main":
+			menu = createMainMenu(ctx, suggestions)
+		case "project":
+			menu = createProjectMenu(ctx)
+		case "epics":
+			menu = createEpicsMenu(ctx)
+		case "current-epics":
+			menu = createCurrentEpicMenu(ctx)
+		case "current-story":
+			menu = createCurrentStoryMenu(ctx)
+		case "ticket":
+			menu = createTicketMenu(ctx)
+		case "claude":
+			menu = createClaudeMenu(ctx)
+		default:
+			menu = createMainMenu(ctx, suggestions)
+			currentMenu = "main"
+		}
 
 		// Show menu and get user choice
 		result, err := menuDisplay.Show(menu)
@@ -187,6 +212,15 @@ func runInteractiveNavigation(
 		case "quit":
 			menuDisplay.ShowMessage("👋 Goodbye!")
 			return nil
+
+		case "back":
+			// Navigate back to previous menu
+			if len(menuStack) > 0 {
+				currentMenu = menuStack[len(menuStack)-1]
+				menuStack = menuStack[:len(menuStack)-1]
+			} else {
+				currentMenu = "main"
+			}
 
 		case "help":
 			displayNavigationHelp(menuDisplay)
@@ -218,6 +252,31 @@ func runInteractiveNavigation(
 			suggestions = newSuggestions
 			menuDisplay.ShowSuccess("Context refreshed!")
 
+		// Menu navigation actions
+		case "project-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "project"
+
+		case "epics-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "epics"
+
+		case "current-epic-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "current-epics"
+
+		case "current-story-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "current-story"
+
+		case "ticket-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "ticket"
+
+		case "claude-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "claude"
+
 		default:
 			// Handle action execution
 			err := executeAction(result.Action, ctx, menuDisplay)
@@ -229,17 +288,16 @@ func runInteractiveNavigation(
 	}
 }
 
-// createMainMenu builds the main navigation menu based on context
-func createMainMenu(ctx *navigation.ProjectContext, _ []*navigation.Suggestion) *navigation.Menu {
+// createMainMenu builds the main navigation menu with hierarchical groups
+func createMainMenu(_ *navigation.ProjectContext, _ []*navigation.Suggestion) *navigation.Menu {
 	menu := &navigation.Menu{
 		Title:       "🧭 Claude WM CLI Navigation",
 		Options:     []navigation.MenuOption{},
 		ShowNumbers: true,
 		ShowHelp:    true,
-		AllowBack:   true,
+		AllowBack:   false, // No back button for main menu
 		AllowQuit:   true,
 	}
-
 
 	// Helper function to add regular option
 	addOption := func(id, label, description, action string) {
@@ -252,73 +310,249 @@ func createMainMenu(ctx *navigation.ProjectContext, _ []*navigation.Suggestion) 
 		})
 	}
 
-	// === PROJECT UPDATE CYCLE === (always available)
+	// Main menu groups
+	addOption("project-menu", "Project update cycle", "Init/Update", "project-menu")
+	addOption("epics-menu", "Epics management", "Plan/Track", "epics-menu")
+	addOption("current-epic-menu", "Current epic management", "Start epic/Plan stories/Complete epic", "current-epic-menu")
+	addOption("current-story-menu", "Current story management", "Start story/Complete story", "current-story-menu")
+	addOption("ticket-menu", "Ticket management", "Create/Plan/Execute/Complete", "ticket-menu")
+	addOption("claude-menu", ".claude management", "Import/Install", "claude-menu")
+
+	return menu
+}
+
+// createProjectMenu builds the project update cycle submenu
+func createProjectMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "📋 Project Update Cycle",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Init section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
-		ID:          "section-header-project",
-		Label:       "📋 PROJECT UPDATE CYCLE",
+		ID:          "init-header",
+		Label:       "Init the Project",
 		Description: "",
 		Action:      "",
 		Enabled:     false,
 	})
-	addOption("project-import-feedback", "🔄 Import Feedback", "Import and process feedback from FEEDBACK.md", "project-import-feedback")
-	addOption("project-challenge", "🤔 Challenge Docs", "Challenge existing documentation and assumptions", "project-challenge")
-	addOption("project-enrich", "🌟 Enrich Context", "Enrich project context with additional information", "project-enrich")
-	addOption("project-status-update", "📊 Status Update", "Update overall project status", "project-status-update")
-	addOption("project-implementation-status", "🔍 Implementation Status", "Review and update implementation progress", "project-implementation-status")
+	addOption("project-init", "🚀", "Initialize the current project", "init-project")
 
-	// === EPIC MANAGEMENT === (only if project is initialized)
-	if ctx != nil && ctx.State != navigation.StateNotInitialized {
-		menu.Options = append(menu.Options, navigation.MenuOption{
-			ID:          "section-header-epic",
-			Label:       "📚 EPIC MANAGEMENT",
-			Description: "",
-			Action:      "",
-			Enabled:     false,
-		})
-		addOption("project-plan-epics", "📝 Plan Epics", "Plan and manage epic roadmap (create/update epics.json)", "project-plan-epics")
-		addOption("epic-list", "📋 List Epics", "List all available epics", "epic-list")
-	}
-
-	// === CURRENT EPIC === (only if we have an active epic)
-	if ctx != nil && ctx.CurrentEpic != nil {
-		menu.Options = append(menu.Options, navigation.MenuOption{
-			ID:          "section-header-current-epic",
-			Label:       "🚧 CURRENT EPIC MANAGEMENT",
-			Description: "",
-			Action:      "",
-			Enabled:     false, // Explicitly disabled
-		})
-		addOption("epic-select-stories", "🎯 Select Stories", "Select the most important story to work on", "/2-epic:1-start:1-Select-Stories")
-		addOption("epic-plan-stories", "📋 Plan Stories", "Plan and organize stories for the epic", "/2-epic:1-start:2-Plan-stories")
-		addOption("epic-complete", "✅ Complete Epic", "Mark epic as complete and archive", "/2-epic:2-manage:1-Complete-Epic")
-		addOption("epic-status", "📊 Epic Status", "View current epic progress and status", "/2-epic:2-manage:2-Status-Epic")
-	}
-
-	// === TICKETS/INTERRUPTIONS === (always available)
+	// Update section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
-		ID:          "section-header-tickets",
-		Label:       "🎫 TICKETS & INTERRUPTIONS",
+		ID:          "update-header",
+		Label:       "Update the Project",
 		Description: "",
 		Action:      "",
-		Enabled:     false, // Explicitly disabled
+		Enabled:     false,
 	})
-	addOption("ticket-create", "🆘 Create Ticket", "Create interruption ticket or urgent task", "ticket-create")
-	addOption("ticket-list", "📋 List Tickets", "List current tickets and interruptions", "ticket-list")
-	if ctx != nil && ctx.CurrentTask != nil {
-		addOption("ticket-current", "🎯 Current Ticket", "Work on current active ticket", "ticket-current")
+	addOption("project-import-feedback", "🔄", "Import and process feedback from FEEDBACK.md", "/1-project:2-update:1-Import-feedback")
+	addOption("project-challenge", "🤔", "Challenge existing documentation and assumptions", "/1-project:2-update:2-Challenge")
+	addOption("project-enrich", "🌟", "Enrich project context with additional information", "/1-project:2-update:3-Enrich")
+	addOption("project-status-update", "📊", "Analyze epics and provide project status with completion metrics and next actions. ", "/1-project:2-update:4-Status")
+	addOption("project-implementation-status", "🔍", "Display working features, integration points, coverage", "/1-project:2-update:5-Implementation-Status")
+
+	return menu
+}
+
+// createEpicsMenu builds the epics management submenu
+func createEpicsMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "📚 Epics Management",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
 	}
 
-	// === SYSTEM === (always available)
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Epics management options
+	addOption("epics-plan", "📝 Plan Epics", "Create comprehensive EPICS.md with prioritized epic roadmap", "/1-project:3-epics:1-Plan-Epics")
+	addOption("epics-update-implementation", "📊 Update Implementation", "Track and update epic implementation status across the project", "/1-project:3-epics:2-Update-Implementation")
+	addOption("epic-list", "📋 List Epics", "List all available epics with status and progress", "epic-list")
+
+	return menu
+}
+
+// createCurrentEpicMenu builds the epics management submenu
+func createCurrentEpicMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "📚 Current Epic Management",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Epics management options
+	addOption("epic-select", "🎯 Select Epic", "Select the most important story to work on", "/2-epic:1-start:1-Select-Stories")
+	addOption("epic-plan-stories", "📝 Plan Stories", "Plan and organize stories for the epic", "/2-epic:1-start:2-Plan-stories")
+	addOption("story-list", "📋 List Stories", "List all stories in current epic with status and progress", "story-list")
+	addOption("epic-complete", "✅ Complete Epic", "Mark epic as complete and archive", "/2-epic:2-manage:1-Complete-Epic")
+
+	return menu
+}
+
+// createCurrentStoryMenu builds the current story management submenu
+func createCurrentStoryMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "📖 Current Story Management",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Current story management options
+	addOption("story-start", "🚀 Start Story", "Identify highest priority unstarted story and start implementation", "/3-story:1-manage:1-Start-Story")
+	addOption("ticket-list", "📋 List Tickets", "List all tickets and interruptions with status and priority", "ticket-list")
+	addOption("story-complete", "✅ Complete Story", "Mark story complete and prepare for next story or epic completion", "/3-story:1-manage:2-Complete-Story")
+
+	return menu
+}
+
+// createTicketMenu builds the ticket management submenu
+func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "🎫 Ticket Management",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Create section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
-		ID:          "section-header-system",
-		Label:       "⚙️ SYSTEM",
+		ID:          "create-header",
+		Label:       "Create",
 		Description: "",
 		Action:      "",
-		Enabled:     false, // Explicitly disabled
+		Enabled:     false,
 	})
-	addOption("status", "📊 Project Status", "Display detailed project state and progress", "status")
-	addOption("suggestions", "💡 View Suggestions", "Show AI-generated action suggestions", "suggestions")
-	addOption("refresh", "🔄 Refresh", "Re-scan project state and update context", "refresh")
+	addOption("ticket-from-story", "📋 From Story", "Generate implementation ticket from current story", "/4-ticket:1-start:1-From-story")
+	addOption("ticket-from-issue", "🐛 From Issue", "Create ticket from GitHub issue with analysis", "/4-ticket:1-start:2-From-issue")
+	addOption("ticket-from-input", "✏️  From Input", "Create custom ticket from direct user input", "/4-ticket:1-start:3-From-input")
+
+	// Execute section header
+	menu.Options = append(menu.Options, navigation.MenuOption{
+		ID:          "execute-header",
+		Label:       "Execute",
+		Description: "",
+		Action:      "",
+		Enabled:     false,
+	})
+	addOption("ticket-plan", "📝 Plan Ticket", "Create detailed implementation plan with research", "/4-ticket:2-execute:1-Plan-Ticket")
+	addOption("ticket-test-design", "🧪 Test Design", "Design comprehensive test strategy", "/4-ticket:2-execute:2-Test-design")
+	addOption("ticket-implement", "⚡ Implement", "Execute intelligent implementation with MCP workflow", "/4-ticket:2-execute:3-Implement")
+	addOption("ticket-validate", "✅ Validate", "Validate implementation against acceptance criteria", "/4-ticket:2-execute:4-Validate-Ticket")
+	addOption("ticket-review", "👀 Review", "Final code review and quality assurance", "/4-ticket:2-execute:5-Review-Ticket")
+
+	// Complete section header
+	menu.Options = append(menu.Options, navigation.MenuOption{
+		ID:          "complete-header",
+		Label:       "Complete",
+		Description: "",
+		Action:      "",
+		Enabled:     false,
+	})
+	addOption("ticket-execute-full", "⚡ Complete the current ticket", "Execute full workflow: Plan → Test → Implement → Validate → Review", "ticket-execute-full")
+	addOption("ticket-execute-full-from-story", "⚡ Complete the current ticket from Story", "Execute full workflow: From Story → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-story")
+	addOption("ticket-execute-full-from-issue", "⚡ Complete the current ticket from Issue", "Execute full workflow: From Issue → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-issue")
+	addOption("ticket-execute-full-from-input", "⚡ Complete the current ticket from Input", "Execute full workflow: From Input → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-input")
+	addOption("ticket-archive", "📦 Archive", "Archive completed ticket with summary", "/4-ticket:3-complete:1-Archive-Ticket")
+	addOption("ticket-status", "📊 Status", "Update ticket status across documentation", "/4-ticket:3-complete:2-Status-Ticket")
+
+	return menu
+}
+
+// createClaudeMenu builds the Claude management submenu
+func createClaudeMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "⚙️ .claude Management",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Claude management options
+	addOption("claude-import", "📥 Import commands and hooks", "Git clone/pull pezzos/.claude repository to .claude-wm", "claude-import")
+	addOption("claude-init", "🚀 Initialize .claude directory", "Create .claude directory with commands and hooks folders", "claude-init")
+	addOption("claude-install", "📦 Install or update .claude directory", "Copy commands and hooks from .claude-wm to .claude", "claude-install")
 
 	return menu
 }
@@ -326,7 +560,34 @@ func createMainMenu(ctx *navigation.ProjectContext, _ []*navigation.Suggestion) 
 // executeAction handles the execution of selected actions
 func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
 	switch action {
-	// Project Update Cycle
+	// Claude slash commands - can start with '/'
+	case "/1-project:1-start:1-Init-Project",
+		"/1-project:2-update:1-Import-feedback",
+		"/1-project:2-update:2-Challenge",
+		"/1-project:2-update:3-Enrich",
+		"/1-project:2-update:4-Status",
+		"/1-project:2-update:5-Implementation-Status",
+		"/1-project:3-epics:1-Plan-Epics",
+		"/1-project:3-epics:2-Update-Implementation",
+		"/2-epic:1-start:1-Select-Stories",
+		"/2-epic:1-start:2-Plan-stories",
+		"/2-epic:2-manage:1-Complete-Epic",
+		"/2-epic:2-manage:2-Status-Epic",
+		"/3-story:1-manage:1-Start-Story",
+		"/3-story:1-manage:2-Complete-Story",
+		"/4-ticket:1-start:1-From-story",
+		"/4-ticket:1-start:2-From-issue",
+		"/4-ticket:1-start:3-From-input",
+		"/4-ticket:2-execute:1-Plan-Ticket",
+		"/4-ticket:2-execute:2-Test-design",
+		"/4-ticket:2-execute:3-Implement",
+		"/4-ticket:2-execute:4-Validate-Ticket",
+		"/4-ticket:2-execute:5-Review-Ticket",
+		"/4-ticket:3-complete:1-Archive-Ticket",
+		"/4-ticket:3-complete:2-Status-Ticket":
+		return executeClaudeCommandInteractive(action, menuDisplay)
+
+	// Legacy project actions (keeping for backward compatibility)
 	case "project-import-feedback":
 		return executeProjectCommand([]string{"import-feedback"}, menuDisplay)
 	case "project-challenge":
@@ -344,20 +605,9 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	case "epic-list":
 		return executeEpicCommand([]string{"list"}, menuDisplay)
 
-	// Current Epic Management - Claude Commands
-	case "/2-epic:1-start:1-Select-Stories":
-		return executeClaudeCommandInteractive("/2-epic:1-start:1-Select-Stories", menuDisplay)
-	case "/2-epic:1-start:2-Plan-stories":
-		return executeClaudeCommandInteractive("/2-epic:1-start:2-Plan-stories", menuDisplay)
-	case "/2-epic:2-manage:1-Complete-Epic":
-		return executeClaudeCommandInteractive("/2-epic:2-manage:1-Complete-Epic", menuDisplay)
-	case "/2-epic:2-manage:2-Status-Epic":
-		return executeClaudeCommandInteractive("/2-epic:2-manage:2-Status-Epic", menuDisplay)
-
-	// Task Management
-	case "task-create":
-		menuDisplay.ShowMessage("Create task functionality - use story commands to generate tasks")
-		return nil
+	// Story Management
+	case "story-list":
+		return executeStoryCommand([]string{"list"}, menuDisplay)
 
 	// Ticket Management
 	case "ticket-create":
@@ -366,6 +616,22 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 		return executeTicketCommand([]string{"list"}, menuDisplay)
 	case "ticket-current":
 		return executeTicketCommand([]string{"current"}, menuDisplay)
+	case "ticket-execute-full":
+		return executeTicketCommand([]string{"execute-full"}, menuDisplay)
+	case "ticket-execute-full-from-story":
+		return executeTicketCommand([]string{"execute-full-from-story"}, menuDisplay)
+	case "ticket-execute-full-from-issue":
+		return executeTicketCommand([]string{"execute-full-from-issue"}, menuDisplay)
+	case "ticket-execute-full-from-input":
+		return executeTicketCommand([]string{"execute-full-from-input"}, menuDisplay)
+
+	// Claude Management
+	case "claude-import":
+		return executeClaudeImport(ctx, menuDisplay)
+	case "claude-init":
+		return executeClaudeInit(ctx, menuDisplay)
+	case "claude-install":
+		return executeClaudeInstall(ctx, menuDisplay)
 
 	// Legacy actions
 	case "init-project":
@@ -378,9 +644,9 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	}
 }
 
-// executeInitProject handles project initialization
+// executeInitProject handles comprehensive project initialization
 func executeInitProject(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	confirmed, err := menuDisplay.Confirm("Initialize project structure in current directory?")
+	confirmed, err := menuDisplay.Confirm("Initialize complete project structure in current directory?")
 	if err != nil {
 		return err
 	}
@@ -390,27 +656,217 @@ func executeInitProject(ctx *navigation.ProjectContext, menuDisplay *navigation.
 		return nil
 	}
 
-	// Create basic project structure
+	menuDisplay.ShowMessage("🚀 Starting comprehensive project initialization...")
+
+	// Step 1: Create all required directories
+	if err := createProjectDirectories(ctx, menuDisplay); err != nil {
+		return err
+	}
+
+	// Step 2: Import Claude commands and hooks
+	menuDisplay.ShowMessage("📥 Importing Claude commands and hooks...")
+	if err := executeClaudeImport(ctx, menuDisplay); err != nil {
+		menuDisplay.ShowWarning(fmt.Sprintf("Failed to import Claude commands: %v", err))
+		menuDisplay.ShowMessage("Continuing with manual setup...")
+	}
+
+	// Step 3: Copy template files if they don't exist
+	if err := copyTemplateFiles(ctx, menuDisplay); err != nil {
+		return err
+	}
+
+	// Step 4: Initialize Git with main/develop branches
+	if err := initializeGitBranches(ctx, menuDisplay); err != nil {
+		menuDisplay.ShowWarning(fmt.Sprintf("Git initialization failed: %v", err))
+		menuDisplay.ShowMessage("You can initialize Git manually later")
+	}
+
+	menuDisplay.ShowSuccess("✅ Complete project structure initialized!")
+	menuDisplay.ShowMessage("Your project is ready for development with:")
+	menuDisplay.ShowMessage("  • Directory structure")
+	menuDisplay.ShowMessage("  • Claude Code integration")
+	menuDisplay.ShowMessage("  • Template files")
+	menuDisplay.ShowMessage("  • Git repository with main/develop branches")
+	return nil
+}
+
+// createProjectDirectories creates all required project directories
+func createProjectDirectories(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("📁 Creating project directories...")
+
 	dirs := []string{
 		"docs/1-project",
 		"docs/2-current-epic",
 		"docs/3-current-task",
+		"docs/archive",
+		".claude-wm",
+		".claude",
 	}
 
 	for _, dir := range dirs {
 		fullPath := filepath.Join(ctx.ProjectPath, dir)
-		if err := os.MkdirAll(fullPath, 0755); err != nil {
-			return errors.NewCLIError("Failed to create project directory", 1).
-				WithDetails(err.Error()).
-				WithContext("directory", fullPath)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			if err := os.MkdirAll(fullPath, 0755); err != nil {
+				return errors.NewCLIError("Failed to create project directory", 1).
+					WithDetails(err.Error()).
+					WithContext("directory", fullPath)
+			}
+			menuDisplay.ShowMessage(fmt.Sprintf("  ✓ Created %s", dir))
+		} else {
+			menuDisplay.ShowMessage(fmt.Sprintf("  ◦ %s already exists", dir))
 		}
 	}
 
-	menuDisplay.ShowSuccess("✅ Project structure initialized!")
-	menuDisplay.ShowMessage("You can now create your first epic.")
 	return nil
 }
 
+// copyTemplateFiles copies template files from .claude/commands/template to project root
+func copyTemplateFiles(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("📄 Copying template files...")
+
+	templateDir := filepath.Join(ctx.ProjectPath, ".claude", "commands", "templates")
+
+	// Check if template directory exists
+	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
+		menuDisplay.ShowWarning("Template directory not found. Skipping template file copy.")
+		return nil
+	}
+
+	templateFiles := []string{"README.md", "METRICS.md", "CLAUDE.md"}
+
+	for _, fileName := range templateFiles {
+		sourcePath := filepath.Join(templateDir, fileName)
+		destPath := filepath.Join(ctx.ProjectPath, fileName)
+
+		// Check if source file exists
+		if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+			menuDisplay.ShowMessage(fmt.Sprintf("  ◦ %s template not found, skipping", fileName))
+			continue
+		}
+
+		// Check if destination file already exists
+		if _, err := os.Stat(destPath); err == nil {
+			menuDisplay.ShowMessage(fmt.Sprintf("  ◦ %s already exists, skipping", fileName))
+			continue
+		}
+
+		// Copy the file
+		if err := copyFile(sourcePath, destPath); err != nil {
+			menuDisplay.ShowWarning(fmt.Sprintf("Failed to copy %s: %v", fileName, err))
+			continue
+		}
+
+		menuDisplay.ShowMessage(fmt.Sprintf("  ✓ Copied %s", fileName))
+	}
+
+	return nil
+}
+
+// copyFile copies a file from source to destination
+func copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	return err
+}
+
+// initializeGitBranches initializes Git repository with main and develop branches
+func initializeGitBranches(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("🌿 Initializing Git repository...")
+
+	// Check if .git directory already exists
+	gitDir := filepath.Join(ctx.ProjectPath, ".git")
+	if _, err := os.Stat(gitDir); err == nil {
+		menuDisplay.ShowMessage("  ◦ Git repository already exists")
+		return ensureBranches(ctx, menuDisplay)
+	}
+
+	// Initialize git repository
+	cmd := exec.Command("git", "init")
+	cmd.Dir = ctx.ProjectPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to initialize git repository: %w", err)
+	}
+	menuDisplay.ShowMessage("  ✓ Initialized Git repository")
+
+	// Create initial commit
+	cmd = exec.Command("git", "add", ".")
+	cmd.Dir = ctx.ProjectPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to add files to git: %w", err)
+	}
+
+	cmd = exec.Command("git", "commit", "-m", "Initial project setup with Claude WM CLI")
+	cmd.Dir = ctx.ProjectPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create initial commit: %w", err)
+	}
+	menuDisplay.ShowMessage("  ✓ Created initial commit")
+
+	return ensureBranches(ctx, menuDisplay)
+}
+
+// ensureBranches ensures main and develop branches exist
+func ensureBranches(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Check current branch
+	cmd := exec.Command("git", "branch", "--show-current")
+	cmd.Dir = ctx.ProjectPath
+	currentBranch, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get current branch: %w", err)
+	}
+
+	currentBranchName := strings.TrimSpace(string(currentBranch))
+
+	// Rename current branch to main if it's not already main
+	if currentBranchName != "main" && currentBranchName != "" {
+		cmd = exec.Command("git", "branch", "-M", "main")
+		cmd.Dir = ctx.ProjectPath
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to rename branch to main: %w", err)
+		}
+		menuDisplay.ShowMessage("  ✓ Renamed default branch to main")
+	}
+
+	// Create develop branch if it doesn't exist
+	cmd = exec.Command("git", "branch")
+	cmd.Dir = ctx.ProjectPath
+	branches, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to list branches: %w", err)
+	}
+
+	if !strings.Contains(string(branches), "develop") {
+		cmd = exec.Command("git", "checkout", "-b", "develop")
+		cmd.Dir = ctx.ProjectPath
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to create develop branch: %w", err)
+		}
+		menuDisplay.ShowMessage("  ✓ Created develop branch")
+
+		// Switch back to main
+		cmd = exec.Command("git", "checkout", "main")
+		cmd.Dir = ctx.ProjectPath
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to switch back to main: %w", err)
+		}
+		menuDisplay.ShowMessage("  ✓ Switched back to main branch")
+	} else {
+		menuDisplay.ShowMessage("  ◦ develop branch already exists")
+	}
+
+	return nil
+}
 
 // Helper functions to execute CLI commands
 
@@ -418,38 +874,38 @@ func executeInitProject(ctx *navigation.ProjectContext, menuDisplay *navigation.
 func executeProjectCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
 	// Use exec.Command to run the command in a subprocess to avoid stdin conflicts
 	cmdArgs := append([]string{"project"}, args...)
-	
+
 	// Get the path to the current binary
 	execPath, err := os.Executable()
 	if err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
 		return err
 	}
-	
+
 	// Use the build binary instead of the current executable if we're in development
 	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
 	if _, err := os.Stat(buildPath); err == nil {
 		execPath = buildPath
 	}
-	
+
 	// Debug logging
 	debug.LogCommandWithArgs("PROJECT", fmt.Sprintf("Execute project command: %s", args[0]), execPath, cmdArgs)
-	
+
 	// Add debug flag to subprocess if enabled
 	if debugMode || viper.GetBool("debug") {
 		cmdArgs = append(cmdArgs, "--debug")
 	}
-	
+
 	cmd := exec.Command(execPath, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		debug.LogResult("PROJECT", fmt.Sprintf("project %s", args[0]), fmt.Sprintf("Command failed: %v", err), false)
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute project %s: %v", args[0], err))
 		return err
 	}
-	
+
 	debug.LogResult("PROJECT", fmt.Sprintf("project %s", args[0]), "Command completed successfully", true)
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Project %s completed successfully", args[0]))
 	return nil
@@ -458,81 +914,201 @@ func executeProjectCommand(args []string, menuDisplay *navigation.MenuDisplay) e
 // executeEpicCommand executes an epic subcommand
 func executeEpicCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
 	cmdArgs := append([]string{"epic"}, args...)
-	
+
 	execPath, err := os.Executable()
 	if err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
 		return err
 	}
-	
+
 	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
 	if _, err := os.Stat(buildPath); err == nil {
 		execPath = buildPath
 	}
-	
+
 	cmd := exec.Command(execPath, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute epic %s: %v", args[0], err))
 		return err
 	}
-	
+
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Epic %s completed successfully", args[0]))
 	return nil
 }
 
+// executeStoryCommand executes a story subcommand
+func executeStoryCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := append([]string{"story"}, args...)
 
-// executeTicketCommand executes a ticket subcommand  
-func executeTicketCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
-	cmdArgs := append([]string{"ticket"}, args...)
-	
 	execPath, err := os.Executable()
 	if err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
 		return err
 	}
-	
+
 	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
 	if _, err := os.Stat(buildPath); err == nil {
 		execPath = buildPath
 	}
-	
+
 	cmd := exec.Command(execPath, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
+	if err := cmd.Run(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to execute story %s: %v", args[0], err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Story %s completed successfully", args[0]))
+	return nil
+}
+
+// executeTicketCommand executes a ticket subcommand
+func executeTicketCommand(args []string, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := append([]string{"ticket"}, args...)
+
+	execPath, err := os.Executable()
+	if err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
+		return err
+	}
+
+	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
+	if _, err := os.Stat(buildPath); err == nil {
+		execPath = buildPath
+	}
+
+	cmd := exec.Command(execPath, cmdArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
 	if err := cmd.Run(); err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute ticket %s: %v", args[0], err))
 		return err
 	}
-	
+
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Ticket %s completed successfully", args[0]))
+	return nil
+}
+
+// cleanCurrentTaskDirectory removes all files from docs/3-current-task/
+func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuDisplay) error {
+	currentTaskDir := filepath.Join(projectPath, "docs/3-current-task")
+	
+	// Check if directory exists
+	if _, err := os.Stat(currentTaskDir); os.IsNotExist(err) {
+		// Create directory if it doesn't exist
+		if err := os.MkdirAll(currentTaskDir, 0755); err != nil {
+			return fmt.Errorf("failed to create current task directory: %w", err)
+		}
+		menuDisplay.ShowMessage("  ✓ Created docs/3-current-task/ directory")
+		return nil
+	}
+	
+	// Read directory contents
+	files, err := os.ReadDir(currentTaskDir)
+	if err != nil {
+		return fmt.Errorf("failed to read current task directory: %w", err)
+	}
+	
+	// Remove all files and subdirectories
+	for _, file := range files {
+		filePath := filepath.Join(currentTaskDir, file.Name())
+		if err := os.RemoveAll(filePath); err != nil {
+			return fmt.Errorf("failed to remove %s: %w", file.Name(), err)
+		}
+		menuDisplay.ShowMessage(fmt.Sprintf("  🗑️ Removed %s", file.Name()))
+	}
+	
+	if len(files) == 0 {
+		menuDisplay.ShowMessage("  ◦ docs/3-current-task/ was already empty")
+	} else {
+		menuDisplay.ShowMessage(fmt.Sprintf("  ✓ Cleaned %d items from docs/3-current-task/", len(files)))
+	}
+	
+	return nil
+}
+
+// copyIterationsTemplate copies ITERATIONS.md from template to current task directory
+func copyIterationsTemplate(projectPath string, menuDisplay *navigation.MenuDisplay) error {
+	templatePath := filepath.Join(projectPath, ".claude/commands/template/ITERATIONS.md")
+	destPath := filepath.Join(projectPath, "docs/3-current-task/ITERATIONS.md")
+	
+	// Check if template exists
+	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+		menuDisplay.ShowWarning("⚠️  ITERATIONS.md template not found, skipping template copy")
+		menuDisplay.ShowMessage("💡 You may need to run Claude import/install first")
+		return nil
+	}
+	
+	// Copy template file
+	if err := copyFile(templatePath, destPath); err != nil {
+		return fmt.Errorf("failed to copy ITERATIONS.md template: %w", err)
+	}
+	
+	menuDisplay.ShowMessage("  ✓ Copied ITERATIONS.md template to docs/3-current-task/")
+	return nil
+}
+
+// preprocessPlanTicketCommand handles preprocessing for Plan-Ticket command
+func preprocessPlanTicketCommand(projectPath string, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("📋 Preparing task workspace...")
+	
+	// Step 1: Clean current task directory
+	if err := cleanCurrentTaskDirectory(projectPath, menuDisplay); err != nil {
+		return fmt.Errorf("failed to clean current task directory: %w", err)
+	}
+	
+	// Step 2: Copy ITERATIONS.md template
+	if err := copyIterationsTemplate(projectPath, menuDisplay); err != nil {
+		return fmt.Errorf("failed to copy ITERATIONS template: %w", err)
+	}
+	
+	menuDisplay.ShowSuccess("✅ Task workspace prepared successfully")
 	return nil
 }
 
 // executeClaudeCommandInteractive executes a Claude slash command from interactive menu
 func executeClaudeCommandInteractive(command string, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage(fmt.Sprintf("🚀 Executing Claude command: %s", command))
-	
+
+	// Special preprocessing for Plan-Ticket command
+	if command == "/4-ticket:2-execute:1-Plan-Ticket" {
+		// Get current working directory for preprocessing
+		workDir, err := os.Getwd()
+		if err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to get current directory: %v", err))
+			return err
+		}
+		
+		// Execute preprocessing
+		if err := preprocessPlanTicketCommand(workDir, menuDisplay); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to prepare task workspace: %v", err))
+			return err
+		}
+	}
+
 	// Create Claude executor
 	claudeExecutor := executor.NewClaudeExecutor()
-	
+
 	// Validate Claude is available
 	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Claude CLI not available: %v", err))
 		menuDisplay.ShowMessage("💡 Please install Claude CLI to use this functionality")
 		return err
 	}
-	
+
 	// Execute the slash command
 	description := fmt.Sprintf("Interactive menu command: %s", command)
 	if err := claudeExecutor.ExecuteSlashCommand(command, description); err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute Claude command: %v", err))
 		return err
 	}
-	
+
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Claude command %s completed successfully", command))
 	return nil
 }
@@ -609,4 +1185,138 @@ func truncateString(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// executeClaudeImport handles importing commands and hooks from pezzos/.claude repository
+func executeClaudeImport(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	claudeWmPath := filepath.Join(ctx.ProjectPath, ".claude-wm")
+	claudeRepoPath := filepath.Join(claudeWmPath, ".claude")
+
+	// Create .claude-wm directory if it doesn't exist
+	if err := os.MkdirAll(claudeWmPath, 0755); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to create .claude-wm directory: %v", err))
+		return err
+	}
+
+	// Check if .claude directory already exists
+	if _, err := os.Stat(claudeRepoPath); err == nil {
+		// Directory exists, pull latest changes
+		menuDisplay.ShowMessage("📥 .claude directory exists, pulling latest changes...")
+
+		cmd := exec.Command("git", "pull", "origin", "master")
+		cmd.Dir = claudeRepoPath
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to pull latest changes: %v", err))
+			return err
+		}
+	} else {
+		// Directory doesn't exist, clone repository
+		menuDisplay.ShowMessage("📥 Cloning pezzos/.claude repository...")
+
+		cmd := exec.Command("git", "clone", "https://github.com/pezzos/.claude.git", claudeRepoPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to clone repository: %v", err))
+			return err
+		}
+	}
+
+	menuDisplay.ShowSuccess("✅ Commands and hooks imported successfully!")
+	menuDisplay.ShowMessage("💡 Next step: Initialize or install .claude directory")
+	return nil
+}
+
+// executeClaudeInit handles initializing the .claude project directory
+func executeClaudeInit(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	claudeDir := filepath.Join(ctx.ProjectPath, ".claude")
+	commandsDir := filepath.Join(claudeDir, "commands")
+	hooksDir := filepath.Join(claudeDir, "hooks")
+
+	menuDisplay.ShowMessage("🚀 Initializing .claude directory...")
+
+	// Create .claude directory and subdirectories
+	if err := os.MkdirAll(commandsDir, 0755); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to create commands directory: %v", err))
+		return err
+	}
+
+	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to create hooks directory: %v", err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess("✅ .claude directory initialized successfully!")
+	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", claudeDir))
+	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", commandsDir))
+	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", hooksDir))
+	menuDisplay.ShowMessage("💡 Next step: Install commands and hooks")
+	return nil
+}
+
+// executeClaudeInstall handles installing/updating the .claude project directory
+func executeClaudeInstall(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	claudeDir := filepath.Join(ctx.ProjectPath, ".claude")
+	claudeWmPath := filepath.Join(ctx.ProjectPath, ".claude-wm", ".claude")
+
+	// Check if .claude-wm/.claude exists
+	if _, err := os.Stat(claudeWmPath); os.IsNotExist(err) {
+		menuDisplay.ShowError("❌ .claude-wm/.claude directory not found")
+		menuDisplay.ShowMessage("💡 Run 'Import commands and hooks' first")
+		return fmt.Errorf(".claude-wm/.claude directory not found")
+	}
+
+	// Check if .claude directory exists, if not initialize it
+	if _, err := os.Stat(claudeDir); os.IsNotExist(err) {
+		menuDisplay.ShowMessage("📁 .claude directory not found, initializing...")
+		if err := executeClaudeInit(ctx, menuDisplay); err != nil {
+			return err
+		}
+	}
+
+	menuDisplay.ShowMessage("📦 Installing/updating .claude directory...")
+
+	// Copy commands directory
+	sourceCommands := filepath.Join(claudeWmPath, "commands")
+	destCommands := filepath.Join(claudeDir, "commands")
+
+	if _, err := os.Stat(sourceCommands); err == nil {
+		// Remove existing commands directory and recreate
+		os.RemoveAll(destCommands)
+
+		cmd := exec.Command("cp", "-r", sourceCommands, destCommands)
+		if err := cmd.Run(); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to copy commands: %v", err))
+			return err
+		}
+		menuDisplay.ShowMessage("✅ Commands copied successfully")
+	} else {
+		menuDisplay.ShowWarning("⚠️ No commands directory found in source")
+	}
+
+	// Copy hooks directory
+	sourceHooks := filepath.Join(claudeWmPath, "hooks")
+	destHooks := filepath.Join(claudeDir, "hooks")
+
+	if _, err := os.Stat(sourceHooks); err == nil {
+		// Remove existing hooks directory and recreate
+		os.RemoveAll(destHooks)
+
+		cmd := exec.Command("cp", "-r", sourceHooks, destHooks)
+		if err := cmd.Run(); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to copy hooks: %v", err))
+			return err
+		}
+		menuDisplay.ShowMessage("✅ Hooks copied successfully")
+	} else {
+		menuDisplay.ShowWarning("⚠️ No hooks directory found in source")
+	}
+
+	menuDisplay.ShowSuccess("🎉 .claude directory installed/updated successfully!")
+	menuDisplay.ShowMessage("💡 You can now use Claude Code commands and hooks in this project")
+	return nil
 }
