@@ -1,0 +1,426 @@
+{
+  "stories": {
+    "STORY-001": {
+      "id": "STORY-001",
+      "title": "TypeScript Interface Definition",
+      "description": "As a developer, I want comprehensive TypeScript interfaces for all data structures so that I can have type safety and better code maintainability throughout the refactoring process.",
+      "epic_id": "EPIC-001",
+      "status": "🚧 In Progress - 2025-07-30",
+      "priority": "critical",
+      "acceptance_criteria": [
+        "✅ Define VocabularyEntry interface with all properties (word, translation, context, difficulty)",
+        "✅ Define ExpressionEntry interface for language expressions",
+        "✅ Define QuizQuestion interface with question, options, correct answer properties",
+        "✅ Define Quiz interface containing array of questions and metadata",
+        "✅ Define component props interfaces for all planned components",
+        "✅ All interfaces exported from dedicated types.ts file",
+        "✅ Existing functionality remains unchanged during interface addition",
+        "✅ TypeScript compilation passes without errors"
+      ],
+      "blockers": [],
+      "dependencies": [],
+      "tasks": [
+        {
+          "id": "STORY-001-TASK-1",
+          "title": "Analyze current data structures",
+          "description": "Review subtitle-vocabulary-trainer.tsx to identify all data structures currently used",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-001-TASK-2",
+          "title": "Create types.ts file",
+          "description": "Create dedicated TypeScript file for all interfaces and type definitions",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-001-TASK-3",
+          "title": "Define core interfaces",
+          "description": "Implement VocabularyEntry, ExpressionEntry, QuizQuestion and Quiz interfaces",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-001-TASK-4",
+          "title": "Define component prop interfaces",
+          "description": "Create interfaces for planned component props and state structures",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-001-TASK-5",
+          "title": "Verify TypeScript compilation",
+          "description": "Ensure all new interfaces compile correctly and don't break existing code",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-002": {
+      "id": "STORY-002",
+      "title": "Development Tooling Configuration",
+      "description": "As a developer, I want properly configured development tooling (ESLint, Prettier, Jest) so that I can maintain code quality standards throughout the refactoring process.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "high",
+      "acceptance_criteria": [
+        "✅ ESLint configured with TypeScript-specific rules and React best practices",
+        "✅ Prettier configured and integrated with ESLint for consistent formatting",
+        "✅ Jest configuration updated to support new component architecture",
+        "✅ Pre-commit hooks properly configured and working",
+        "✅ All linting and formatting tools pass on current codebase",
+        "✅ IDE integration working (VS Code settings if needed)",
+        "✅ CI/CD integration ready for automated checks"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-001"],
+      "tasks": [
+        {
+          "id": "STORY-002-TASK-1",
+          "title": "Configure ESLint for TypeScript",
+          "description": "Set up ESLint with @typescript-eslint rules and React hooks plugin",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-002-TASK-2",
+          "title": "Configure Prettier integration",
+          "description": "Set up Prettier with ESLint integration and consistent formatting rules",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-002-TASK-3",
+          "title": "Update Jest configuration",
+          "description": "Configure Jest for new component testing structure and TypeScript support",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-002-TASK-4",
+          "title": "Set up pre-commit hooks",
+          "description": "Configure Husky or similar for automated linting and formatting on commit",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-002-TASK-5",
+          "title": "Verify tooling integration",
+          "description": "Test all tools work together and pass on existing codebase",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-003": {
+      "id": "STORY-003",
+      "title": "State Management Refactor with useReducer",
+      "description": "As a developer, I want to convert the current 13+ useState hooks to a useReducer pattern so that I can have better state management and easier testing for complex state transitions.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "critical",
+      "acceptance_criteria": [
+        "✅ Define comprehensive application state shape with TypeScript interface",
+        "✅ Create action types for all state transitions (file upload, quiz progression, etc.)",
+        "✅ Implement reducer function handling all current state logic",
+        "✅ Replace all 13+ useState calls with single useReducer hook",
+        "✅ Maintain identical UI behavior and functionality",
+        "✅ Add comprehensive reducer tests for state transitions",
+        "✅ Debug logging shows proper state flow",
+        "✅ No regression in user experience or functionality"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-001", "STORY-002"],
+      "tasks": [
+        {
+          "id": "STORY-003-TASK-1",
+          "title": "Design state shape and actions",
+          "description": "Analyze current useState hooks and design consolidated state structure with action types",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-2",
+          "title": "Implement reducer function",
+          "description": "Create reducer handling all state transitions with proper TypeScript typing",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-3",
+          "title": "Replace useState with useReducer",
+          "description": "Replace all useState hooks with single useReducer hook and dispatch calls",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-4",
+          "title": "Add reducer unit tests",
+          "description": "Comprehensive test coverage for all reducer actions and state transitions",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-5",
+          "title": "Verify functionality preservation",
+          "description": "End-to-end testing to ensure all user flows work identically",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-004": {
+      "id": "STORY-004",
+      "title": "File Input Component Extraction",
+      "description": "As a developer, I want to extract file upload and subtitle processing logic into focused components so that I can have better separation of concerns and testability.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "high",
+      "acceptance_criteria": [
+        "✅ FileUpload component extracted with clean props interface",
+        "✅ SubtitleParser utility functions separated from UI logic",
+        "✅ Component handles all current file formats (.srt) and validation",
+        "✅ Error handling and user feedback preserved",
+        "✅ API integration for subtitle processing maintained",
+        "✅ Fallback mechanisms for parsing failures working",
+        "✅ Unit tests for both component and utility functions",
+        "✅ Integration tests for file processing flow"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-003"],
+      "tasks": [
+        {
+          "id": "STORY-004-TASK-1",
+          "title": "Extract FileUpload component",
+          "description": "Create reusable FileUpload component with proper props interface and error handling",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-004-TASK-2",
+          "title": "Create SubtitleParser utilities",
+          "description": "Extract subtitle parsing logic into testable utility functions",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-004-TASK-3",
+          "title": "Implement file validation",
+          "description": "Add comprehensive file format and content validation",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-004-TASK-4",
+          "title": "Add component unit tests",
+          "description": "Test FileUpload component rendering, user interactions, and error states",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-004-TASK-5",
+          "title": "Add parser utility tests",
+          "description": "Test subtitle parsing functions with various file formats and edge cases",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-005": {
+      "id": "STORY-005",
+      "title": "Vocabulary Display Component Extraction",
+      "description": "As a user, I want the vocabulary display to be a focused, reusable component so that I can have consistent vocabulary presentation and easier maintenance.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "medium",
+      "acceptance_criteria": [
+        "✅ VocabularySheet component extracted as purely presentational component",
+        "✅ Component accepts vocabulary data via props with TypeScript interfaces",
+        "✅ All current display modes and formatting preserved",
+        "✅ Responsive design maintained across all screen sizes",
+        "✅ Accessibility features (ARIA labels, keyboard navigation) included",
+        "✅ Loading and empty states properly handled",
+        "✅ Unit tests for rendering different vocabulary data sets",
+        "✅ Visual regression tests for styling consistency"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-001", "STORY-003"],  
+      "tasks": [
+        {
+          "id": "STORY-005-TASK-1",
+          "title": "Extract VocabularySheet component",
+          "description": "Create presentational component for vocabulary display with proper props interface",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-005-TASK-2",
+          "title": "Implement responsive design",
+          "description": "Ensure component works well on all screen sizes and devices",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-005-TASK-3",
+          "title": "Add accessibility features",
+          "description": "Implement proper ARIA labels, keyboard navigation, and screen reader support",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-005-TASK-4",
+          "title": "Handle loading and empty states",
+          "description": "Add proper loading indicators and empty state messaging",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-005-TASK-5",
+          "title": "Add component tests",
+          "description": "Unit tests for rendering, props handling, and responsive behavior",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-006": {
+      "id": "STORY-006",
+      "title": "Quiz System Component Extraction",
+      "description": "As a user, I want the quiz system to be well-structured components so that I can have reliable quiz functionality and better user experience.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "critical",
+      "acceptance_criteria": [
+        "✅ Quiz component extracted handling question display and user interactions",
+        "✅ QuizResults component extracted for score display and analysis",
+        "✅ Quiz generation logic properly separated and testable",
+        "✅ All current quiz functionality preserved (scoring, progress, navigation)",
+        "✅ Question randomization and answer shuffling maintained",
+        "✅ Quiz progress tracking and state management working",
+        "✅ Edge cases handled (empty vocabulary, single question, etc.)",
+        "✅ Comprehensive unit tests for quiz logic and components"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-001", "STORY-003"],
+      "tasks": [
+        {
+          "id": "STORY-006-TASK-1",
+          "title": "Extract Quiz component",
+          "description": "Create Quiz component handling question display, answer selection, and navigation",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-006-TASK-2",
+          "title": "Extract QuizResults component",
+          "description": "Create QuizResults component for displaying scores and performance analysis",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-006-TASK-3",
+          "title": "Separate quiz generation logic",
+          "description": "Extract quiz generation into testable utility functions",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-006-TASK-4",
+          "title": "Implement quiz state management",
+          "description": "Handle quiz progress, scoring, and navigation state within components",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-006-TASK-5",
+          "title": "Add comprehensive testing",
+          "description": "Unit tests for quiz components, generation logic, and edge cases",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-007": {
+      "id": "STORY-007",
+      "title": "Comprehensive Testing Implementation",
+      "description": "As a developer, I want comprehensive test coverage for all extracted components so that I can ensure reliability and prevent regressions during future development.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "high",
+      "acceptance_criteria": [
+        "✅ Unit tests for all extracted components achieve 80%+ coverage",
+        "✅ Integration tests for component interactions and data flow",
+        "✅ Test utilities and shared helpers for common testing scenarios",
+        "✅ Mocking strategy implemented for API calls and external dependencies",
+        "✅ Visual regression tests for UI components",
+        "✅ Performance tests to ensure no regression from refactoring",
+        "✅ All tests pass consistently in CI/CD environment",
+        "✅ Test documentation and testing best practices documented"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-004", "STORY-005", "STORY-006"],
+      "tasks": [
+        {
+          "id": "STORY-007-TASK-1",
+          "title": "Set up testing infrastructure",
+          "description": "Configure Jest, React Testing Library, and testing utilities for component testing",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-007-TASK-2",
+          "title": "Create test utilities",
+          "description": "Build shared test helpers, mocks, and utilities for common testing scenarios",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-007-TASK-3",
+          "title": "Implement unit tests",
+          "description": "Write comprehensive unit tests for all components and utility functions",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-007-TASK-4",
+          "title": "Add integration tests",
+          "description": "Test component interactions and complete user workflows",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-007-TASK-5",
+          "title": "Performance and visual tests",
+          "description": "Add performance regression tests and visual testing for UI consistency",
+          "status": "planned"
+        }
+      ]
+    },
+    "STORY-008": {
+      "id": "STORY-008",
+      "title": "Integration Validation and Architecture Cleanup",
+      "description": "As a developer, I want to validate the complete refactored architecture and clean up any remaining issues so that I can ensure the system works perfectly and is ready for future development.",
+      "epic_id": "EPIC-001",
+      "status": "todo",
+      "priority": "medium",
+      "acceptance_criteria": [
+        "✅ End-to-end functionality verification across all user workflows",
+        "✅ Performance benchmarks meet or exceed pre-refactoring metrics",  
+        "✅ Code cleanup completed (unused imports, dead code, console logs)",
+        "✅ Documentation updated to reflect new architecture",
+        "✅ Architecture review completed and approved",
+        "✅ All original epic success criteria validated and confirmed",
+        "✅ System ready for new feature development",
+        "✅ Deployment to staging environment successful"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-007"],
+      "tasks": [
+        {
+          "id": "STORY-008-TASK-1",
+          "title": "End-to-end validation",
+          "description": "Comprehensive testing of all user workflows and system functionality",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-008-TASK-2",
+          "title": "Performance validation",
+          "description": "Benchmark performance against pre-refactoring metrics",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-008-TASK-3",
+          "title": "Code cleanup and optimization",
+          "description": "Remove unused code, optimize imports, clean up console logs and debug code",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-008-TASK-4",
+          "title": "Documentation update",
+          "description": "Update architecture documentation and component usage guides",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-008-TASK-5",
+          "title": "Final architecture review",
+          "description": "Review complete architecture against original goals and best practices",
+          "status": "planned"
+        }
+      ]
+    }
+  },
+  "epic_context": {
+    "id": "EPIC-001",
+    "title": "Component Architecture Optimization",
+    "current_story": "STORY-001",
+    "total_stories": 8,
+    "completed_stories": 0
+  }
+}

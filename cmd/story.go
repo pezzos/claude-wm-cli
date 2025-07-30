@@ -217,7 +217,7 @@ func createStory(title string, _ *cobra.Command) {
 		Description:        storyDescription,
 		EpicID:             storyEpicID,
 		Priority:           priority,
-		StoryPoints:        storyPoints,
+		// StoryPoints not used in current schema
 		AcceptanceCriteria: storyCriteria,
 		Dependencies:       dependencies,
 	}
@@ -237,7 +237,7 @@ func createStory(title string, _ *cobra.Command) {
 	fmt.Printf("   Epic ID:     %s\n", newStory.EpicID)
 	fmt.Printf("   Priority:    %s\n", newStory.Priority)
 	fmt.Printf("   Status:      %s\n", newStory.Status)
-	fmt.Printf("   Points:      %d\n", newStory.StoryPoints)
+	fmt.Printf("   Tasks:       %d\n", len(newStory.Tasks))
 	if newStory.Description != "" {
 		fmt.Printf("   Description: %s\n", newStory.Description)
 	}
@@ -315,7 +315,7 @@ func updateStory(storyID string, cmd *cobra.Command) {
 	}
 
 	if storyPoints > 0 {
-		options.StoryPoints = &storyPoints
+		// StoryPoints not used in current schema
 	}
 
 	if len(storyCriteria) > 0 {
@@ -328,7 +328,7 @@ func updateStory(storyID string, cmd *cobra.Command) {
 
 	// Check if any updates were specified
 	if options.Title == nil && options.Description == nil && options.Priority == nil &&
-		options.Status == nil && options.StoryPoints == nil && options.AcceptanceCriteria == nil &&
+		options.Status == nil && options.AcceptanceCriteria == nil &&
 		options.Dependencies == nil {
 		fmt.Fprintf(os.Stderr, "Error: No updates specified. Use flags like --title, --status, --priority, etc.\n")
 		os.Exit(1)
@@ -349,7 +349,7 @@ func updateStory(storyID string, cmd *cobra.Command) {
 	fmt.Printf("   Epic ID:     %s\n", updatedStory.EpicID)
 	fmt.Printf("   Priority:    %s\n", updatedStory.Priority)
 	fmt.Printf("   Status:      %s\n", updatedStory.Status)
-	fmt.Printf("   Points:      %d\n", updatedStory.StoryPoints)
+	fmt.Printf("   Tasks:       %d\n", len(updatedStory.Tasks))
 	if updatedStory.Description != "" {
 		fmt.Printf("   Description: %s\n", updatedStory.Description)
 	}
@@ -385,7 +385,7 @@ func showStory(storyID string) {
 	fmt.Printf("📝 Title:       %s\n", st.Title)
 	fmt.Printf("📊 Status:      %s %s\n", getStoryStatusIcon(st.Status), st.Status)
 	fmt.Printf("⚡ Priority:    %s %s\n", getStoryPriorityIcon(st.Priority), st.Priority)
-	fmt.Printf("🎯 Points:      %d\n", st.StoryPoints)
+	fmt.Printf("🎯 Tasks:       %d\n", len(st.Tasks))
 
 	if st.EpicID != "" {
 		fmt.Printf("📚 Epic:        %s\n", st.EpicID)
@@ -527,27 +527,35 @@ func truncateStoryString(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// JSON structure for stories.json file
+// JSON structure for stories.json file (follows schema: stories as object with STORY-XXX keys)
 type StoriesJSON struct {
-	Stories []struct {
+	Stories map[string]struct {
 		ID               string `json:"id"`
 		Title            string `json:"title"`
 		Description      string `json:"description"`
 		EpicID           string `json:"epic_id"`
 		Status           string `json:"status"`
 		Priority         string `json:"priority"`
-		StoryPoints      int    `json:"story_points"`
 		AcceptanceCriteria []string `json:"acceptance_criteria"`
-		Tasks            []struct {
-			ID     string `json:"id"`
-			Title  string `json:"title"`
-			Status string `json:"status"`
+		Blockers         []struct {
+			Description string `json:"description"`
+			Impact      string `json:"impact"`
+		} `json:"blockers"`
+		Dependencies []string `json:"dependencies"`
+		Tasks        []struct {
+			ID          string `json:"id"`
+			Title       string `json:"title"`
+			Description string `json:"description"`
+			Status      string `json:"status"`
 		} `json:"tasks"`
 	} `json:"stories"`
-	Metadata struct {
-		TotalStories int `json:"total_stories"`
-		TotalTasks   int `json:"total_tasks"`
-	} `json:"metadata"`
+	EpicContext struct {
+		ID               string `json:"id"`
+		Title            string `json:"title"`
+		CurrentStory     string `json:"current_story"`
+		TotalStories     int    `json:"total_stories"`
+		CompletedStories int    `json:"completed_stories"`
+	} `json:"epic_context"`
 }
 
 // displayStoriesFromFile reads stories.json and displays formatted story list
@@ -569,29 +577,44 @@ func displayStoriesFromFile(wd, statusFilter string) error {
 		return fmt.Errorf("failed to parse stories.json: %w", err)
 	}
 
-	// Filter stories
-	filteredStories := make([]struct {
+	// Filter stories from map
+	type StoryItem struct {
 		ID               string `json:"id"`
 		Title            string `json:"title"`
 		Description      string `json:"description"`
 		EpicID           string `json:"epic_id"`
 		Status           string `json:"status"`
 		Priority         string `json:"priority"`
-		StoryPoints      int    `json:"story_points"`
 		AcceptanceCriteria []string `json:"acceptance_criteria"`
 		Tasks            []struct {
-			ID     string `json:"id"`
-			Title  string `json:"title"`
-			Status string `json:"status"`
+			ID          string `json:"id"`
+			Title       string `json:"title"`
+			Description string `json:"description"`
+			Status      string `json:"status"`
 		} `json:"tasks"`
-	}, 0)
+	}
+	
+	filteredStories := make([]StoryItem, 0)
 
 	for _, story := range storiesData.Stories {
 		// Apply status filter
 		if statusFilter != "" && story.Status != statusFilter {
 			continue
 		}
-		filteredStories = append(filteredStories, story)
+		
+		// Convert to StoryItem
+		storyItem := StoryItem{
+			ID:               story.ID,
+			Title:            story.Title,
+			Description:      story.Description,
+			EpicID:           story.EpicID,
+			Status:           story.Status,
+			Priority:         story.Priority,
+			AcceptanceCriteria: story.AcceptanceCriteria,
+			Tasks:            story.Tasks,
+		}
+		
+		filteredStories = append(filteredStories, storyItem)
 	}
 
 	// Display header
@@ -640,7 +663,7 @@ func displayStoriesFromFile(wd, statusFilter string) error {
 			truncateStoryString(story.Title, 30),
 			statusIcon, story.Status,
 			priorityIcon, story.Priority,
-			story.StoryPoints,
+			len(story.Tasks),
 			tasksStr)
 	}
 

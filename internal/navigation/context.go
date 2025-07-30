@@ -67,6 +67,7 @@ type EpicContext struct {
 type StoryContext struct {
 	ID             string
 	Title          string
+	Description    string
 	Status         string
 	Priority       string
 	Progress       float64
@@ -283,6 +284,7 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 		Story struct {
 			ID          string `json:"id"`
 			Title       string `json:"title"`
+			Description string `json:"description"`
 			Status      string `json:"status"`
 			Priority    string `json:"priority"`
 			EpicID      string `json:"epic_id"`
@@ -296,11 +298,12 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 
 	// Return the current story context
 	return &StoryContext{
-		ID:       storyData.Story.ID,
-		Title:    storyData.Story.Title,
-		Status:   storyData.Story.Status,
-		Priority: storyData.Story.Priority,
-		Progress: 0.0, // TODO: Calculate from tasks
+		ID:          storyData.Story.ID,
+		Title:       storyData.Story.Title,
+		Description: storyData.Story.Description,
+		Status:      storyData.Story.Status,
+		Priority:    storyData.Story.Priority,
+		Progress:    0.0, // TODO: Calculate from tasks
 		TotalTasks:     0,   // TODO: Calculate from tasks
 		CompletedTasks: 0,   // TODO: Calculate from tasks
 	}, nil
