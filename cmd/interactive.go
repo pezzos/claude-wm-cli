@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
@@ -638,13 +640,13 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	case "ticket-current":
 		return executeTicketCommand([]string{"current"}, menuDisplay)
 	case "ticket-execute-full":
-		return executeTicketCommand([]string{"execute-full"}, menuDisplay)
+		return executeTicketFullWorkflow(ctx, menuDisplay, "")
 	case "ticket-execute-full-from-story":
-		return executeTicketCommand([]string{"execute-full-from-story"}, menuDisplay)
+		return executeTicketFullWorkflow(ctx, menuDisplay, "story")
 	case "ticket-execute-full-from-issue":
-		return executeTicketCommand([]string{"execute-full-from-issue"}, menuDisplay)
+		return executeTicketFullWorkflow(ctx, menuDisplay, "issue")
 	case "ticket-execute-full-from-input":
-		return executeTicketCommand([]string{"execute-full-from-input"}, menuDisplay)
+		return executeTicketFullWorkflow(ctx, menuDisplay, "input")
 
 	// Claude Management
 	case "claude-import":
@@ -1466,4 +1468,245 @@ func executeTaskStatus(ctx *navigation.ProjectContext, menuDisplay *navigation.M
 
 	// Step 2: Execute Claude command for detailed status analysis
 	return executeClaudeCommandInteractive("/4-task:3-complete:2-Status-Task", menuDisplay)
+}
+
+// executeTicketFullWorkflow executes the complete ticket workflow with iteration support
+func executeTicketFullWorkflow(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay, source string) error {
+	menuDisplay.ShowMessage("🚀 Starting full ticket workflow with iteration support...")
+
+	// Step 1: Initialize task based on source
+	if err := initializeTaskFromSource(ctx, menuDisplay, source); err != nil {
+		return err
+	}
+
+	// Main workflow loop with iteration support
+	maxIterations := 3
+	for iteration := 1; iteration <= maxIterations; iteration++ {
+		menuDisplay.ShowMessage(fmt.Sprintf("🔄 Starting iteration %d/%d", iteration, maxIterations))
+
+		// Step 2: Plan Task
+		if err := executeTaskPlan(ctx, menuDisplay); err != nil {
+			return fmt.Errorf("failed at planning step: %w", err)
+		}
+
+		// Step 3: Test Design
+		if err := executeTaskTestDesign(ctx, menuDisplay); err != nil {
+			return fmt.Errorf("failed at test design step: %w", err)
+		}
+
+		// Step 4: Implementation
+		if err := executeClaudeCommandInteractive("/4-task:2-execute:3-Implement", menuDisplay); err != nil {
+			return fmt.Errorf("failed at implementation step: %w", err)
+		}
+
+		// Step 5: Validation (with iteration check)
+		validationResult, err := executeValidationWithIterationCheck(ctx, menuDisplay, iteration, maxIterations)
+		if err != nil {
+			return fmt.Errorf("failed at validation step: %w", err)
+		}
+
+		switch validationResult {
+		case ValidationSuccess:
+			menuDisplay.ShowSuccess("✅ Validation successful! Continuing to review...")
+			// Step 6: Review
+			if err := executeTaskReview(ctx, menuDisplay); err != nil {
+				return fmt.Errorf("failed at review step: %w", err)
+			}
+
+			// Step 7: Archive
+			if err := executeTaskArchive(ctx, menuDisplay); err != nil {
+				return fmt.Errorf("failed at archive step: %w", err)
+			}
+
+			menuDisplay.ShowSuccess("🎉 Full ticket workflow completed successfully!")
+			return nil
+
+		case ValidationFailedRetry:
+			menuDisplay.ShowMessage(fmt.Sprintf("⚠️ Validation failed (iteration %d/%d). Retrying from planning step...", iteration, maxIterations))
+			continue // Go to next iteration
+
+		case ValidationFailedMaxReached:
+			menuDisplay.ShowError(fmt.Sprintf("❌ Validation failed after %d iterations. Workflow stopped.", maxIterations))
+			return fmt.Errorf("validation failed after maximum iterations (%d)", maxIterations)
+
+		default:
+			return fmt.Errorf("unknown validation result: %v", validationResult)
+		}
+	}
+
+	return fmt.Errorf("workflow failed after %d iterations", maxIterations)
+}
+
+// ValidationResult represents the result of a validation step
+type ValidationResult int
+
+const (
+	ValidationSuccess ValidationResult = iota
+	ValidationFailedRetry
+	ValidationFailedMaxReached
+)
+
+// initializeTaskFromSource initializes the task based on the source type
+func initializeTaskFromSource(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay, source string) error {
+	switch source {
+	case "story":
+		return executeTaskFromStory(ctx, menuDisplay)
+	case "issue":
+		return executeTaskFromIssue(ctx, menuDisplay)
+	case "input":
+		return executeTaskFromInput(ctx, menuDisplay)
+	case "":
+		// No initialization needed - task already exists
+		menuDisplay.ShowMessage("📋 Using existing task context...")
+		return nil
+	default:
+		return fmt.Errorf("unknown task source: %s", source)
+	}
+}
+
+// executeValidationWithIterationCheck executes validation and determines next action based on result
+func executeValidationWithIterationCheck(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay, currentIteration, maxIterations int) (ValidationResult, error) {
+	// Execute preprocessing first
+	if err := preprocessing.PreprocessValidateTask(ctx.ProjectPath, menuDisplay); err != nil {
+		return ValidationFailedRetry, fmt.Errorf("preprocessing failed: %w", err)
+	}
+
+	// Check current iteration status from iterations.json
+	iterationsPath := filepath.Join(ctx.ProjectPath, "docs/3-current-task/iterations.json")
+	iterations, err := parseIterationsJSONFile(iterationsPath)
+	if err != nil {
+		menuDisplay.ShowWarning("⚠️ Could not read iterations.json, continuing with validation")
+	}
+
+	// Execute Claude validation command
+	claudeExecutor := executor.NewClaudeExecutor()
+	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		return ValidationFailedRetry, fmt.Errorf("Claude CLI not available: %w", err)
+	}
+
+	// Execute validation command and capture exit code
+	description := fmt.Sprintf("Validation step (iteration %d/%d)", currentIteration, maxIterations)
+	exitCode, err := claudeExecutor.ExecuteSlashCommandWithExitCode("/4-task:2-execute:4-Validate-Task", description)
+	
+	if err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to execute validation: %v", err))
+		return ValidationFailedRetry, err
+	}
+
+	// Interpret Claude's exit code
+	switch exitCode {
+	case 0: // Success
+		menuDisplay.ShowSuccess("✅ Validation passed!")
+		return ValidationSuccess, nil
+
+	case 1: // Needs iteration
+		menuDisplay.ShowMessage("⚠️ Validation indicates iteration needed")
+		
+		// Check if we've reached max iterations
+		if currentIteration >= maxIterations {
+			// Update iterations.json to mark as blocked
+			if iterations != nil {
+				if err := updateIterationsAsBlocked(iterationsPath, iterations, "Maximum iterations reached"); err != nil {
+					menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+				}
+			}
+			return ValidationFailedMaxReached, nil
+		}
+		
+		// Update iterations.json for retry
+		if iterations != nil {
+			if err := updateIterationsForRetry(iterationsPath, iterations, currentIteration); err != nil {
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+			}
+		}
+		
+		return ValidationFailedRetry, nil
+
+	case 2: // Blocked
+		menuDisplay.ShowError("❌ Validation indicates task is blocked")
+		if iterations != nil {
+			if err := updateIterationsAsBlocked(iterationsPath, iterations, "Validation blocked"); err != nil {
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+			}
+		}
+		return ValidationFailedMaxReached, fmt.Errorf("validation blocked")
+
+	default:
+		menuDisplay.ShowError(fmt.Sprintf("❌ Validation returned unexpected exit code: %d", exitCode))
+		return ValidationFailedRetry, fmt.Errorf("unexpected exit code: %d", exitCode)
+	}
+}
+
+// updateIterationsForRetry updates iterations.json for a retry scenario
+func updateIterationsForRetry(iterationsPath string, iterations *preprocessing.IterationsData, currentIteration int) error {
+	// Update current iteration
+	iterations.TaskContext.CurrentIteration = currentIteration + 1
+	
+	// Add iteration record
+	newIteration := preprocessing.Iteration{
+		IterationNumber: currentIteration,
+		Attempt: preprocessing.Attempt{
+			StartedAt:      time.Now().Format(time.RFC3339),
+			Approach:       "Validation-driven retry",
+			Implementation: []string{"Validation failed", "Retrying from planning step"},
+		},
+		Result: preprocessing.Result{
+			Success: false,
+			Outcome: "❌ Failed",
+			Details: "Validation did not pass, retrying from planning",
+		},
+		Learnings:   []string{"Validation failed", "Need to revisit planning and implementation"},
+		CompletedAt: time.Now().Format(time.RFC3339),
+	}
+	
+	iterations.Iterations = append(iterations.Iterations, newIteration)
+	
+	// Write back to file
+	return writeJSONToFile(iterationsPath, iterations)
+}
+
+// updateIterationsAsBlocked updates iterations.json when max iterations reached or blocked
+func updateIterationsAsBlocked(iterationsPath string, iterations *preprocessing.IterationsData, reason string) error {
+	// Update final outcome
+	iterations.FinalOutcome = preprocessing.FinalOutcome{
+		Status:                "blocked",
+		Solution:              "",
+		TotalTimeHours:        0, // Would be calculated based on iterations
+		Complexity:            "higher_than_estimated",
+		OriginalEstimateHours: 0, // Would be from initial estimate
+	}
+	
+	// Add recommendations
+	iterations.Recommendations = append(iterations.Recommendations, 
+		"Consider breaking down the task into smaller components",
+		"Review approach and seek additional expertise",
+		"Validate requirements and acceptance criteria",
+	)
+	
+	// Write back to file
+	return writeJSONToFile(iterationsPath, iterations)
+}
+
+// writeJSONToFile writes JSON data to a file
+func writeJSONToFile(path string, data interface{}) error {
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, jsonData, 0644)
+}
+
+// parseIterationsJSONFile parses iterations.json file locally
+func parseIterationsJSONFile(path string) (*preprocessing.IterationsData, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var iterations preprocessing.IterationsData
+	if err := json.Unmarshal(data, &iterations); err != nil {
+		return nil, err
+	}
+
+	return &iterations, nil
 }

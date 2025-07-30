@@ -82,6 +82,68 @@ func (ce *ClaudeExecutor) ExecuteSlashCommand(slashCommand, description string) 
 	return ce.ExecutePrompt(slashCommand, description)
 }
 
+// ExecuteSlashCommandWithExitCode executes a Claude slash command and returns the exit code
+func (ce *ClaudeExecutor) ExecuteSlashCommandWithExitCode(slashCommand, description string) (int, error) {
+	debug.LogClaudeCommand(slashCommand, description)
+	debug.LogExecution("CLAUDE", "execute slash command with exit code", fmt.Sprintf("Claude command with exit code tracking (timeout: %v)", ce.timeout))
+	
+	// Build the command
+	cmd := exec.Command("claude", "-p", slashCommand)
+	
+	// Set up environment and output
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	
+	// In development mode, run without timeout
+	if debug.DevMode {
+		debug.LogExecution("CLAUDE", "dev mode", "Running without timeout - kill manually if needed (Ctrl+C)")
+		err := cmd.Run()
+		exitCode := getExitCode(err)
+		
+		debug.LogResult("CLAUDE", "execute slash command with exit code", 
+			fmt.Sprintf("Command completed with exit code: %d", exitCode), err == nil)
+		
+		return exitCode, nil
+	}
+	
+	// Run with timeout in production mode
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Run()
+	}()
+	
+	select {
+	case err := <-done:
+		exitCode := getExitCode(err)
+		debug.LogResult("CLAUDE", "execute slash command with exit code", 
+			fmt.Sprintf("Command completed with exit code: %d", exitCode), err == nil)
+		return exitCode, nil
+		
+	case <-time.After(ce.timeout):
+		if cmd.Process != nil {
+			cmd.Process.Kill()
+		}
+		debug.LogResult("CLAUDE", "execute slash command with exit code", 
+			fmt.Sprintf("Command timed out after %v", ce.timeout), false)
+		return -1, fmt.Errorf("claude command timed out after %v", ce.timeout)
+	}
+}
+
+// getExitCode extracts exit code from error
+func getExitCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	
+	if exitError, ok := err.(*exec.ExitError); ok {
+		return exitError.ExitCode()
+	}
+	
+	// If we can't determine the exit code, assume failure
+	return 1
+}
+
 // ValidateClaudeAvailable checks if Claude CLI is available
 func (ce *ClaudeExecutor) ValidateClaudeAvailable() error {
 	debug.LogExecution("CLAUDE", "validate availability", "Check if claude command is in PATH")

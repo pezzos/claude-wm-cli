@@ -860,6 +860,11 @@ func parseIterationsJSON(path string) (*IterationsData, error) {
 	return &iterations, nil
 }
 
+// ParseIterationsJSON is the exported version of parseIterationsJSON
+func ParseIterationsJSON(path string) (*IterationsData, error) {
+	return parseIterationsJSON(path)
+}
+
 func getCurrentTaskFromJSON(path string) (*CurrentTaskData, error) {
 	return parseTaskJSONFile(path)
 }
