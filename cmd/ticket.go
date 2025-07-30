@@ -974,31 +974,6 @@ func formatTicketDuration(d time.Duration) string {
 	}
 }
 
-// JSON structure for tickets.json file
-type TicketsJSON struct {
-	Tickets map[string]struct {
-		ID          string `json:"id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Type        string `json:"type"`
-		Status      string `json:"status"`
-		Priority    string `json:"priority"`
-		Estimations struct {
-			EstimatedHours float64 `json:"estimated_hours"`
-			StoryPoints    int     `json:"story_points"`
-		} `json:"estimations"`
-		CreatedAt  string `json:"created_at"`
-		UpdatedAt  string `json:"updated_at"`
-		StartedAt  string `json:"started_at,omitempty"`
-		ResolvedAt string `json:"resolved_at,omitempty"`
-	} `json:"tickets"`
-	CurrentTicket string `json:"current_ticket"`
-	Metadata      struct {
-		TotalTickets    int `json:"total_tickets"`
-		OpenTickets     int `json:"open_tickets"`
-		ResolvedTickets int `json:"resolved_tickets"`
-	} `json:"metadata"`
-}
 
 // displayTasksFromCurrentStory reads current story from stories.json and displays its tasks
 func displayTasksFromCurrentStory(wd, statusFilter string) error {
@@ -1136,55 +1111,6 @@ func displayTasksFromCurrentStory(wd, statusFilter string) error {
 	return nil
 }
 
-// Helper functions for string-based type/status/priority icons
-func getTicketTypeIconFromString(ticketType string) string {
-	switch ticketType {
-	case "bug":
-		return "🐛"
-	case "feature":
-		return "✨"
-	case "interruption":
-		return "⚡"
-	case "task":
-		return "📋"
-	case "support":
-		return "🆘"
-	default:
-		return "❓"
-	}
-}
-
-func getTicketStatusIconFromString(status string) string {
-	switch status {
-	case "open":
-		return "🔵"
-	case "in_progress":
-		return "🟡"
-	case "resolved":
-		return "🟢"
-	case "closed":
-		return "⚫"
-	default:
-		return "❓"
-	}
-}
-
-func getTicketPriorityIconFromString(priority string) string {
-	switch priority {
-	case "low":
-		return "🟢"
-	case "medium":
-		return "🟡"
-	case "high":
-		return "🟠"
-	case "critical":
-		return "🔴"
-	case "urgent":
-		return "🚨"
-	default:
-		return "⚪"
-	}
-}
 
 // executeFullTicketWorkflow executes the complete ticket workflow automatically
 func executeFullTicketWorkflow() {
