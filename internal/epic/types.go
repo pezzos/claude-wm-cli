@@ -2,6 +2,8 @@ package epic
 
 import (
 	"time"
+
+	"claude-wm-cli/internal/model"
 )
 
 // Epic represents a large unit of work composed of multiple user stories
@@ -23,25 +25,51 @@ type Epic struct {
 }
 
 // Priority represents the priority level of an epic
-type Priority string
+// Now uses the centralized model.Priority type for consistency
+type Priority = model.Priority
 
+// Status represents the current status of an epic  
+// Now uses the centralized model.Status type for consistency
+type Status = model.Status
+
+// Legacy priority constants for backward compatibility
+// These map to the standardized P0-P3 system
 const (
-	PriorityLow      Priority = "low"
-	PriorityMedium   Priority = "medium"
-	PriorityHigh     Priority = "high"
-	PriorityCritical Priority = "critical"
+	PriorityLow      = model.PriorityP3 // Low priority maps to P3
+	PriorityMedium   = model.PriorityP2 // Medium priority maps to P2
+	PriorityHigh     = model.PriorityP1 // High priority maps to P1
+	PriorityCritical = model.PriorityP0 // Critical priority maps to P0
 )
 
-// Status represents the current status of an epic
-type Status string
-
+// Legacy status constants for backward compatibility
 const (
-	StatusPlanned    Status = "planned"
-	StatusInProgress Status = "in_progress"
-	StatusOnHold     Status = "on_hold"
-	StatusCompleted  Status = "completed"
-	StatusCancelled  Status = "cancelled"
+	StatusPlanned    = model.StatusPlanned
+	StatusInProgress = model.StatusInProgress
+	StatusOnHold     = model.StatusOnHold
+	StatusCompleted  = model.StatusCompleted
+	StatusCancelled  = model.StatusCancelled
 )
+
+// MigrateLegacyPriority converts legacy priority strings to standardized Priority
+func MigrateLegacyPriority(legacy string) Priority {
+	switch legacy {
+	case "critical":
+		return model.PriorityP0
+	case "high":
+		return model.PriorityP1
+	case "medium":
+		return model.PriorityP2
+	case "low":
+		return model.PriorityP3
+	default:
+		return model.PriorityP2 // Default to medium if unknown
+	}
+}
+
+// MigrateLegacyStatus converts legacy status strings to standardized Status
+func MigrateLegacyStatus(legacy string) Status {
+	return model.StatusFromLegacy(legacy)
+}
 
 // UserStory represents a user story within an epic
 type UserStory struct {
@@ -107,35 +135,8 @@ type EpicListOptions struct {
 	ShowAll  bool
 }
 
-// String returns the string representation of priority
-func (p Priority) String() string {
-	return string(p)
-}
-
-// String returns the string representation of status
-func (s Status) String() string {
-	return string(s)
-}
-
-// IsValid checks if the priority is valid
-func (p Priority) IsValid() bool {
-	switch p {
-	case PriorityLow, PriorityMedium, PriorityHigh, PriorityCritical:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsValid checks if the status is valid
-func (s Status) IsValid() bool {
-	switch s {
-	case StatusPlanned, StatusInProgress, StatusOnHold, StatusCompleted, StatusCancelled:
-		return true
-	default:
-		return false
-	}
-}
+// Note: String() and IsValid() methods are now available through model.Priority and model.Status
+// No need to redefine them here as they are inherited from the model types
 
 // CalculateProgress updates the progress metrics for an epic
 func (e *Epic) CalculateProgress() {
