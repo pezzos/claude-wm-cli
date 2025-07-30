@@ -207,7 +207,7 @@ The CLI analyzes your project state and suggests appropriate next actions based 
 
 ### Phase 1: Interactive CLI Core (Current)
 - Go-based CLI with Cobra/Bubble Tea interface
-- JSON state management (state.json, epics.json, stories.json, tickets.json)
+- JSON state management (epics.json, stories.json...)
 - Interactive navigation and contextual options
 - Claude Code command wrapper with error handling
 

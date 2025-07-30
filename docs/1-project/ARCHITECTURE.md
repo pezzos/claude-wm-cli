@@ -21,7 +21,6 @@ Claude WM CLI is an intelligent command-line interface built in **Go** that acts
   - `docs/2-current-epic/current-epic.json` - Currently selected epic
   - `docs/2-current-epic/stories.json` - All stories for current epic + embedded tasks
   - `docs/2-current-epic/current-story.json` - Currently selected story  
-  - `docs/2-current-epic/tickets.json` - Interruptions and tickets
   - `docs/3-current-task/current-task.json` - Currently selected task
 
 #### Data Flow Pattern
@@ -228,7 +227,7 @@ Detection → Analysis → Contextual Suggestion → Next Step Prediction → Ex
 
 ### Phase 1: Interactive CLI Core
 - Go-based CLI with Cobra/Bubble Tea interface
-- JSON state parser (state.json, epics.json, stories.json, tickets.json)
+- JSON state parser (epics.json, stories.json, ...)
 - Claude Code command wrapper with timeout-based error handling
 - Interactive navigation through workflow options with step-by-step guidance
 
