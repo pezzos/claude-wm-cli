@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"claude-wm-cli/internal/errors"
-	"claude-wm-cli/internal/validation"
+	"claude-wm-cli/internal/model"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -91,8 +90,8 @@ func init() {
 func initConfig() {
 	// Validate config file if specified
 	if cfgFile != "" {
-		if err := validation.ValidateConfigFile(cfgFile); err != nil {
-			errors.HandleError(err, verbose)
+		if err := model.ValidateConfigFile(cfgFile); err != nil {
+			model.HandleValidationError(err, "")
 			return
 		}
 		viper.SetConfigFile(cfgFile)
@@ -100,10 +99,10 @@ func initConfig() {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
-			cliErr := errors.NewCLIError("Failed to get user home directory", 1).
-				WithDetails(err.Error()).
-				WithSuggestion("Specify a config file explicitly with --config")
-			errors.HandleError(cliErr, verbose)
+			cliErr := model.NewInternalError("failed to get user home directory").
+				WithCause(err).
+				WithSuggestions([]string{"Specify a config file explicitly with --config"})
+			model.HandleValidationError(cliErr, "")
 			return
 		}
 
@@ -120,11 +119,9 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		// Only show error if config file was explicitly specified
 		if cfgFile != "" {
-			cliErr := errors.NewCLIError("Failed to read config file", 1).
-				WithDetails(err.Error()).
-				WithSuggestion("Check that the config file exists and is valid YAML/JSON").
-				WithContext("config_file", cfgFile)
-			errors.HandleError(cliErr, verbose)
+			cliErr := model.NewFileSystemError("read", cfgFile, err).
+				WithSuggestions([]string{"Check that the config file exists and is valid YAML/JSON"})
+			model.HandleValidationError(cliErr, "")
 			return
 		}
 		// If no explicit config file, it's okay if default doesn't exist

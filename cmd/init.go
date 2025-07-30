@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"claude-wm-cli/internal/errors"
-	"claude-wm-cli/internal/validation"
+	"claude-wm-cli/internal/model"
 
 	"github.com/spf13/cobra"
 )
@@ -45,8 +44,8 @@ Examples:
 
 func initializeProject(projectName string) {
 	// Validate project name
-	if err := validation.ValidateProjectName(projectName); err != nil {
-		validation.HandleValidationError(err, "claude-wm-cli init my-project")
+	if err := model.ValidateProjectName(projectName); err != nil {
+		model.HandleValidationError(err, "claude-wm-cli init my-project")
 		return
 	}
 
@@ -60,10 +59,7 @@ func initializeProject(projectName string) {
 		projectDir = filepath.Join(".", projectName)
 		fmt.Printf("📁 Creating project directory: %s\n", projectDir)
 		if err := os.MkdirAll(projectDir, 0755); err != nil {
-			cliErr := errors.ErrPermissionDenied(projectDir).
-				WithDetails(err.Error()).
-				WithSuggestion("Check directory permissions or choose a different location")
-			errors.HandleError(cliErr, verbose)
+			fmt.Fprintf(os.Stderr, "❌ Error creating directory: %s\n", err.Error())
 			return
 		}
 	} else {
@@ -82,10 +78,7 @@ func initializeProject(projectName string) {
 	for _, dir := range dirs {
 		fullPath := filepath.Join(projectDir, dir)
 		if err := os.MkdirAll(fullPath, 0755); err != nil {
-			cliErr := errors.ErrPermissionDenied(fullPath).
-				WithDetails(err.Error()).
-				WithContext("directory", dir)
-			errors.HandleError(cliErr, verbose)
+			fmt.Fprintf(os.Stderr, "❌ Error creating directory %s: %s\n", dir, err.Error())
 			return
 		}
 		fmt.Printf("  ✓ %s\n", dir)
@@ -109,21 +102,18 @@ defaults:
 `, projectName)
 
 		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-			cliErr := errors.ErrPermissionDenied(configPath).
-				WithDetails(err.Error()).
-				WithSuggestion("Check write permissions in the target directory")
-			errors.HandleError(cliErr, verbose)
+			fmt.Fprintf(os.Stderr, "❌ Error writing config file: %s\n", err.Error())
 			return
 		}
 		fmt.Printf("  ✓ .claude-wm-cli.yaml\n")
 	} else {
-		errors.PrintWarning(".claude-wm-cli.yaml already exists (use --force to overwrite)")
+		fmt.Fprintf(os.Stderr, "⚠️  %s\n", ".claude-wm-cli.yaml already exists (use --force to overwrite)")
 	}
 
 	fmt.Println()
-	errors.PrintSuccess(fmt.Sprintf("Project '%s' initialized successfully!", projectName))
+	fmt.Printf("✅ Project '%s' initialized successfully!\n", projectName)
 	fmt.Println()
-	errors.PrintInfo("Next steps:")
+	fmt.Println("📋 Next steps:")
 	fmt.Println("  1. cd " + projectName + " (if created in subdirectory)")
 	fmt.Println("  2. claude-wm-cli status     # Check project status")
 	fmt.Println("  3. Start your first epic with the agile workflow commands")

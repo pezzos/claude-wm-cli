@@ -1,6 +1,7 @@
 package epic
 
 import (
+	"fmt"
 	"time"
 
 	"claude-wm-cli/internal/model"
@@ -89,6 +90,8 @@ type ProgressMetrics struct {
 	TotalStories         int        `json:"total_stories"`
 	CompletedStories     int        `json:"completed_stories"`
 	CompletionPercentage float64    `json:"completion_percentage"`
+	EstimatedHours       int        `json:"estimated_hours"`
+	ActualHours          int        `json:"actual_hours"`
 	EstimatedEndDate     *time.Time `json:"estimated_end_date,omitempty"`
 }
 
@@ -186,4 +189,21 @@ func (e *Epic) CanStart() bool {
 // CanComplete returns true if the epic can be completed
 func (e *Epic) CanComplete() bool {
 	return e.Status == StatusInProgress && e.Progress.CompletionPercentage >= 100
+}
+
+// Validate validates the epic's data
+func (e *Epic) Validate() error {
+	if e.ID == "" {
+		return fmt.Errorf("epic ID is required")
+	}
+	if e.Title == "" {
+		return fmt.Errorf("epic title is required")
+	}
+	if !e.Priority.IsValid() {
+		return fmt.Errorf("invalid priority: %s", e.Priority)
+	}
+	if !e.Status.IsValid() {
+		return fmt.Errorf("invalid status: %s", e.Status)
+	}
+	return nil
 }

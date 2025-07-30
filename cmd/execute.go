@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/executor"
-	"claude-wm-cli/internal/validation"
+	"claude-wm-cli/internal/model"
 
 	"github.com/spf13/cobra"
 )
@@ -61,18 +60,18 @@ Examples:
 
 func executeClaudeCommand(command string) {
 	// Validate inputs
-	if err := validation.ValidateCommand(command); err != nil {
-		validation.HandleValidationError(err, "claude-wm-cli execute \"claude --help\"")
+	if err := model.ValidateCommand(command); err != nil {
+		model.HandleValidationError(err, "claude-wm-cli execute \"claude --help\"")
 		return
 	}
 
-	if err := validation.ValidateTimeout(executeTimeout); err != nil {
-		validation.HandleValidationError(err, "claude-wm-cli execute --timeout 30 \"your-command\"")
+	if err := model.ValidateTimeout(executeTimeout); err != nil {
+		model.HandleValidationError(err, "claude-wm-cli execute --timeout 30 \"your-command\"")
 		return
 	}
 
-	if err := validation.ValidateRetries(executeRetries); err != nil {
-		validation.HandleValidationError(err, "claude-wm-cli execute --retries 2 \"your-command\"")
+	if err := model.ValidateRetries(executeRetries); err != nil {
+		model.HandleValidationError(err, "claude-wm-cli execute --retries 2 \"your-command\"")
 		return
 	}
 
@@ -88,7 +87,7 @@ func executeClaudeCommand(command string) {
 
 	// Validate command format and provide warnings
 	if !strings.Contains(strings.ToLower(command), "claude") {
-		errors.PrintWarning("Command doesn't appear to contain 'claude'. Make sure this is correct.")
+		fmt.Fprintf(os.Stderr, "⚠️  %s\n", "Command doesn't appear to contain 'claude'. Make sure this is correct.")
 	}
 
 	// Create executor with proven patterns
@@ -148,7 +147,7 @@ func displayExecutionResult(result *executor.ExecutionResult) {
 
 	// Print result status
 	if result.Success {
-		errors.PrintSuccess(fmt.Sprintf("Command completed successfully in %v", result.Duration))
+		fmt.Printf("✅ %s\n", fmt.Sprintf("Command completed successfully in %v", result.Duration))
 
 		// Performance feedback based on proven patterns
 		if result.Duration <= 5*time.Second {
@@ -158,9 +157,9 @@ func displayExecutionResult(result *executor.ExecutionResult) {
 		}
 	} else {
 		if result.Error != nil {
-			errors.HandleError(result.Error, verbose)
+			fmt.Fprintf(os.Stderr, "❌ %s\n", result.Error.Error())
 		} else {
-			errors.PrintWarning(fmt.Sprintf("Command failed with exit code %d after %d attempts",
+			fmt.Fprintf(os.Stderr, "⚠️  %s\n", fmt.Sprintf("Command failed with exit code %d after %d attempts",
 				result.ExitCode, result.Attempts))
 		}
 	}
