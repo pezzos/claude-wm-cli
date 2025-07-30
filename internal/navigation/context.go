@@ -81,6 +81,7 @@ type TaskContext struct {
 	Status         string
 	Priority       string
 	EstimatedHours int
+	StoryID        string
 }
 
 // ContextDetector is responsible for analyzing project state
@@ -307,63 +308,41 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 	return nil, nil
 }
 
-// loadTaskContext loads the current task context from todo files
+// loadTaskContext loads the current task context from current-task.json
 func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
-	taskDir := filepath.Join(cd.projectPath, "docs/3-current-task")
-
-	// Look for todo files in current task directory
-	entries, err := os.ReadDir(taskDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read task directory: %w", err)
-	}
-
-	// Find the most recent todo file
-	var todoFile string
-	for _, entry := range entries {
-		if filepath.Ext(entry.Name()) == ".json" &&
-			(entry.Name() == "todo.json" || entry.Name() == "todo-epic-001.json") {
-			todoFile = filepath.Join(taskDir, entry.Name())
-			break
-		}
-	}
-
-	if todoFile == "" {
+	currentTaskPath := filepath.Join(cd.projectPath, "docs/3-current-task/current-task.json")
+	
+	if !cd.pathExists(currentTaskPath) {
 		return nil, nil
 	}
 
-	data, err := os.ReadFile(todoFile)
+	data, err := os.ReadFile(currentTaskPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read todo file: %w", err)
+		return nil, fmt.Errorf("failed to read current-task.json: %w", err)
 	}
 
-	var todoData struct {
-		Todos []struct {
-			ID             string `json:"id"`
-			Title          string `json:"title"`
-			Status         string `json:"status"`
-			Priority       string `json:"priority"`
-			EstimatedHours int    `json:"estimatedHours"`
-		} `json:"todos"`
+	var taskData struct {
+		ID             string `json:"id"`
+		Title          string `json:"title"`
+		Status         string `json:"status"`
+		Priority       string `json:"priority"`
+		EstimatedHours int    `json:"estimatedHours"`
+		StoryID        string `json:"storyId"`
 	}
 
-	if err := json.Unmarshal(data, &todoData); err != nil {
-		return nil, fmt.Errorf("failed to parse todo file: %w", err)
+	if err := json.Unmarshal(data, &taskData); err != nil {
+		return nil, fmt.Errorf("failed to parse current-task.json: %w", err)
 	}
 
-	// Find current task (first in_progress or todo task)
-	for _, task := range todoData.Todos {
-		if task.Status == "in_progress" || task.Status == "todo" {
-			return &TaskContext{
-				ID:             task.ID,
-				Title:          task.Title,
-				Status:         task.Status,
-				Priority:       task.Priority,
-				EstimatedHours: task.EstimatedHours,
-			}, nil
-		}
-	}
-
-	return nil, nil
+	// Return current task
+	return &TaskContext{
+		ID:             taskData.ID,
+		Title:          taskData.Title,
+		Status:         taskData.Status,
+		Priority:       taskData.Priority,
+		EstimatedHours: taskData.EstimatedHours,
+		StoryID:        taskData.StoryID,
+	}, nil
 }
 
 // determineAvailableActions determines what actions are available based on current state
