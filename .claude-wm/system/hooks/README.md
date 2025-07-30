@@ -1,76 +1,85 @@
-# Claude Code Hooks System
+# System Hooks (Package Manager)
 
-## Notification Permissions Setup
+📦 **Hooks système par défaut de claude-wm-cli**
 
-### Problem
-macOS blocks notifications from Terminal by default. You need to explicitly grant permission.
+## ⚠️ Important : Read-Only
 
-### Solution
-1. Open **Script Editor** (Applications > Utilities > Script Editor)
-2. Type this command:
-   ```applescript
-   display notification "Hello"
-   ```
-3. Click **Run** (▶️)
-4. macOS will prompt for notification permissions
-5. Click **Allow** when prompted
+Ce dossier contient les hooks fournis par claude-wm-cli. **Ne pas modifier directement**.
 
-### Alternative Method
+## 🎯 Pour personnaliser
+
+1. Copiez le hook dans `../../user/hooks/`
+2. Modifiez votre copie
+3. Référencez dans `../../user/settings.json`
+4. Lancez `claude-wm config sync`
+
+## 📁 Structure
+
+- `common/` - Hooks partagés (backup, git-status, etc.)
+- `agile/` - Hooks spécifiques au workflow agile
+- `config/` - Configuration des triggers et groupes parallèles
+- `logs/` - Statistiques de performance et fiabilité
+- `patterns/` - Patterns de sécurité et validation
+- `*.sh`, `*.go`, `*.py` - Scripts individuels
+
+## 🔧 Utilisation dans settings.json
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": ["chemin/vers/votre-hook.sh"]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": ["chemin/vers/post-hook.py"]
+      }
+    ]
+  }
+}
+```
+
+## 📝 Exemple de personnalisation
+
 ```bash
-# Open system preferences to notifications
-~/.claude/hooks/notification-wrapper.sh setup
+# 1. Copiez un hook système vers user/
+cp smart-notify.sh ../../user/hooks/mon-notify.sh
 
-# Test notifications
-~/.claude/hooks/notification-wrapper.sh test
+# 2. Modifiez votre copie
+nano ../../user/hooks/mon-notify.sh
+
+# 3. Référencez dans user/settings.json
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": ["/chemin/absolu/vers/mon-notify.sh"]
+      }
+    ]
+  }
+}
+
+# 4. Appliquez
+claude-wm config sync
 ```
 
-## Hook System Overview
+## 🔍 Hooks principaux
 
-### Core Components
-- **`hook-resolver.sh`** - Maps hook names to absolute paths
-- **`notification-wrapper.sh`** - Robust notification system with fallbacks
-- **`smart-notify.sh`** - Simple notification wrapper
+- `parallel-hook-runner.sh` - Orchestrateur principal
+- `smart-notify.sh` - Notifications système
+- `git-validator.go` - Validation Git
+- `security-validator.go` - Validation sécurité
+- `duplicate-detector.go` - Détection doublons
 
-### Directory Structure
-```
-~/.claude/hooks/
-├── common/           # Shared hooks (backup, git-status, etc.)
-├── agile/           # Agile workflow specific hooks
-├── logs/            # Hook execution logs
-└── *.sh             # Individual hook scripts
-```
+## 📊 Debugging
 
-### Using Hooks
-```bash
-# Direct execution
-~/.claude/hooks/hook-resolver.sh backup-current-state
+Runtime hooks sont dans `../../runtime/hooks/` - consultez les logs là-bas.
 
-# Via notification wrapper
-~/.claude/hooks/notification-wrapper.sh "Message" "Title" "Sound" "Type"
-```
+---
 
-### Debugging
-- Check logs in `~/.claude/hooks/logs/`
-- Use `notification-wrapper.sh test` to verify system
-- Enable debug mode: `CLAUDE_DEBUG=true`
-
-## Troubleshooting
-
-### No Notifications Appearing
-1. Check Terminal has notification permissions (System Preferences > Notifications)
-2. Verify Do Not Disturb is off
-3. Run: `~/.claude/hooks/notification-wrapper.sh test`
-4. Check debug log: `~/.claude/hooks/logs/notification-debug.log`
-
-### Hook Not Found
-- Verify hook name with `hook-resolver.sh`
-- Check file permissions (`chmod +x`)
-- Ensure absolute paths in hook configurations
-
-### Permission Denied
-```bash
-# Fix permissions
-chmod +x ~/.claude/hooks/*.sh
-chmod +x ~/.claude/hooks/common/*.sh
-chmod +x ~/.claude/hooks/agile/*.sh
-```
+*Hooks système - Version managée automatiquement*
