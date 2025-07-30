@@ -514,11 +514,10 @@ func TestProjectStateDisplay_CompleteWorkflow(t *testing.T) {
 			TotalTasks:     6,
 		},
 		CurrentTask: &TaskContext{
-			ID:             "TASK-015",
-			Title:          "Write Unit Tests",
-			Status:         "in_progress",
-			Priority:       "P1",
-			EstimatedHours: 3,
+			ID:       "TASK-015",
+			Title:    "Write Unit Tests",
+			Status:   "in_progress",
+			Priority: "P1",
 		},
 		AvailableActions: []string{
 			"continue-task",

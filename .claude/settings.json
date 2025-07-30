@@ -88,29 +88,20 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash(git *)",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/parallel-hook-runner.sh Bash"
+            "command": "claude-wm-cli hook git-validation"
           }
         ]
       },
       {
-        "matcher": "Write",
+        "matcher": "Write(*.go)",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/parallel-hook-runner.sh Write"
-          }
-        ]
-      },
-      {
-        "matcher": "Write_Edit_MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/parallel-hook-runner.sh Write_Edit_MultiEdit"
+            "command": "claude-wm-cli hook duplicate-detection"
           }
         ]
       }
@@ -126,11 +117,11 @@
         ]
       },
       {
-        "matcher": "",
+        "matcher": "Write_Edit_MultiEdit(*.go)",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/parallel-hook-runner.sh PostToolUse"
+            "command": "claude-wm-cli hook auto-format"
           }
         ]
       }
