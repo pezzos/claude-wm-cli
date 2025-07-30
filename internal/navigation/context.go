@@ -227,11 +227,7 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 		Epic struct {
 			ID          string `json:"id"`
 			Title       string `json:"title"`
-			Status      struct {
-				Code    string `json:"code"`
-				Display string `json:"display"`
-				Details string `json:"details"`
-			} `json:"status"`
+			Status      string `json:"status"`
 			Priority    string `json:"priority"`
 			UserStories []struct {
 				Status string `json:"status"`
@@ -260,9 +256,9 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	return &EpicContext{
 		ID:               epicData.Epic.ID,
 		Title:            epicData.Epic.Title,
-		Status:           epicData.Epic.Status.Display, // Use display from JSON structure
-		StatusCode:       epicData.Epic.Status.Code,    // Store raw code for logic
-		StatusDetails:    epicData.Epic.Status.Details, // Store details
+		Status:           epicData.Epic.Status, // Use status string directly
+		StatusCode:       "",                   // No longer available in simplified format
+		StatusDetails:    "",                   // No longer available in simplified format
 		Priority:         epicData.Epic.Priority,
 		Progress:         progress,
 		TotalStories:     totalStories,

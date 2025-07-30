@@ -529,7 +529,7 @@ func truncateStoryString(s string, maxLen int) string {
 
 // JSON structure for stories.json file
 type StoriesJSON struct {
-	Stories map[string]struct {
+	Stories []struct {
 		ID               string `json:"id"`
 		Title            string `json:"title"`
 		Description      string `json:"description"`
