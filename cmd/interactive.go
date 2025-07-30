@@ -1354,6 +1354,35 @@ func executeClaudeInstall(ctx *navigation.ProjectContext, menuDisplay *navigatio
 		menuDisplay.ShowWarning("⚠️ No settings.json found in source")
 	}
 
+	// Copy JSON validation hook if it exists
+	sourceHook := filepath.Join(claudeWmPath, "commands", "tools", "post-write-json-validator-simple.sh")
+	destHooksDir := filepath.Join(claudeDir, "hooks")
+	destHook := filepath.Join(destHooksDir, "post-write-json-validator-simple.sh")
+
+	if _, err := os.Stat(sourceHook); err == nil {
+		// Create hooks directory if it doesn't exist
+		if err := os.MkdirAll(destHooksDir, 0755); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to create hooks directory: %v", err))
+			return err
+		}
+
+		// Copy JSON validation hook
+		if err := copyFile(sourceHook, destHook); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to copy JSON validation hook: %v", err))
+			return err
+		}
+
+		// Make hook executable
+		if err := os.Chmod(destHook, 0755); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to make hook executable: %v", err))
+			return err
+		}
+
+		menuDisplay.ShowMessage("✅ JSON validation hook copied successfully")
+	} else {
+		menuDisplay.ShowWarning("⚠️ No JSON validation hook found in source")
+	}
+
 	menuDisplay.ShowSuccess("🎉 .claude directory installed/updated successfully!")
 	menuDisplay.ShowMessage("💡 You can now use Claude Code commands and hooks in this project")
 	return nil

@@ -121,7 +121,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude-wm/.claude/commands/tools/post-write-json-validator-simple.sh"
+            "command": ".claude/hooks/post-write-json-validator-simple.sh"
           }
         ]
       },
