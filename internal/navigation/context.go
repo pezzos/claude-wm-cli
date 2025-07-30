@@ -304,8 +304,6 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 		TotalTasks:     0,   // TODO: Calculate from tasks
 		CompletedTasks: 0,   // TODO: Calculate from tasks
 	}, nil
-
-	return nil, nil
 }
 
 // loadTaskContext loads the current task context from current-task.json

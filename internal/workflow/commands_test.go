@@ -504,7 +504,7 @@ func setupCompletedTasks(t *testing.T, tempDir string) {
 	}
 
 	todoJSON, _ := json.Marshal(todoData)
-	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo.json")
+	todoPath := filepath.Join(tempDir, "docs/3-current-task/current-task.json")
 	err := os.WriteFile(todoPath, todoJSON, 0644)
 	require.NoError(t, err)
 

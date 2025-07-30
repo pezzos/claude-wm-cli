@@ -424,7 +424,7 @@ func setupTaskInProgress(dir string) error {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(dir, "docs/3-current-task/todo.json"), data, 0644)
+	return os.WriteFile(filepath.Join(dir, "docs/3-current-task/current-task.json"), data, 0644)
 }
 
 func setupCorruptedEpic(dir string) error {

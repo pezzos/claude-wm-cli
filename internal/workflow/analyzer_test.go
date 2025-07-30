@@ -290,7 +290,7 @@ func TestLoadCurrentTasks_TodoFormat(t *testing.T) {
 	}
 
 	todoJSON, _ := json.Marshal(todoData)
-	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo.json")
+	todoPath := filepath.Join(tempDir, "docs/3-current-task/current-task.json")
 	os.WriteFile(todoPath, todoJSON, 0644)
 
 	analyzer := NewWorkflowAnalyzer(tempDir)
@@ -410,7 +410,7 @@ func setupCurrentTasks(t *testing.T, tempDir string) {
 	}
 
 	todoJSON, _ := json.Marshal(todoData)
-	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo.json")
+	todoPath := filepath.Join(tempDir, "docs/3-current-task/current-task.json")
 	err := os.WriteFile(todoPath, todoJSON, 0644)
 	require.NoError(t, err)
 }
@@ -506,7 +506,7 @@ func setupBlockedTasks(t *testing.T, tempDir string) {
 	}
 
 	todoJSON, _ := json.Marshal(todoData)
-	todoPath := filepath.Join(tempDir, "docs/3-current-task/todo.json")
+	todoPath := filepath.Join(tempDir, "docs/3-current-task/current-task.json")
 	err := os.WriteFile(todoPath, todoJSON, 0644)
 	require.NoError(t, err)
 }

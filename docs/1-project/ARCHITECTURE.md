@@ -16,11 +16,19 @@ Claude WM CLI is an intelligent command-line interface built in **Go** that acts
 #### Simplified JSON-Based State
 - **Design Philosophy**: Simple JSON files for fast parsing and solo-developer usage (sequential workflow, no parallel updates)
 - **Recovery Strategy**: Git versioning for state files - rollback to previous version if corruption occurs
-- **Core State Files**:
-  - `${PROJECT}/.claude-wm/state.json` - Project initialization and metadata
-  - `${PROJECT}/.claude-wm/epics.json` - Epic definitions and status (archived when completed)
-  - `${PROJECT}/.claude-wm/stories.json` - Story breakdowns and progress
-  - `${PROJECT}/.claude-wm/tickets.json` - Individual ticket tracking
+- **Core Workflow Files**:
+  - `docs/1-project/epics.json` - All epics list with statuses
+  - `docs/2-current-epic/current-epic.json` - Currently selected epic
+  - `docs/2-current-epic/stories.json` - All stories for current epic + embedded tasks
+  - `docs/2-current-epic/current-story.json` - Currently selected story  
+  - `docs/2-current-epic/tickets.json` - Interruptions and tickets
+  - `docs/3-current-task/current-task.json` - Currently selected task
+
+#### Data Flow Pattern
+Each level follows a **List + Current** pattern:
+- **List files**: Contain all items at that level (epics.json, stories.json)
+- **Current files**: Track the currently selected item (current-epic.json, current-story.json, current-task.json)
+- **Tasks**: Embedded within stories.json (no separate todo.json files)
 
 #### State Structure Example
 ```json
