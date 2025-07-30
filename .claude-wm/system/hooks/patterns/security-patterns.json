@@ -1,0 +1,173 @@
+{
+  "secrets": {
+    "api_keys": {
+      "patterns": [
+        "(?i)api[_-]?key\\s*[:=]\\s*['\"][0-9a-zA-Z\\-_]{20,}['\"]",
+        "(?i)apikey\\s*[:=]\\s*['\"][0-9a-zA-Z\\-_]{20,}['\"]",
+        "(?i)api[_-]?secret\\s*[:=]\\s*['\"][0-9a-zA-Z\\-_]{20,}['\"]",
+        "sk_(?:test|live)_[0-9a-zA-Z]{24,}",
+        "AIza[0-9A-Za-z\\-_]{35}",
+        "(?i)aws[_-]?access[_-]?key[_-]?id\\s*[:=]\\s*['\"]?AKIA[0-9A-Z]{16}['\"]?",
+        "ghp_[0-9a-zA-Z]{36}",
+        "gho_[0-9a-zA-Z]{36}",
+        "github_pat_[0-9a-zA-Z]{22}_[0-9a-zA-Z]{59}"
+      ],
+      "severity": "high",
+      "description": "API keys and service credentials"
+    },
+    "private_keys": {
+      "patterns": [
+        "-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----",
+        "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+        "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+        "(?i)private[_-]?key\\s*[:=]\\s*['\"][^'\"]{40,}['\"]"
+      ],
+      "severity": "high",
+      "description": "Private keys and certificates"
+    },
+    "passwords": {
+      "patterns": [
+        "(?i)password\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+        "(?i)passwd\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+        "(?i)pwd\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+        "(?i)admin[_-]?pass\\s*[:=]\\s*['\"][^'\"]+['\"]",
+        "(?i)db[_-]?pass(?:word)?\\s*[:=]\\s*['\"][^'\"]+['\"]"
+      ],
+      "severity": "medium",
+      "description": "Hardcoded passwords"
+    },
+    "tokens": {
+      "patterns": [
+        "(?i)auth[_-]?token\\s*[:=]\\s*['\"][0-9a-zA-Z\\-_\\.]{20,}['\"]",
+        "(?i)access[_-]?token\\s*[:=]\\s*['\"][0-9a-zA-Z\\-_\\.]{20,}['\"]",
+        "(?i)bearer\\s+[0-9a-zA-Z\\-_\\.]{20,}",
+        "(?i)jwt\\s*[:=]\\s*['\"]eyJ[0-9a-zA-Z\\-_\\.]+['\"]",
+        "xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[0-9a-zA-Z]{24,}"
+      ],
+      "severity": "high",
+      "description": "Authentication tokens"
+    },
+    "connection_strings": {
+      "patterns": [
+        "(?i)(?:mongodb|postgres|postgresql|mysql|redis|amqp)://[^:]+:[^@]+@[^\\s]+",
+        "(?i)Data Source=[^;]+;Password=[^;]+",
+        "(?i)server=[^;]+;uid=[^;]+;pwd=[^;]+"
+      ],
+      "severity": "high",
+      "description": "Database connection strings with credentials"
+    },
+    "env_values": {
+      "patterns": [
+        "(?i)process\\.env\\.[A-Z_]+\\s*\\|\\|\\s*['\"][^'\"]+['\"]",
+        "(?i)(?:export\\s+)?[A-Z_]+=['\"]?[^\\s'\"]+['\"]?\\s*#.*(?:secret|key|token|password)"
+      ],
+      "severity": "medium",
+      "description": "Hardcoded environment variable fallbacks"
+    },
+    "ssh": {
+      "patterns": [
+        "ssh-rsa\\s+[0-9a-zA-Z+/]+={0,3}\\s+[\\w+@.]+",
+        "(?i)ssh[_-]?key\\s*[:=]\\s*['\"][^'\"]+['\"]"
+      ],
+      "severity": "medium",
+      "description": "SSH keys and configuration"
+    }
+  },
+  "api_security": {
+    "internal_endpoints": {
+      "patterns": [
+        "/internal/",
+        "/admin/",
+        "/system/",
+        "/private/"
+      ],
+      "description": "Internal API endpoint patterns"
+    },
+    "authentication_patterns": {
+      "patterns": [
+        "request\\.headers\\.get\\(['\"](?:x-api-key|authorization|api-key)",
+        "validateApiKey",
+        "checkAuth",
+        "requireAuth", 
+        "isAuthenticated",
+        "verifyToken",
+        "middleware.*auth"
+      ],
+      "description": "Authentication implementation patterns"
+    },
+    "internal_bypass_patterns": {
+      "patterns": [
+        "X-Internal-Call",
+        "isInternalIP",
+        "request\\.ip",
+        "INTERNAL_SECRET"
+      ],
+      "description": "Internal service bypass patterns"
+    }
+  },
+  "database_schema": {
+    "create_table": {
+      "patterns": [
+        "CREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?[`\"]?(\\w+)[`\"]?",
+        "model\\s+(\\w+)\\s*\\{"
+      ],
+      "severity": "high",
+      "description": "New table/model creation patterns"
+    },
+    "restricted_operations": {
+      "patterns": [
+        "DROP\\s+TABLE",
+        "ALTER\\s+TABLE.*DROP",
+        "TRUNCATE\\s+TABLE"
+      ],
+      "severity": "critical",
+      "description": "Dangerous database operations"
+    }
+  },
+  "allowed_patterns": {
+    "false_positives": [
+      "(?i)password\\s*[:=]\\s*['\"](?:\\*{3,}|\\.{3,}|x{3,}|\\$\\{[^}]+\\}|<[^>]+>)['\"]",
+      "(?i)api[_-]?key\\s*[:=]\\s*(?:process\\.env\\.|import\\.meta\\.env\\.|os\\.environ)",
+      "(?i)token\\s*[:=]\\s*(?:null|undefined|None|\"\"|'')",
+      "(?i)password\\s*[:=]\\s*(?:null|undefined|None|\"\"|'')",
+      "(?i)example\\.com",
+      "(?i)localhost",
+      "127\\.0\\.0\\.1"
+    ],
+    "test_indicators": [
+      "describe(",
+      "it(",
+      "test(",
+      "expect(",
+      "assert",
+      "should"
+    ],
+    "comment_indicators": [
+      "//",
+      "#",
+      "*"
+    ]
+  },
+  "file_extensions": {
+    "skip_binary": [".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".eot"],
+    "skip_generated": [".lock", ".min.js", ".min.css", ".bundle.js"],
+    "scan_code": [".js", ".ts", ".jsx", ".tsx", ".py", ".rb", ".php", ".java", ".cs", ".go", ".rs"],
+    "scan_config": [".json", ".yaml", ".yml", ".toml", ".ini", ".env", ".conf"],
+    "scan_database": [".sql", ".prisma", ".migration"]
+  },
+  "gitignore_required": {
+    "patterns": [
+      ".env",
+      "*.pem", 
+      "*.key",
+      ".env.local",
+      ".env.*.local",
+      "config/secrets.yml",
+      "config/database.yml"
+    ],
+    "broader_patterns": {
+      ".env*": [".env", ".env.local", ".env.*.local"],
+      "*.local": [".env.local", ".env.*.local"]
+    }
+  }
+}

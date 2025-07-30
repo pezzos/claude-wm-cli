@@ -1,0 +1,13 @@
+{
+  "env": {},
+  "hooks": {
+    "PostToolUse": [],
+    "PreToolUse": []
+  },
+  "permissions": {
+    "allowed_tools": [
+      "*"
+    ]
+  },
+  "version": "1.0.0"
+}

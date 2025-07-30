@@ -1,0 +1,90 @@
+{
+  "style_consistency": {
+    "enabled": true,
+    "severity": "medium",
+    "file_types": [".js", ".ts", ".jsx", ".tsx", ".py", ".go", ".css", ".scss"],
+    "indentation": {
+      "type": "spaces",
+      "size": 4
+    },
+    "line_length": {
+      "max": 120
+    },
+    "naming": {
+      "camelCase": [".js", ".ts", ".jsx", ".tsx"],
+      "snake_case": [".py"],
+      "kebab_case": [".css", ".scss"],
+      "PascalCase": [".jsx", ".tsx"]
+    },
+    "patterns": [
+      {
+        "name": "hardcoded_colors",
+        "pattern": "#[0-9a-fA-F]{3,6}\\b",
+        "message": "Hardcoded color values should use theme-aware alternatives",
+        "severity": "medium"
+      },
+      {
+        "name": "mixed_quotes",
+        "pattern": "['\"][^'\"]*['\"][^'\"]*['\"]",
+        "message": "Inconsistent quote usage detected",
+        "severity": "low"
+      }
+    ]
+  },
+  "mock_code_detection": {
+    "enabled": true,
+    "severity": "high",
+    "file_types": [".js", ".ts", ".jsx", ".tsx", ".py", ".go"],
+    "patterns": [
+      {
+        "name": "placeholder_names",
+        "pattern": "\\b(?:John|Jane)\\s+(?:Doe|Smith)\\b",
+        "message": "Placeholder names like 'John Doe' should be replaced",
+        "severity": "high"
+      },
+      {
+        "name": "todo_placeholders",
+        "pattern": "TODO:\\s*(?:implement|fix|replace)",
+        "message": "TODO placeholder implementations should be completed",
+        "severity": "high"
+      },
+      {
+        "name": "fixme_placeholders", 
+        "pattern": "FIXME:\\s*",
+        "message": "FIXME comments indicate incomplete implementations",
+        "severity": "medium"
+      },
+      {
+        "name": "placeholder_functions",
+        "pattern": "def\\s+placeholder_\\w+|function\\s+placeholder\\w+",
+        "message": "Placeholder functions should be implemented",
+        "severity": "high"
+      }
+    ]
+  },
+  "timestamp_validation": {
+    "enabled": true,
+    "severity": "medium",
+    "file_types": [".js", ".ts", ".jsx", ".tsx", ".py", ".go", ".md"],
+    "patterns": [
+      {
+        "name": "hardcoded_dates",
+        "pattern": "\\b202[0-3]-\\d{2}-\\d{2}\\b",
+        "message": "Hardcoded dates should be replaced with dynamic date generation",
+        "severity": "medium"
+      },
+      {
+        "name": "old_copyright",
+        "pattern": "Copyright\\s+\\(c\\)\\s+20(1[0-9]|2[0-2])\\b",
+        "message": "Copyright dates should be updated to current year",
+        "severity": "low"
+      },
+      {
+        "name": "expired_timestamps",
+        "pattern": "\\b(2020|2021|2022)-\\d{2}-\\d{2}\\b",
+        "message": "Old timestamp detected, consider if this should be dynamic",
+        "severity": "low"
+      }
+    ]
+  }
+}

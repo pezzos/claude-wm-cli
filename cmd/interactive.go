@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"claude-wm-cli/internal/config"
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/executor"
@@ -552,10 +553,10 @@ func createClaudeMenu(_ *navigation.ProjectContext) *navigation.Menu {
 		})
 	}
 
-	// Claude management options
-	addOption("claude-import", "📥 Import commands and hooks", "Git clone/pull pezzos/.claude repository to .claude-wm", "claude-import")
-	addOption("claude-init", "🚀 Initialize .claude directory", "Create .claude directory with commands and hooks folders", "claude-init")
-	addOption("claude-install", "📦 Install or update .claude directory", "Copy commands and hooks from .claude-wm to .claude", "claude-install")
+	// Configuration management options
+	addOption("config-init", "🚀 Initialize configuration", "Set up package manager configuration structure", "config-init")
+	addOption("config-sync", "🔄 Sync configuration", "Regenerate runtime config from templates and overrides", "config-sync")
+	addOption("config-upgrade", "⬆️ Upgrade templates", "Update system templates while preserving customizations", "config-upgrade")
 
 	return menu
 }
@@ -648,13 +649,13 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	case "ticket-execute-full-from-input":
 		return executeTicketFullWorkflow(ctx, menuDisplay, "input")
 
-	// Claude Management
-	case "claude-import":
-		return executeClaudeImport(ctx, menuDisplay)
-	case "claude-init":
-		return executeClaudeInit(ctx, menuDisplay)
-	case "claude-install":
-		return executeClaudeInstall(ctx, menuDisplay)
+	// Configuration Management
+	case "config-init":
+		return executeConfigInit(ctx, menuDisplay)
+	case "config-sync":
+		return executeConfigSync(ctx, menuDisplay)
+	case "config-upgrade":
+		return executeConfigUpgrade(ctx, menuDisplay)
 
 	// Legacy actions
 	case "init-project":
@@ -743,11 +744,19 @@ func createProjectDirectories(ctx *navigation.ProjectContext, menuDisplay *navig
 	return nil
 }
 
-// copyTemplateFiles copies template files from .claude/commands/template to project root
+// copyTemplateFiles copies template files from runtime config to project root
 func copyTemplateFiles(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("📄 Copying template files...")
 
-	templateDir := filepath.Join(ctx.ProjectPath, ".claude", "commands", "templates")
+	// Ensure config is initialized
+	if err := config.EnsureConfigInitialized(ctx.ProjectPath); err != nil {
+		return fmt.Errorf("failed to initialize config: %w", err)
+	}
+
+	templateDir, err := config.GetRuntimeConfigPath("commands/templates")
+	if err != nil {
+		return fmt.Errorf("failed to get template path: %w", err)
+	}
 
 	// Check if template directory exists
 	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
@@ -1058,7 +1067,13 @@ func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuD
 
 // copyIterationsTemplate copies ITERATIONS.md from template to current task directory
 func copyIterationsTemplate(projectPath string, menuDisplay *navigation.MenuDisplay) error {
-	templatePath := filepath.Join(projectPath, ".claude/commands/template/ITERATIONS.md")
+	// Ensure config is initialized
+	if err := config.EnsureConfigInitialized(projectPath); err != nil {
+		return fmt.Errorf("failed to initialize config: %w", err)
+	}
+
+	manager := config.NewManager(projectPath)
+	templatePath := manager.GetRuntimePath("commands/templates/ITERATIONS.md")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/ITERATIONS.md")
 
 	// Check if template exists
@@ -1211,105 +1226,27 @@ func truncateString(s string, maxLen int) string {
 }
 
 // executeClaudeImport handles importing commands and hooks from pezzos/.claude repository
+// Legacy functions - these are now replaced by the config system
+
+// executeClaudeImport - deprecated, use executeConfigInit instead
 func executeClaudeImport(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	claudeWmPath := filepath.Join(ctx.ProjectPath, ".claude-wm")
-	claudeRepoPath := filepath.Join(claudeWmPath, ".claude")
-
-	// Create .claude-wm directory if it doesn't exist
-	if err := os.MkdirAll(claudeWmPath, 0755); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to create .claude-wm directory: %v", err))
-		return err
-	}
-
-	// Check if .claude directory already exists
-	if _, err := os.Stat(claudeRepoPath); err == nil {
-		// Directory exists, pull latest changes
-		menuDisplay.ShowMessage("📥 .claude directory exists, pulling latest changes...")
-
-		cmd := exec.Command("git", "pull", "origin", "master")
-		cmd.Dir = claudeRepoPath
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			menuDisplay.ShowError(fmt.Sprintf("Failed to pull latest changes: %v", err))
-			return err
-		}
-	} else {
-		// Directory doesn't exist, clone repository
-		menuDisplay.ShowMessage("📥 Cloning pezzos/.claude repository...")
-
-		cmd := exec.Command("git", "clone", "https://github.com/pezzos/.claude.git", claudeRepoPath)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Run(); err != nil {
-			menuDisplay.ShowError(fmt.Sprintf("Failed to clone repository: %v", err))
-			return err
-		}
-	}
-
-	menuDisplay.ShowSuccess("✅ Commands and hooks imported successfully!")
-	menuDisplay.ShowMessage("💡 Next step: Initialize or install .claude directory")
-	return nil
+	menuDisplay.ShowMessage("⚠️  This command is deprecated")
+	menuDisplay.ShowMessage("🔄 Redirecting to new configuration system...")
+	return executeConfigInit(ctx, menuDisplay)
 }
 
-// executeClaudeInit handles initializing the .claude project directory
+// executeClaudeInit - deprecated, use executeConfigInit instead  
 func executeClaudeInit(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	claudeDir := filepath.Join(ctx.ProjectPath, ".claude")
-	commandsDir := filepath.Join(claudeDir, "commands")
-	hooksDir := filepath.Join(claudeDir, "hooks")
-
-	menuDisplay.ShowMessage("🚀 Initializing .claude directory...")
-
-	// Create .claude directory and subdirectories
-	if err := os.MkdirAll(commandsDir, 0755); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to create commands directory: %v", err))
-		return err
-	}
-
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
-		menuDisplay.ShowError(fmt.Sprintf("Failed to create hooks directory: %v", err))
-		return err
-	}
-
-	menuDisplay.ShowSuccess("✅ .claude directory initialized successfully!")
-	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", claudeDir))
-	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", commandsDir))
-	menuDisplay.ShowMessage(fmt.Sprintf("📁 Created: %s", hooksDir))
-	menuDisplay.ShowMessage("💡 Next step: Install commands and hooks")
-	return nil
+	menuDisplay.ShowMessage("⚠️  This command is deprecated")
+	menuDisplay.ShowMessage("🔄 Redirecting to new configuration system...")
+	return executeConfigInit(ctx, menuDisplay)
 }
 
-// executeClaudeInstall handles installing/updating the .claude project directory
+// executeClaudeInstall - deprecated, use executeConfigSync instead
 func executeClaudeInstall(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
-	claudeDir := filepath.Join(ctx.ProjectPath, ".claude")
-	claudeWmPath := filepath.Join(ctx.ProjectPath, ".claude-wm", ".claude")
-
-	// Check if .claude-wm/.claude exists
-	if _, err := os.Stat(claudeWmPath); os.IsNotExist(err) {
-		menuDisplay.ShowError("❌ .claude-wm/.claude directory not found")
-		menuDisplay.ShowMessage("💡 Run 'Import commands and hooks' first")
-		return fmt.Errorf(".claude-wm/.claude directory not found")
-	}
-
-	// Check if .claude directory exists, if not initialize it
-	if _, err := os.Stat(claudeDir); os.IsNotExist(err) {
-		menuDisplay.ShowMessage("📁 .claude directory not found, initializing...")
-		if err := executeClaudeInit(ctx, menuDisplay); err != nil {
-			return err
-		}
-	}
-
-	menuDisplay.ShowMessage("📦 Installing/updating .claude directory...")
-
-	// Copy commands directory
-	sourceCommands := filepath.Join(claudeWmPath, "commands")
-	destCommands := filepath.Join(claudeDir, "commands")
-
-	if _, err := os.Stat(sourceCommands); err == nil {
-		// Remove existing commands directory and recreate
-		os.RemoveAll(destCommands)
+	menuDisplay.ShowMessage("⚠️  This command is deprecated")
+	menuDisplay.ShowMessage("🔄 Redirecting to new configuration system...")
+	return executeConfigSync(ctx, menuDisplay)
 
 		cmd := exec.Command("cp", "-r", sourceCommands, destCommands)
 		if err := cmd.Run(); err != nil {
@@ -1755,8 +1692,14 @@ func parseIterationsJSONFile(path string) (*preprocessing.IterationsData, error)
 func resetIterationsAfterValidation(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("🔄 Resetting iterations.json for review phase...")
 	
-	// Copy fresh template
-	templatePath := filepath.Join(projectPath, ".claude-wm/.claude/commands/templates/iterations.json")
+	// Ensure config is initialized
+	if err := config.EnsureConfigInitialized(projectPath); err != nil {
+		return fmt.Errorf("failed to initialize config: %w", err)
+	}
+
+	// Copy fresh template from runtime configuration
+	manager := config.NewManager(projectPath)
+	templatePath := manager.GetRuntimePath("commands/templates/iterations.json")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/iterations.json")
 	
 	if err := copyFile(templatePath, destPath); err != nil {
@@ -1985,4 +1928,77 @@ func getCurrentGitBranch(projectPath string) string {
 		return "main"
 	}
 	return strings.TrimSpace(string(output))
+}
+
+// executeConfigInit handles initializing the configuration workspace
+func executeConfigInit(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("🚀 Initializing configuration workspace...")
+
+	manager := config.NewManager(ctx.ProjectPath)
+
+	// Initialize directory structure
+	if err := manager.Initialize(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to initialize workspace: %v", err))
+		return err
+	}
+
+	// Install default templates
+	if err := manager.InstallSystemTemplates(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to install system templates: %v", err))
+		return err
+	}
+
+	// Migrate from legacy structure if it exists
+	legacyPath := filepath.Join(ctx.ProjectPath, ".claude-wm", ".claude")
+	if err := manager.MigrateFromLegacy(legacyPath); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Migration failed: %v", err))
+		return err
+	}
+
+	// Generate initial runtime configuration
+	if err := manager.Sync(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to generate runtime configuration: %v", err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess("✅ Configuration workspace initialized successfully!")
+	menuDisplay.ShowMessage("💡 Use 'claude-wm config show' to view your configuration")
+	return nil
+}
+
+// executeConfigSync handles syncing the configuration
+func executeConfigSync(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("🔄 Syncing configuration...")
+
+	manager := config.NewManager(ctx.ProjectPath)
+	if err := manager.Sync(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Sync failed: %v", err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess("✅ Configuration synced successfully!")
+	return nil
+}
+
+// executeConfigUpgrade handles upgrading system templates
+func executeConfigUpgrade(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	menuDisplay.ShowMessage("⬆️  Upgrading system templates...")
+
+	manager := config.NewManager(ctx.ProjectPath)
+
+	// Reinstall system templates
+	if err := manager.InstallSystemTemplates(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to upgrade system templates: %v", err))
+		return err
+	}
+
+	// Regenerate runtime configuration
+	if err := manager.Sync(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to sync after upgrade: %v", err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess("✅ System templates upgraded successfully!")
+	menuDisplay.ShowMessage("💡 Your user customizations have been preserved")
+	return nil
 }
