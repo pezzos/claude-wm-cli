@@ -77,12 +77,14 @@ type StoryContext struct {
 
 // TaskContext contains information about the current task
 type TaskContext struct {
-	ID             string
-	Title          string
-	Status         string
-	Priority       string
-	EstimatedHours int
-	StoryID        string
+	ID          string
+	Title       string
+	Description string
+	Type        string
+	Status      string
+	Priority    string
+	Environment string
+	Version     string
 }
 
 // ContextDetector is responsible for analyzing project state
@@ -323,12 +325,21 @@ func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 	}
 
 	var taskData struct {
-		ID             string `json:"id"`
-		Title          string `json:"title"`
-		Status         string `json:"status"`
-		Priority       string `json:"priority"`
-		EstimatedHours int    `json:"estimatedHours"`
-		StoryID        string `json:"storyId"`
+		ID          string `json:"id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+		Priority    string `json:"priority"`
+		Status      string `json:"status"`
+		TechnicalContext struct {
+			AffectedComponents []string `json:"affected_components"`
+			Environment        string   `json:"environment"`
+			Version            string   `json:"version"`
+		} `json:"technical_context"`
+		InterruptionContext struct {
+			BlockedWork string `json:"blocked_work"`
+			Notes       string `json:"notes"`
+		} `json:"interruption_context"`
 	}
 
 	if err := json.Unmarshal(data, &taskData); err != nil {
@@ -337,12 +348,14 @@ func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 
 	// Return current task
 	return &TaskContext{
-		ID:             taskData.ID,
-		Title:          taskData.Title,
-		Status:         taskData.Status,
-		Priority:       taskData.Priority,
-		EstimatedHours: taskData.EstimatedHours,
-		StoryID:        taskData.StoryID,
+		ID:          taskData.ID,
+		Title:       taskData.Title,
+		Description: taskData.Description,
+		Type:        taskData.Type,
+		Status:      taskData.Status,
+		Priority:    taskData.Priority,
+		Environment: taskData.TechnicalContext.Environment,
+		Version:     taskData.TechnicalContext.Version,
 	}, nil
 }
 

@@ -129,8 +129,89 @@ case "$FILENAME" in
         echo -e "${GREEN}✓ current-story.json schema validation passed${NC}"
         ;;
         
-    "current-epic.json"|"current-task.json")
-        echo -e "${BLUE}📋 Validating current-*.json schema compliance...${NC}"
+    "current-task.json")
+        echo -e "${BLUE}📋 Validating current-task.json schema compliance...${NC}"
+        
+        # Check for required top-level fields
+        required_fields=("id" "title" "description" "type" "priority" "status" "technical_context" "analysis" "reproduction" "investigation" "implementation" "resolution" "interruption_context")
+        for field in "${required_fields[@]}"; do
+            if ! grep -q "\"$field\"" "$WRITTEN_FILE"; then
+                echo -e "${RED}❌ SCHEMA VIOLATION: Missing required field '$field' in current-task.json${NC}" >&2
+                exit 1
+            fi
+        done
+        
+        # Validate task ID format
+        if ! grep -q '"id": "TASK-[0-9][0-9][0-9]"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Task ID must follow format TASK-XXX${NC}" >&2
+            exit 1
+        fi
+        
+        # Validate type values
+        if ! grep -qE '"type": "(bug|feature|enhancement|refactor|documentation)"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Type must be one of: bug, feature, enhancement, refactor, documentation${NC}" >&2
+            exit 1
+        fi
+        
+        # Validate status values
+        if ! grep -qE '"status": "(todo|in_progress|done|blocked)"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Status must be one of: todo, in_progress, done, blocked${NC}" >&2
+            exit 1
+        fi
+        
+        # Validate priority values
+        if ! grep -qE '"priority": "(low|medium|high|critical)"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Priority must be one of: low, medium, high, critical${NC}" >&2
+            exit 1
+        fi
+        
+        # Check for required nested objects with at least one field each
+        if ! grep -q '"technical_context"' "$WRITTEN_FILE" || ! grep -q '"affected_components"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Missing required technical_context.affected_components field${NC}" >&2
+            exit 1
+        fi
+        
+        echo -e "${GREEN}✓ current-task.json schema validation passed${NC}"
+        ;;
+        
+    "iterations.json")
+        echo -e "${BLUE}📋 Validating iterations.json schema compliance...${NC}"
+        
+        # Check for required top-level fields
+        required_fields=("task_context" "iterations" "final_outcome" "recommendations")
+        for field in "${required_fields[@]}"; do
+            if ! grep -q "\"$field\"" "$WRITTEN_FILE"; then
+                echo -e "${RED}❌ SCHEMA VIOLATION: Missing required field '$field' in iterations.json${NC}" >&2
+                exit 1
+            fi
+        done
+        
+        # Validate task_context.task_id format
+        if ! grep -q '"task_id": "TASK-[0-9][0-9][0-9]"' "$WRITTEN_FILE"; then
+            echo -e "${RED}❌ SCHEMA VIOLATION: Task ID must follow format TASK-XXX${NC}" >&2
+            exit 1
+        fi
+        
+        echo -e "${GREEN}✓ iterations.json schema validation passed${NC}"
+        ;;
+        
+    "metrics.json")
+        echo -e "${BLUE}📋 Validating metrics.json schema compliance...${NC}"
+        
+        # Check for required top-level fields
+        required_fields=("project_overview" "current_epic" "iteration_performance" "time_analytics" "quality_metrics" "team_performance" "trend_indicators" "last_updated")
+        for field in "${required_fields[@]}"; do
+            if ! grep -q "\"$field\"" "$WRITTEN_FILE"; then
+                echo -e "${RED}❌ SCHEMA VIOLATION: Missing required field '$field' in metrics.json${NC}" >&2
+                exit 1
+            fi
+        done
+        
+        echo -e "${GREEN}✓ metrics.json schema validation passed${NC}"
+        ;;
+        
+    "current-epic.json")
+        echo -e "${BLUE}📋 Validating current-epic.json schema compliance...${NC}"
         echo -e "${GREEN}✓ Basic JSON syntax validation passed${NC}"
         ;;
         
