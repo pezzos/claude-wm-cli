@@ -1339,6 +1339,21 @@ func executeClaudeInstall(ctx *navigation.ProjectContext, menuDisplay *navigatio
 		menuDisplay.ShowWarning("⚠️ No hooks directory found in source")
 	}
 
+	// Copy settings.json if it exists
+	sourceSettings := filepath.Join(claudeWmPath, "settings.json")
+	destSettings := filepath.Join(claudeDir, "settings.json")
+
+	if _, err := os.Stat(sourceSettings); err == nil {
+		// Copy settings.json
+		if err := copyFile(sourceSettings, destSettings); err != nil {
+			menuDisplay.ShowError(fmt.Sprintf("Failed to copy settings.json: %v", err))
+			return err
+		}
+		menuDisplay.ShowMessage("✅ Settings.json copied successfully")
+	} else {
+		menuDisplay.ShowWarning("⚠️ No settings.json found in source")
+	}
+
 	menuDisplay.ShowSuccess("🎉 .claude directory installed/updated successfully!")
 	menuDisplay.ShowMessage("💡 You can now use Claude Code commands and hooks in this project")
 	return nil
