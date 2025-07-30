@@ -491,9 +491,9 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 		Action:      "",
 		Enabled:     false,
 	})
-	addOption("ticket-from-story", "📋 From Story", "Generate implementation ticket from current story", "/4-ticket:1-start:1-From-story")
-	addOption("ticket-from-issue", "🐛 From Issue", "Create ticket from GitHub issue with analysis", "/4-ticket:1-start:2-From-issue")
-	addOption("ticket-from-input", "✏️  From Input", "Create custom ticket from direct user input", "/4-ticket:1-start:3-From-input")
+	addOption("ticket-from-story", "📋 From Story", "Generate implementation ticket from current story", "/4-task:1-start:1-From-story")
+	addOption("ticket-from-issue", "🐛 From Issue", "Create ticket from GitHub issue with analysis", "/4-task:1-start:2-From-issue")
+	addOption("ticket-from-input", "✏️  From Input", "Create custom ticket from direct user input", "/4-task:1-start:3-From-input")
 
 	// Execute section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
@@ -503,11 +503,11 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 		Action:      "",
 		Enabled:     false,
 	})
-	addOption("ticket-plan", "📝 Plan Ticket", "Create detailed implementation plan with research", "/4-ticket:2-execute:1-Plan-Ticket")
-	addOption("ticket-test-design", "🧪 Test Design", "Design comprehensive test strategy", "/4-ticket:2-execute:2-Test-design")
-	addOption("ticket-implement", "⚡ Implement", "Execute intelligent implementation with MCP workflow", "/4-ticket:2-execute:3-Implement")
-	addOption("ticket-validate", "✅ Validate", "Validate implementation against acceptance criteria", "/4-ticket:2-execute:4-Validate-Ticket")
-	addOption("ticket-review", "👀 Review", "Final code review and quality assurance", "/4-ticket:2-execute:5-Review-Ticket")
+	addOption("ticket-plan", "📝 Plan Ticket", "Create detailed implementation plan with research", "/4-task:2-execute:1-Plan-Ticket")
+	addOption("ticket-test-design", "🧪 Test Design", "Design comprehensive test strategy", "/4-task:2-execute:2-Test-design")
+	addOption("ticket-implement", "⚡ Implement", "Execute intelligent implementation with MCP workflow", "/4-task:2-execute:3-Implement")
+	addOption("ticket-validate", "✅ Validate", "Validate implementation against acceptance criteria", "/4-task:2-execute:4-Validate-Ticket")
+	addOption("ticket-review", "👀 Review", "Final code review and quality assurance", "/4-task:2-execute:5-Review-Ticket")
 
 	// Complete section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
@@ -521,8 +521,8 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 	addOption("ticket-execute-full-from-story", "⚡ Complete the current ticket from Story", "Execute full workflow: From Story → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-story")
 	addOption("ticket-execute-full-from-issue", "⚡ Complete the current ticket from Issue", "Execute full workflow: From Issue → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-issue")
 	addOption("ticket-execute-full-from-input", "⚡ Complete the current ticket from Input", "Execute full workflow: From Input → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-input")
-	addOption("ticket-archive", "📦 Archive", "Archive completed ticket with summary", "/4-ticket:3-complete:1-Archive-Ticket")
-	addOption("ticket-status", "📊 Status", "Update ticket status across documentation", "/4-ticket:3-complete:2-Status-Ticket")
+	addOption("ticket-archive", "📦 Archive", "Archive completed ticket with summary", "/4-task:3-complete:1-Archive-Ticket")
+	addOption("ticket-status", "📊 Status", "Update ticket status across documentation", "/4-task:3-complete:2-Status-Ticket")
 
 	return menu
 }
@@ -575,16 +575,16 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 		"/2-epic:2-manage:2-Status-Epic",
 		"/3-story:1-manage:1-Start-Story",
 		"/3-story:1-manage:2-Complete-Story",
-		"/4-ticket:1-start:1-From-story",
-		"/4-ticket:1-start:2-From-issue",
-		"/4-ticket:1-start:3-From-input",
-		"/4-ticket:2-execute:1-Plan-Ticket",
-		"/4-ticket:2-execute:2-Test-design",
-		"/4-ticket:2-execute:3-Implement",
-		"/4-ticket:2-execute:4-Validate-Ticket",
-		"/4-ticket:2-execute:5-Review-Ticket",
-		"/4-ticket:3-complete:1-Archive-Ticket",
-		"/4-ticket:3-complete:2-Status-Ticket":
+		"/4-task:1-start:1-From-story",
+		"/4-task:1-start:2-From-issue",
+		"/4-task:1-start:3-From-input",
+		"/4-task:2-execute:1-Plan-Ticket",
+		"/4-task:2-execute:2-Test-design",
+		"/4-task:2-execute:3-Implement",
+		"/4-task:2-execute:4-Validate-Ticket",
+		"/4-task:2-execute:5-Review-Ticket",
+		"/4-task:3-complete:1-Archive-Ticket",
+		"/4-task:3-complete:2-Status-Ticket":
 		return executeClaudeCommandInteractive(action, menuDisplay)
 
 	// Legacy project actions (keeping for backward compatibility)
@@ -998,7 +998,7 @@ func executeTicketCommand(args []string, menuDisplay *navigation.MenuDisplay) er
 // cleanCurrentTaskDirectory removes all files from docs/3-current-task/
 func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	currentTaskDir := filepath.Join(projectPath, "docs/3-current-task")
-	
+
 	// Check if directory exists
 	if _, err := os.Stat(currentTaskDir); os.IsNotExist(err) {
 		// Create directory if it doesn't exist
@@ -1008,13 +1008,13 @@ func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuD
 		menuDisplay.ShowMessage("  ✓ Created docs/3-current-task/ directory")
 		return nil
 	}
-	
+
 	// Read directory contents
 	files, err := os.ReadDir(currentTaskDir)
 	if err != nil {
 		return fmt.Errorf("failed to read current task directory: %w", err)
 	}
-	
+
 	// Remove all files and subdirectories
 	for _, file := range files {
 		filePath := filepath.Join(currentTaskDir, file.Name())
@@ -1023,13 +1023,13 @@ func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuD
 		}
 		menuDisplay.ShowMessage(fmt.Sprintf("  🗑️ Removed %s", file.Name()))
 	}
-	
+
 	if len(files) == 0 {
 		menuDisplay.ShowMessage("  ◦ docs/3-current-task/ was already empty")
 	} else {
 		menuDisplay.ShowMessage(fmt.Sprintf("  ✓ Cleaned %d items from docs/3-current-task/", len(files)))
 	}
-	
+
 	return nil
 }
 
@@ -1037,19 +1037,19 @@ func cleanCurrentTaskDirectory(projectPath string, menuDisplay *navigation.MenuD
 func copyIterationsTemplate(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	templatePath := filepath.Join(projectPath, ".claude/commands/template/ITERATIONS.md")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/ITERATIONS.md")
-	
+
 	// Check if template exists
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		menuDisplay.ShowWarning("⚠️  ITERATIONS.md template not found, skipping template copy")
 		menuDisplay.ShowMessage("💡 You may need to run Claude import/install first")
 		return nil
 	}
-	
+
 	// Copy template file
 	if err := copyFile(templatePath, destPath); err != nil {
 		return fmt.Errorf("failed to copy ITERATIONS.md template: %w", err)
 	}
-	
+
 	menuDisplay.ShowMessage("  ✓ Copied ITERATIONS.md template to docs/3-current-task/")
 	return nil
 }
@@ -1057,17 +1057,17 @@ func copyIterationsTemplate(projectPath string, menuDisplay *navigation.MenuDisp
 // preprocessPlanTicketCommand handles preprocessing for Plan-Ticket command
 func preprocessPlanTicketCommand(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("📋 Preparing task workspace...")
-	
+
 	// Step 1: Clean current task directory
 	if err := cleanCurrentTaskDirectory(projectPath, menuDisplay); err != nil {
 		return fmt.Errorf("failed to clean current task directory: %w", err)
 	}
-	
+
 	// Step 2: Copy ITERATIONS.md template
 	if err := copyIterationsTemplate(projectPath, menuDisplay); err != nil {
 		return fmt.Errorf("failed to copy ITERATIONS template: %w", err)
 	}
-	
+
 	menuDisplay.ShowSuccess("✅ Task workspace prepared successfully")
 	return nil
 }
@@ -1077,14 +1077,14 @@ func executeClaudeCommandInteractive(command string, menuDisplay *navigation.Men
 	menuDisplay.ShowMessage(fmt.Sprintf("🚀 Executing Claude command: %s", command))
 
 	// Special preprocessing for Plan-Ticket command
-	if command == "/4-ticket:2-execute:1-Plan-Ticket" {
+	if command == "/4-task:2-execute:1-Plan-Ticket" {
 		// Get current working directory for preprocessing
 		workDir, err := os.Getwd()
 		if err != nil {
 			menuDisplay.ShowError(fmt.Sprintf("Failed to get current directory: %v", err))
 			return err
 		}
-		
+
 		// Execute preprocessing
 		if err := preprocessPlanTicketCommand(workDir, menuDisplay); err != nil {
 			menuDisplay.ShowError(fmt.Sprintf("Failed to prepare task workspace: %v", err))

@@ -1,75 +1,16 @@
 {
   "epic": {
     "id": "EPIC-001",
-    "title": "Interactive CLI Interface Completion",
+    "title": "Current Epic Title",
+    "description": "Detailed description of the current epic being worked on. This should explain the goal, scope, and expected outcomes.",
+    "status": {
+      "code": "in_progress",
+      "display": "🚧 In Progress",
+      "details": "Currently implementing core features"
+    },
+    "started_at": "2025-07-25T09:00:00+02:00",
+    "selectedAt": "2025-07-25T09:00:00+02:00",
     "priority": "high",
-    "status": "in_progress",
-    "dependencies": [],
-    "description": "Complete the interactive CLI interface with full menu functionality, user experience improvements, and contextual navigation. Bridge the gap between current implementation and architecture vision.",
-    "userStories": [
-      {
-        "id": "US-001",
-        "title": "Complete Interactive Menu System",
-        "description": "As a developer, I want a fully functional interactive menu system that provides contextual options based on project state, so I can navigate workflows without memorizing commands",
-        "status": "in_progress",
-        "priority": "high",
-        "acceptanceCriteria": [
-          "All menu actions are implemented and functional",
-          "Context-aware menu options based on project state",
-          "Keyboard shortcuts and navigation work properly",
-          "Clear visual feedback for current position and next steps",
-          "Error handling and graceful fallbacks for all menu actions"
-        ]
-      },
-      {
-        "id": "US-002",
-        "title": "Task-Level CRUD Operations in CLI",
-        "description": "As a developer, I want comprehensive task-level operations accessible through the CLI interface, so I can manage fine-grained work items efficiently",
-        "status": "todo",
-        "priority": "high",
-        "acceptanceCriteria": [
-          "Task creation from stories, issues, and direct input",
-          "Task editing and status management through CLI",
-          "Task completion and archival workflows",
-          "Integration with interruption handling system",
-          "Clear task hierarchy display and navigation"
-        ]
-      },
-      {
-        "id": "US-003",
-        "title": "Context Restoration for Interruption Stack",
-        "description": "As a developer, I want seamless context restoration when returning from interruptions, so I can resume work without losing mental state",
-        "status": "todo",
-        "priority": "medium",
-        "acceptanceCriteria": [
-          "Complete interruption context preservation",
-          "Restoration of previous work state and position",
-          "Visual indication of interruption history",
-          "One-click context switching between tasks",
-          "Cleanup of completed interruption contexts"
-        ]
-      },
-      {
-        "id": "US-004",
-        "title": "Enhanced User Experience and Navigation",
-        "description": "As a developer, I want an intuitive and efficient CLI experience with clear guidance and minimal friction, so I can focus on development rather than tool usage",
-        "status": "todo",
-        "priority": "medium",
-        "acceptanceCriteria": [
-          "Progressive guidance with next-step suggestions",
-          "Clear status indicators and progress visualization",
-          "Consistent color scheme and visual hierarchy",
-          "Help system and command discovery features",
-          "Performance optimization for responsive interactions"
-        ]
-      }
-    ]
-  },
-  "started_at": "2025-07-28T15:00:00+02:00",
-  "metadata": {
-    "selected_by": "auto-selection",
-    "selection_criteria": "highest_priority_unstarted",
-    "total_user_stories": 4,
-    "estimated_duration": "2-3 weeks"
+    "depend_on": ["EPIC-000"]
   }
 }

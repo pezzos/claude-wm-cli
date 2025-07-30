@@ -15,7 +15,7 @@ cmd/                    # CLI commands and main entry point
 internal/               # Internal packages and business logic
 ├── epic/               # Epic management and tracking
 ├── story/              # Story generation and management
-├── ticket/             # Ticket/interruption handling
+├── task/             # Ticket/interruption handling
 ├── navigation/         # Interactive menu system
 ├── state/              # JSON state management with atomicity
 ├── backup/             # Backup and recovery system
@@ -30,7 +30,7 @@ internal/               # Internal packages and business logic
 ✅ **Fully Implemented and Tested**:
 - **Epic Management**: Create, update, track, and complete epics with dashboard
 - **Story Management**: Generate stories from epics with automated task extraction
-- **Ticket/Interruption System**: Handle urgent tasks, GitHub issues, and context switching
+- **Task/Interruption System**: Handle urgent tasks, GitHub issues, and context switching
 - **Interactive Navigation**: Menu-driven CLI with contextual suggestions
 - **State Management**: Atomic JSON operations with corruption protection
 - **Git Integration**: Automatic versioning, backup, and recovery
@@ -76,10 +76,10 @@ Commands follow a hierarchical path-based structure that the CLI manages interna
 #### Story Level (`/3-story:*`)
 - **Manage**: `/3-story:1-manage:*` - Start stories and extract technical tasks
 
-#### Ticket Level (`/4-ticket:*`)
-- **Create**: `/4-ticket:1-start:*` - Generate tickets from stories, issues, or input
-- **Execute**: `/4-ticket:2-execute:*` - 5-phase implementation process
-- **Complete**: `/4-ticket:3-complete:*` - Archive and update status
+#### Task Level (`/4-task:*`)
+- **Create**: `/4-task:1-start:*` - Generate tickets from stories, issues, or input
+- **Execute**: `/4-task:2-execute:*` - 5-phase implementation process
+- **Complete**: `/4-task:3-complete:*` - Archive and update status
 
 #### Support Tools
 - **DEBUG**: `/debug:*` - Project health monitoring and repair

@@ -86,24 +86,24 @@ flowchart TD
 
 ### 3-STORY (Story Level)
 - **Start**: Story selection and technical task extraction
-  - `/3-story:1-manage:1-Start-Story` - Identify highest priority unstarted story (P0 > P1 > P2 > P3), verify dependencies, create story/{epic-name}/{story-id} branch, extract technical tasks into docs/2-current-epic/TODO.md, and mark story "🚧 In Progress" → Next: `/4-ticket:1-start:1-From-story`
+  - `/3-story:1-manage:1-Start-Story` - Identify highest priority unstarted story (P0 > P1 > P2 > P3), verify dependencies, create story/{epic-name}/{story-id} branch, extract technical tasks into docs/2-current-epic/TODO.md, and mark story "🚧 In Progress" → Next: `/4-task:1-start:1-From-story`
 - **Complete**: Story finalization and progress updates
   - `/3-story:1-manage:2-Complete-Story` - Mark story complete in STORIES.md, update documentation, and prepare for next story or epic completion → Next: `/3-story:1-manage:1-Start-Story` or `/2-epic:2-manage:1-Complete-Epic`
 
-### 4-TICKET (Ticket Level)
+### 4-task (Ticket Level)
 - **Create**: Multi-source ticket generation with context initialization
-  - `/4-ticket:1-start:1-From-story` - Generate implementation ticket from current story with technical task breakdown → Next: `/4-ticket:2-execute:1-Plan-Ticket`
-  - `/4-ticket:1-start:2-From-issue` - Query GitHub issues with gh CLI, prioritize by age/severity, create fix/issue-{number} branch, initialize docs/3-current-task/ with issue analysis and reproduction steps → Next: `/4-ticket:2-execute:1-Plan-Ticket`
-  - `/4-ticket:1-start:3-From-input` - Create custom ticket from direct user input with workspace initialization → Next: `/4-ticket:2-execute:1-Plan-Ticket`
+  - `/4-task:1-start:1-From-story` - Generate implementation ticket from current story with technical task breakdown → Next: `/4-task:2-execute:1-Plan-Ticket`
+  - `/4-task:1-start:2-From-issue` - Query GitHub issues with gh CLI, prioritize by age/severity, create fix/issue-{number} branch, initialize docs/3-current-task/ with issue analysis and reproduction steps → Next: `/4-task:2-execute:1-Plan-Ticket`
+  - `/4-task:1-start:3-From-input` - Create custom ticket from direct user input with workspace initialization → Next: `/4-task:2-execute:1-Plan-Ticket`
 - **Execute**: MCP-enhanced 5-phase implementation process with intelligent assistance
-  - `/4-ticket:2-execute:1-Plan-Ticket` - Create detailed implementation plan with mem0 pattern research, initialize ITERATIONS.md tracking, generate TASK.md from template with approach and file changes, include mandatory regression testing strategy covering automated tests, performance baselines, and integration validation → Next: `/4-ticket:2-execute:2-Test-design`
-  - `/4-ticket:2-execute:2-Test-design` - Design comprehensive test strategy including unit, integration, UI automation (MCP-powered), performance, security, and manual test scenarios → Next: `/4-ticket:2-execute:3-Implement`
-  - `/4-ticket:2-execute:3-Implement` - Execute intelligent implementation with MCP workflow: load previous patterns via mem0, get current documentation via context7, use sequential-thinking for complex features, implement with real-time validation via IDE diagnostics, capture successful patterns back to mem0 → Next: `/4-ticket:2-execute:4-Validate-Ticket`
-  - `/4-ticket:2-execute:4-Validate-Ticket` - Validate implementation against acceptance criteria with comprehensive testing → Next: `/4-ticket:2-execute:5-Review-Ticket`
-  - `/4-ticket:2-execute:5-Review-Ticket` - Final code review, documentation updates, and quality assurance → Next: `/4-ticket:3-complete:1-Archive-Ticket`
+  - `/4-task:2-execute:1-Plan-Ticket` - Create detailed implementation plan with mem0 pattern research, initialize ITERATIONS.md tracking, generate TASK.md from template with approach and file changes, include mandatory regression testing strategy covering automated tests, performance baselines, and integration validation → Next: `/4-task:2-execute:2-Test-design`
+  - `/4-task:2-execute:2-Test-design` - Design comprehensive test strategy including unit, integration, UI automation (MCP-powered), performance, security, and manual test scenarios → Next: `/4-task:2-execute:3-Implement`
+  - `/4-task:2-execute:3-Implement` - Execute intelligent implementation with MCP workflow: load previous patterns via mem0, get current documentation via context7, use sequential-thinking for complex features, implement with real-time validation via IDE diagnostics, capture successful patterns back to mem0 → Next: `/4-task:2-execute:4-Validate-Ticket`
+  - `/4-task:2-execute:4-Validate-Ticket` - Validate implementation against acceptance criteria with comprehensive testing → Next: `/4-task:2-execute:5-Review-Ticket`
+  - `/4-task:2-execute:5-Review-Ticket` - Final code review, documentation updates, and quality assurance → Next: `/4-task:3-complete:1-Archive-Ticket`
 - **Complete**: Ticket archival and status management
-  - `/4-ticket:3-complete:1-Archive-Ticket` - Archive completed ticket with implementation summary and lessons learned → Next: `/4-ticket:3-complete:2-Status-Ticket`
-  - `/4-ticket:3-complete:2-Status-Ticket` - Update ticket status across all documentation levels → Next: Clear the context with `/clear` then either next ticket with `/4-ticket:1-start:1-From-story` or end the story with `/3-story:1-manage:2-Complete-Story`
+  - `/4-task:3-complete:1-Archive-Ticket` - Archive completed ticket with implementation summary and lessons learned → Next: `/4-task:3-complete:2-Status-Ticket`
+  - `/4-task:3-complete:2-Status-Ticket` - Update ticket status across all documentation levels → Next: Clear the context with `/clear` then either next ticket with `/4-task:1-start:1-From-story` or end the story with `/3-story:1-manage:2-Complete-Story`
 
 ### Support Tools
 - **DEBUG**: Comprehensive project health monitoring and repair
@@ -205,25 +205,25 @@ Analyse du contexte projet et suggestion de commande appropriée:
 #### Mode STORY (gestion des stories)
 - **Si docs/2-current-epic/STORIES.md existe mais aucune story en cours**:
   - Suggestion: `/3-story:1-manage:1-Start-Story`
-  - Prochaine étape: `/4-ticket:1-start:1-From-story`
+  - Prochaine étape: `/4-task:1-start:1-From-story`
   
 - **Si story en cours mais TODO.md manquant**:
   - Suggestion: `/3-story:1-manage:1-Start-Story`
-  - Prochaine étape: `/4-ticket:1-start:1-From-story`
+  - Prochaine étape: `/4-task:1-start:1-From-story`
 
 #### Mode TICKET (implémentation)
 - **Si docs/2-current-epic/TODO.md existe avec tâches [ ] restantes**:
-  - Suggestion: `/4-ticket:1-start:1-From-story`
-  - Prochaine étape: `/4-ticket:2-execute:1-Plan-Ticket`
+  - Suggestion: `/4-task:1-start:1-From-story`
+  - Prochaine étape: `/4-task:2-execute:1-Plan-Ticket`
   
 - **Si docs/3-current-task/ existe avec ticket en cours**:
   - Analyser l'état du ticket actuel:
-    - Si TASK.md existe sans ITERATIONS.md: `/4-ticket:2-execute:1-Plan-Ticket`
-    - Si plan créé sans tests: `/4-ticket:2-execute:2-Test-design`
-    - Si tests conçus sans implémentation: `/4-ticket:2-execute:3-Implement`
-    - Si implémenté sans validation: `/4-ticket:2-execute:4-Validate-Ticket`
-    - Si validé sans review: `/4-ticket:2-execute:5-Review-Ticket`
-    - Si reviewé: `/4-ticket:3-complete:1-Archive-Ticket`
+    - Si TASK.md existe sans ITERATIONS.md: `/4-task:2-execute:1-Plan-Ticket`
+    - Si plan créé sans tests: `/4-task:2-execute:2-Test-design`
+    - Si tests conçus sans implémentation: `/4-task:2-execute:3-Implement`
+    - Si implémenté sans validation: `/4-task:2-execute:4-Validate-Ticket`
+    - Si validé sans review: `/4-task:2-execute:5-Review-Ticket`
+    - Si reviewé: `/4-task:3-complete:1-Archive-Ticket`
 
 #### Mode COMPLETION (finalisation)
 - **Si toutes les tâches de TODO.md sont [x] complétées**:
@@ -237,8 +237,8 @@ Analyse du contexte projet et suggestion de commande appropriée:
 ### 4. Special Cases & Support Tools
 
 #### GitHub Integration
-- **Si issues GitHub disponibles**: Proposer `/4-ticket:1-start:2-From-issue`
-- **Si input utilisateur direct**: Proposer `/4-ticket:1-start:3-From-input`
+- **Si issues GitHub disponibles**: Proposer `/4-task:1-start:2-From-issue`
+- **Si input utilisateur direct**: Proposer `/4-task:1-start:3-From-input`
 
 #### Maintenance & Debug
 - **Si structure projet corrompue**: Proposer `/debug:1-Check-state` puis `/debug:2-Fix-structure`

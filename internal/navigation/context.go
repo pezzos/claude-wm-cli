@@ -54,7 +54,9 @@ type ProjectContext struct {
 type EpicContext struct {
 	ID               string
 	Title            string
-	Status           string
+	Status           string // For display (uses status.display from JSON)
+	StatusCode       string // Raw status code from JSON
+	StatusDetails    string // Status details from JSON
 	Priority         string
 	Progress         float64 // 0.0 to 1.0
 	TotalStories     int
@@ -225,7 +227,11 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 		Epic struct {
 			ID          string `json:"id"`
 			Title       string `json:"title"`
-			Status      string `json:"status"`
+			Status      struct {
+				Code    string `json:"code"`
+				Display string `json:"display"`
+				Details string `json:"details"`
+			} `json:"status"`
 			Priority    string `json:"priority"`
 			UserStories []struct {
 				Status string `json:"status"`
@@ -254,7 +260,9 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	return &EpicContext{
 		ID:               epicData.Epic.ID,
 		Title:            epicData.Epic.Title,
-		Status:           epicData.Epic.Status,
+		Status:           epicData.Epic.Status.Display, // Use display from JSON structure
+		StatusCode:       epicData.Epic.Status.Code,    // Store raw code for logic
+		StatusDetails:    epicData.Epic.Status.Details, // Store details
 		Priority:         epicData.Epic.Priority,
 		Progress:         progress,
 		TotalStories:     totalStories,
@@ -262,43 +270,43 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	}, nil
 }
 
-// loadStoryContext loads the current story context from state files
+// loadStoryContext loads the current story context from current-story.json
 func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
-	storiesPath := filepath.Join(cd.projectPath, "docs/2-current-epic/stories.json")
-	if !cd.pathExists(storiesPath) {
+	currentStoryPath := filepath.Join(cd.projectPath, "docs/2-current-epic/current-story.json")
+	if !cd.pathExists(currentStoryPath) {
 		return nil, nil
 	}
 
-	data, err := os.ReadFile(storiesPath)
+	data, err := os.ReadFile(currentStoryPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read stories.json: %w", err)
+		return nil, fmt.Errorf("failed to read current-story.json: %w", err)
 	}
 
-	var storiesData struct {
-		Stories map[string]struct {
-			ID       string `json:"id"`
-			Title    string `json:"title"`
-			Status   string `json:"status"`
-			Priority string `json:"priority"`
-		} `json:"stories"`
+	var storyData struct {
+		Story struct {
+			ID          string `json:"id"`
+			Title       string `json:"title"`
+			Status      string `json:"status"`
+			Priority    string `json:"priority"`
+			EpicID      string `json:"epic_id"`
+			EpicTitle   string `json:"epic_title"`
+		} `json:"story"`
 	}
 
-	if err := json.Unmarshal(data, &storiesData); err != nil {
-		return nil, fmt.Errorf("failed to parse stories.json: %w", err)
+	if err := json.Unmarshal(data, &storyData); err != nil {
+		return nil, fmt.Errorf("failed to parse current-story.json: %w", err)
 	}
 
-	// Find current story (first in_progress story)
-	for _, story := range storiesData.Stories {
-		if story.Status == "in_progress" || story.Status == "todo" {
-			return &StoryContext{
-				ID:       story.ID,
-				Title:    story.Title,
-				Status:   story.Status,
-				Priority: story.Priority,
-				Progress: 0.0, // TODO: Calculate from tasks
-			}, nil
-		}
-	}
+	// Return the current story context
+	return &StoryContext{
+		ID:       storyData.Story.ID,
+		Title:    storyData.Story.Title,
+		Status:   storyData.Story.Status,
+		Priority: storyData.Story.Priority,
+		Progress: 0.0, // TODO: Calculate from tasks
+		TotalTasks:     0,   // TODO: Calculate from tasks
+		CompletedTasks: 0,   // TODO: Calculate from tasks
+	}, nil
 
 	return nil, nil
 }

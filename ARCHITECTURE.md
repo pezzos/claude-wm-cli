@@ -43,8 +43,8 @@ State Operations:
 internal/
 ├── epic/          # Epic lifecycle management
 ├── story/         # Story generation and tracking
-├── ticket/        # Interruption and task handling
-├── navigation/    # Interactive menu system
+├── task/        # Interruption and task handling
+├── interactive/    # Interactive menu system
 ├── state/         # JSON state management core
 ├── backup/        # Backup and recovery
 ├── git/          # Git integration layer
@@ -64,7 +64,7 @@ internal/
 ### High-Priority Architectural Challenges
 
 #### 1. State Machine Evolution Pressure
-**Challenge**: Current linear epic → story → ticket progression needs to evolve to support parallel workflows and complex dependency graphs.
+**Challenge**: Current linear epic → story → task progression needs to evolve to support parallel workflows and complex dependency graphs.
 
 **Current State**: Atomic file I/O works well for sequential operations
 **Risk**: Bottlenecks with parallel operations as complexity grows

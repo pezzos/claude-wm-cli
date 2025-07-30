@@ -54,7 +54,7 @@ Claude WM CLI is an intelligent command-line interface built in **Go** that acts
 1. **1-PROJECT**: Project-level initialization and management
 2. **2-EPIC**: Epic-level planning and execution
 3. **3-STORY**: Story-level task breakdown
-4. **4-TICKET**: Individual ticket implementation
+4. **4-task**: Individual ticket implementation
 5. **Support Tools**: DEBUG, ENRICH, METRICS, LEARNING, VALIDATION
 
 ### File Organization System

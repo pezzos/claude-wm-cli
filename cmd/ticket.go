@@ -67,7 +67,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Enable debug mode if flag is set
 		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-		
+
 		createTicket(args[0], cmd)
 	},
 }
@@ -90,7 +90,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Enable debug mode if flag is set
 		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-		
+
 		listTickets(cmd)
 	},
 }
@@ -150,7 +150,7 @@ Examples:
 	},
 }
 
-// ticketCurrentCmd represents the ticket current command  
+// ticketCurrentCmd represents the ticket current command
 var ticketCurrentCmd = &cobra.Command{
 	Use:   "current [ticket-id]",
 	Short: "Set or show the current active ticket",
@@ -167,7 +167,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Enable debug mode if flag is set
 		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-		
+
 		manageCurrentTicket(args, cmd)
 	},
 }
@@ -1169,7 +1169,7 @@ func getTicketPriorityIconFromString(priority string) string {
 func executeFullTicketWorkflow() {
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-	
+
 	fmt.Println("🚀 Starting full ticket execution workflow...")
 	fmt.Println("   This will execute: Plan → Test → Implement → Validate → Review")
 	fmt.Println()
@@ -1192,27 +1192,27 @@ func executeFullTicketWorkflow() {
 	}{
 		{
 			name:        "Plan Ticket",
-			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			command:     "/4-task:2-execute:1-Plan-Ticket",
 			description: "Creating detailed implementation plan with research",
 		},
 		{
-			name:        "Test Design", 
-			command:     "/4-ticket:2-execute:2-Test-design",
+			name:        "Test Design",
+			command:     "/4-task:2-execute:2-Test-design",
 			description: "Designing comprehensive test strategy",
 		},
 		{
 			name:        "Implement",
-			command:     "/4-ticket:2-execute:3-Implement",
+			command:     "/4-task:2-execute:3-Implement",
 			description: "Executing intelligent implementation with MCP workflow",
 		},
 		{
 			name:        "Validate Ticket",
-			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			command:     "/4-task:2-execute:4-Validate-Ticket",
 			description: "Validating implementation against acceptance criteria",
 		},
 		{
 			name:        "Review Ticket",
-			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			command:     "/4-task:2-execute:5-Review-Ticket",
 			description: "Final code review and quality assurance",
 		},
 	}
@@ -1229,7 +1229,7 @@ func executeFullTicketWorkflow() {
 			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
 			fmt.Printf("   Error: %v\n", err)
 			fmt.Printf("\n💡 You can continue manually with:\n")
-			
+
 			// Show remaining phases
 			for j := i; j < len(phases); j++ {
 				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
@@ -1246,16 +1246,16 @@ func executeFullTicketWorkflow() {
 	fmt.Println("   All phases (Plan → Test → Implement → Validate → Review) have been executed.")
 	fmt.Println()
 	fmt.Println("💡 Next steps:")
-	fmt.Println("   • Archive ticket: claude-wm-cli ticket execute-archive") 
+	fmt.Println("   • Archive ticket: claude-wm-cli ticket execute-archive")
 	fmt.Println("   • Update status:  claude-wm-cli ticket execute-status")
-	fmt.Println("   • Or use complete workflow: /4-ticket:3-complete:1-Archive-Ticket")
+	fmt.Println("   • Or use complete workflow: /4-task:3-complete:1-Archive-Ticket")
 }
 
 // executeFullTicketWorkflowFromStory executes the complete ticket workflow starting from story
 func executeFullTicketWorkflowFromStory() {
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-	
+
 	fmt.Println("🚀 Starting full ticket execution workflow from story...")
 	fmt.Println("   This will execute: From Story → Plan → Test → Implement → Validate → Review")
 	fmt.Println()
@@ -1278,32 +1278,32 @@ func executeFullTicketWorkflowFromStory() {
 	}{
 		{
 			name:        "From Story",
-			command:     "/4-ticket:1-start:1-From-story",
+			command:     "/4-task:1-start:1-From-story",
 			description: "Generating implementation ticket from current story",
 		},
 		{
 			name:        "Plan Ticket",
-			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			command:     "/4-task:2-execute:1-Plan-Ticket",
 			description: "Creating detailed implementation plan with research",
 		},
 		{
-			name:        "Test Design", 
-			command:     "/4-ticket:2-execute:2-Test-design",
+			name:        "Test Design",
+			command:     "/4-task:2-execute:2-Test-design",
 			description: "Designing comprehensive test strategy",
 		},
 		{
 			name:        "Implement",
-			command:     "/4-ticket:2-execute:3-Implement",
+			command:     "/4-task:2-execute:3-Implement",
 			description: "Executing intelligent implementation with MCP workflow",
 		},
 		{
 			name:        "Validate Ticket",
-			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			command:     "/4-task:2-execute:4-Validate-Ticket",
 			description: "Validating implementation against acceptance criteria",
 		},
 		{
 			name:        "Review Ticket",
-			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			command:     "/4-task:2-execute:5-Review-Ticket",
 			description: "Final code review and quality assurance",
 		},
 	}
@@ -1320,7 +1320,7 @@ func executeFullTicketWorkflowFromStory() {
 			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
 			fmt.Printf("   Error: %v\n", err)
 			fmt.Printf("\n💡 You can continue manually with:\n")
-			
+
 			// Show remaining phases
 			for j := i; j < len(phases); j++ {
 				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
@@ -1337,15 +1337,15 @@ func executeFullTicketWorkflowFromStory() {
 	fmt.Println("   All phases (From Story → Plan → Test → Implement → Validate → Review) have been executed.")
 	fmt.Println()
 	fmt.Println("💡 Next steps:")
-	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
-	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
+	fmt.Println("   • Archive ticket: /4-task:3-complete:1-Archive-Ticket")
+	fmt.Println("   • Update status:  /4-task:3-complete:2-Status-Ticket")
 }
 
 // executeFullTicketWorkflowFromIssue executes the complete ticket workflow starting from GitHub issue
 func executeFullTicketWorkflowFromIssue() {
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-	
+
 	fmt.Println("🚀 Starting full ticket execution workflow from GitHub issue...")
 	fmt.Println("   This will execute: From Issue → Plan → Test → Implement → Validate → Review")
 	fmt.Println()
@@ -1368,32 +1368,32 @@ func executeFullTicketWorkflowFromIssue() {
 	}{
 		{
 			name:        "From Issue",
-			command:     "/4-ticket:1-start:2-From-issue",
+			command:     "/4-task:1-start:2-From-issue",
 			description: "Creating ticket from GitHub issue with analysis",
 		},
 		{
 			name:        "Plan Ticket",
-			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			command:     "/4-task:2-execute:1-Plan-Ticket",
 			description: "Creating detailed implementation plan with research",
 		},
 		{
-			name:        "Test Design", 
-			command:     "/4-ticket:2-execute:2-Test-design",
+			name:        "Test Design",
+			command:     "/4-task:2-execute:2-Test-design",
 			description: "Designing comprehensive test strategy",
 		},
 		{
 			name:        "Implement",
-			command:     "/4-ticket:2-execute:3-Implement",
+			command:     "/4-task:2-execute:3-Implement",
 			description: "Executing intelligent implementation with MCP workflow",
 		},
 		{
 			name:        "Validate Ticket",
-			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			command:     "/4-task:2-execute:4-Validate-Ticket",
 			description: "Validating implementation against acceptance criteria",
 		},
 		{
 			name:        "Review Ticket",
-			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			command:     "/4-task:2-execute:5-Review-Ticket",
 			description: "Final code review and quality assurance",
 		},
 	}
@@ -1410,7 +1410,7 @@ func executeFullTicketWorkflowFromIssue() {
 			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
 			fmt.Printf("   Error: %v\n", err)
 			fmt.Printf("\n💡 You can continue manually with:\n")
-			
+
 			// Show remaining phases
 			for j := i; j < len(phases); j++ {
 				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
@@ -1427,15 +1427,15 @@ func executeFullTicketWorkflowFromIssue() {
 	fmt.Println("   All phases (From Issue → Plan → Test → Implement → Validate → Review) have been executed.")
 	fmt.Println()
 	fmt.Println("💡 Next steps:")
-	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
-	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
+	fmt.Println("   • Archive ticket: /4-task:3-complete:1-Archive-Ticket")
+	fmt.Println("   • Update status:  /4-task:3-complete:2-Status-Ticket")
 }
 
 // executeFullTicketWorkflowFromInput executes the complete ticket workflow starting from user input
 func executeFullTicketWorkflowFromInput() {
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-	
+
 	fmt.Println("🚀 Starting full ticket execution workflow from user input...")
 	fmt.Println("   This will execute: From Input → Plan → Test → Implement → Validate → Review")
 	fmt.Println()
@@ -1458,32 +1458,32 @@ func executeFullTicketWorkflowFromInput() {
 	}{
 		{
 			name:        "From Input",
-			command:     "/4-ticket:1-start:3-From-input",
+			command:     "/4-task:1-start:3-From-input",
 			description: "Creating custom ticket from direct user input",
 		},
 		{
 			name:        "Plan Ticket",
-			command:     "/4-ticket:2-execute:1-Plan-Ticket",
+			command:     "/4-task:2-execute:1-Plan-Ticket",
 			description: "Creating detailed implementation plan with research",
 		},
 		{
-			name:        "Test Design", 
-			command:     "/4-ticket:2-execute:2-Test-design",
+			name:        "Test Design",
+			command:     "/4-task:2-execute:2-Test-design",
 			description: "Designing comprehensive test strategy",
 		},
 		{
 			name:        "Implement",
-			command:     "/4-ticket:2-execute:3-Implement",
+			command:     "/4-task:2-execute:3-Implement",
 			description: "Executing intelligent implementation with MCP workflow",
 		},
 		{
 			name:        "Validate Ticket",
-			command:     "/4-ticket:2-execute:4-Validate-Ticket", 
+			command:     "/4-task:2-execute:4-Validate-Ticket",
 			description: "Validating implementation against acceptance criteria",
 		},
 		{
 			name:        "Review Ticket",
-			command:     "/4-ticket:2-execute:5-Review-Ticket",
+			command:     "/4-task:2-execute:5-Review-Ticket",
 			description: "Final code review and quality assurance",
 		},
 	}
@@ -1500,7 +1500,7 @@ func executeFullTicketWorkflowFromInput() {
 			fmt.Printf("❌ Phase %d failed: %s\n", i+1, phase.name)
 			fmt.Printf("   Error: %v\n", err)
 			fmt.Printf("\n💡 You can continue manually with:\n")
-			
+
 			// Show remaining phases
 			for j := i; j < len(phases); j++ {
 				fmt.Printf("   %d. %s: %s\n", j+1, phases[j].name, phases[j].command)
@@ -1517,6 +1517,6 @@ func executeFullTicketWorkflowFromInput() {
 	fmt.Println("   All phases (From Input → Plan → Test → Implement → Validate → Review) have been executed.")
 	fmt.Println()
 	fmt.Println("💡 Next steps:")
-	fmt.Println("   • Archive ticket: /4-ticket:3-complete:1-Archive-Ticket") 
-	fmt.Println("   • Update status:  /4-ticket:3-complete:2-Status-Ticket")
+	fmt.Println("   • Archive ticket: /4-task:3-complete:1-Archive-Ticket")
+	fmt.Println("   • Update status:  /4-task:3-complete:2-Status-Ticket")
 }

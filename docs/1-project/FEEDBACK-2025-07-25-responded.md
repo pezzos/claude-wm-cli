@@ -22,8 +22,8 @@
 ### Scope & Requirements Reality Check
 - **Q**: The workflow assumes perfect linear progression (Project → Epic → Story → Ticket), but real projects have interruptions. How do you handle emergency hotfixes or scope changes?
   - **A**: **Les interruptions sont déjà gérées** via deux mécanismes :
-    - `/4-ticket:1-start:2-From-issue` - pour créer un ticket depuis une issue GitHub
-    - `/4-ticket:1-start:3-From-input` - pour créer un ticket depuis une demande utilisateur
+    - `/4-task:1-start:2-From-issue` - pour créer un ticket depuis une issue GitHub
+    - `/4-task:1-start:3-From-input` - pour créer un ticket depuis une demande utilisateur
     Ces commandes permettent d'injecter du travail urgent à tout moment dans le workflow.
 
 - **Q**: Your VSCode extension integration is mentioned but completely unspecified. Is this realistic for initial implementation?
