@@ -12,6 +12,7 @@ import (
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/executor"
 	"claude-wm-cli/internal/navigation"
+	"claude-wm-cli/internal/preprocessing"
 	"claude-wm-cli/internal/workflow"
 
 	"github.com/spf13/cobra"
@@ -491,9 +492,9 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 		Action:      "",
 		Enabled:     false,
 	})
-	addOption("ticket-from-story", "📋 From Story", "Generate implementation ticket from current story", "/4-task:1-start:1-From-story")
-	addOption("ticket-from-issue", "🐛 From Issue", "Create ticket from GitHub issue with analysis", "/4-task:1-start:2-From-issue")
-	addOption("ticket-from-input", "✏️  From Input", "Create custom ticket from direct user input", "/4-task:1-start:3-From-input")
+	addOption("ticket-from-story", "📋 From Story", "Generate implementation ticket from current story", "ticket-from-story")
+	addOption("ticket-from-issue", "🐛 From Issue", "Create ticket from GitHub issue with analysis", "ticket-from-issue")
+	addOption("ticket-from-input", "✏️  From Input", "Create custom ticket from direct user input", "ticket-from-input")
 
 	// Execute section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
@@ -503,11 +504,11 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 		Action:      "",
 		Enabled:     false,
 	})
-	addOption("ticket-plan", "📝 Plan Ticket", "Create detailed implementation plan with research", "/4-task:2-execute:1-Plan-Ticket")
-	addOption("ticket-test-design", "🧪 Test Design", "Design comprehensive test strategy", "/4-task:2-execute:2-Test-design")
+	addOption("ticket-plan", "📝 Plan Ticket", "Create detailed implementation plan with research", "ticket-plan")
+	addOption("ticket-test-design", "🧪 Test Design", "Design comprehensive test strategy", "ticket-test-design")
 	addOption("ticket-implement", "⚡ Implement", "Execute intelligent implementation with MCP workflow", "/4-task:2-execute:3-Implement")
-	addOption("ticket-validate", "✅ Validate", "Validate implementation against acceptance criteria", "/4-task:2-execute:4-Validate-Ticket")
-	addOption("ticket-review", "👀 Review", "Final code review and quality assurance", "/4-task:2-execute:5-Review-Ticket")
+	addOption("ticket-validate", "✅ Validate", "Validate implementation against acceptance criteria", "ticket-validate")
+	addOption("ticket-review", "👀 Review", "Final code review and quality assurance", "ticket-review")
 
 	// Complete section header
 	menu.Options = append(menu.Options, navigation.MenuOption{
@@ -521,8 +522,8 @@ func createTicketMenu(_ *navigation.ProjectContext) *navigation.Menu {
 	addOption("ticket-execute-full-from-story", "⚡ Complete the current ticket from Story", "Execute full workflow: From Story → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-story")
 	addOption("ticket-execute-full-from-issue", "⚡ Complete the current ticket from Issue", "Execute full workflow: From Issue → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-issue")
 	addOption("ticket-execute-full-from-input", "⚡ Complete the current ticket from Input", "Execute full workflow: From Input → Plan → Test → Implement → Validate → Review", "ticket-execute-full-from-input")
-	addOption("ticket-archive", "📦 Archive", "Archive completed ticket with summary", "/4-task:3-complete:1-Archive-Ticket")
-	addOption("ticket-status", "📊 Status", "Update ticket status across documentation", "/4-task:3-complete:2-Status-Ticket")
+	addOption("ticket-archive", "📦 Archive", "Archive completed ticket with summary", "ticket-archive")
+	addOption("ticket-status", "📊 Status", "Update ticket status across documentation", "ticket-status")
 
 	return menu
 }
@@ -609,7 +610,27 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	case "story-list":
 		return executeStoryCommand([]string{"list"}, menuDisplay)
 
-	// Ticket Management
+	// Task Management with Preprocessing
+	case "ticket-from-story":
+		return executeTaskFromStory(ctx, menuDisplay)
+	case "ticket-from-issue":
+		return executeTaskFromIssue(ctx, menuDisplay)
+	case "ticket-from-input":
+		return executeTaskFromInput(ctx, menuDisplay)
+	case "ticket-plan":
+		return executeTaskPlan(ctx, menuDisplay)
+	case "ticket-test-design":
+		return executeTaskTestDesign(ctx, menuDisplay)
+	case "ticket-validate":
+		return executeTaskValidate(ctx, menuDisplay)
+	case "ticket-review":
+		return executeTaskReview(ctx, menuDisplay)
+	case "ticket-archive":
+		return executeTaskArchive(ctx, menuDisplay)
+	case "ticket-status":
+		return executeTaskStatus(ctx, menuDisplay)
+
+	// Legacy Ticket Management (keeping for compatibility)
 	case "ticket-create":
 		return executeTicketCommand([]string{"create"}, menuDisplay)
 	case "ticket-list":
@@ -1319,4 +1340,130 @@ func executeClaudeInstall(ctx *navigation.ProjectContext, menuDisplay *navigatio
 	menuDisplay.ShowSuccess("🎉 .claude directory installed/updated successfully!")
 	menuDisplay.ShowMessage("💡 You can now use Claude Code commands and hooks in this project")
 	return nil
+}
+
+// Task execution functions with preprocessing integration
+
+// executeTaskFromStory handles task creation from story with preprocessing
+func executeTaskFromStory(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessFromStory(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent content generation
+	return executeClaudeCommandInteractive("/4-task:1-start:1-From-story", menuDisplay)
+}
+
+// executeTaskFromIssue handles task creation from GitHub issue with preprocessing
+func executeTaskFromIssue(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessFromIssue(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent content generation
+	return executeClaudeCommandInteractive("/4-task:1-start:2-From-issue", menuDisplay)
+}
+
+// executeTaskFromInput handles task creation from user input with preprocessing
+func executeTaskFromInput(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Get user input for task description
+	fmt.Print("Enter task description: ")
+	var description string
+	fmt.Scanln(&description)
+
+	if strings.TrimSpace(description) == "" {
+		menuDisplay.ShowError("Task description cannot be empty")
+		return fmt.Errorf("empty task description")
+	}
+
+	// Step 1: Execute preprocessing with user input
+	if err := preprocessing.PreprocessFromInput(ctx.ProjectPath, description, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent content generation
+	return executeClaudeCommandInteractive("/4-task:1-start:3-From-input", menuDisplay)
+}
+
+// executeTaskPlan handles task planning with preprocessing
+func executeTaskPlan(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessPlanTask(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent planning
+	return executeClaudeCommandInteractive("/4-task:2-execute:1-Plan-Task", menuDisplay)
+}
+
+// executeTaskTestDesign handles test design with preprocessing
+func executeTaskTestDesign(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessTestDesign(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent test design
+	return executeClaudeCommandInteractive("/4-task:2-execute:2-Test-design", menuDisplay)
+}
+
+// executeTaskValidate handles task validation with preprocessing
+func executeTaskValidate(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessValidateTask(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent validation
+	return executeClaudeCommandInteractive("/4-task:2-execute:4-Validate-Task", menuDisplay)
+}
+
+// executeTaskReview handles task review with preprocessing
+func executeTaskReview(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessReviewTask(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent review
+	return executeClaudeCommandInteractive("/4-task:2-execute:5-Review-Task", menuDisplay)
+}
+
+// executeTaskArchive handles task archiving with preprocessing
+func executeTaskArchive(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing
+	if err := preprocessing.PreprocessArchiveTask(ctx.ProjectPath, menuDisplay); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Step 2: Execute Claude command for intelligent archiving
+	return executeClaudeCommandInteractive("/4-task:3-complete:1-Archive-Task", menuDisplay)
+}
+
+// executeTaskStatus handles task status with preprocessing
+func executeTaskStatus(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Step 1: Execute preprocessing and get status
+	status, err := preprocessing.PreprocessStatusTask(ctx.ProjectPath, menuDisplay)
+	if err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Preprocessing failed: %v", err))
+		return err
+	}
+
+	// Display status information
+	menuDisplay.ShowMessage("📊 Task Status Report:")
+	menuDisplay.ShowMessage(fmt.Sprintf("  %s", status.Message))
+	menuDisplay.ShowMessage(fmt.Sprintf("  %s", status.Details))
+
+	// Step 2: Execute Claude command for detailed status analysis
+	return executeClaudeCommandInteractive("/4-task:3-complete:2-Status-Task", menuDisplay)
 }
