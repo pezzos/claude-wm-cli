@@ -1,18 +1,21 @@
 package workflow
 
-// Priority represents the priority level of a workflow action
-type Priority string
-
-const (
-	PriorityP0 Priority = "P0" // Critical/Blocking
-	PriorityP1 Priority = "P1" // Important
-	PriorityP2 Priority = "P2" // Nice to have
+import (
+	"claude-wm-cli/internal/model"
 )
 
-// String returns the string representation of the priority
-func (p Priority) String() string {
-	return string(p)
-}
+// Priority represents the priority level of a workflow action
+// Now uses the centralized model.Priority type
+type Priority = model.Priority
+
+// Workflow priority constants (using standardized P0-P3 system)
+const (
+	PriorityP0 = model.PriorityP0 // Critical/Blocking
+	PriorityP1 = model.PriorityP1 // Important
+	PriorityP2 = model.PriorityP2 // Nice to have
+)
+
+// Note: String() method is inherited from model.Priority
 
 // WorkflowAction represents an action that can be performed in the workflow
 type WorkflowAction struct {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"claude-wm-cli/internal/errors"
+	"claude-wm-cli/internal/model"
 )
 
 // ExecutionResult represents the result of command execution
@@ -136,7 +136,9 @@ func (e *Executor) executeSingleAttempt(opts ExecutionOptions) *ExecutionResult 
 		return &ExecutionResult{
 			Command:  opts.Command,
 			ExitCode: 1,
-			Error:    errors.ErrInvalidInput("command", opts.Command, "command cannot be empty"),
+			Error:    model.NewValidationError("command cannot be empty").
+				WithContext(opts.Command).
+				WithSuggestion("Provide a valid command to execute"),
 		}
 	}
 
@@ -159,7 +161,10 @@ func (e *Executor) executeSingleAttempt(opts ExecutionOptions) *ExecutionResult 
 		return &ExecutionResult{
 			Command:  opts.Command,
 			ExitCode: 1,
-			Error:    fmt.Errorf("failed to create stdout pipe: %w", err),
+			Error:    model.NewInternalError("failed to create stdout pipe").
+				WithCause(err).
+				WithContext(opts.Command).
+				WithSuggestion("Command execution environment may be corrupted"),
 		}
 	}
 
@@ -168,7 +173,10 @@ func (e *Executor) executeSingleAttempt(opts ExecutionOptions) *ExecutionResult 
 		return &ExecutionResult{
 			Command:  opts.Command,
 			ExitCode: 1,
-			Error:    fmt.Errorf("failed to create stderr pipe: %w", err),
+			Error:    model.NewInternalError("failed to create stderr pipe").
+				WithCause(err).
+				WithContext(opts.Command).
+				WithSuggestion("Command execution environment may be corrupted"),
 		}
 	}
 
@@ -177,7 +185,14 @@ func (e *Executor) executeSingleAttempt(opts ExecutionOptions) *ExecutionResult 
 		return &ExecutionResult{
 			Command:  opts.Command,
 			ExitCode: 1,
-			Error:    fmt.Errorf("failed to start command: %w", err),
+			Error:    model.NewInternalError("failed to start command").
+				WithCause(err).
+				WithContext(opts.Command).
+				WithSuggestions([]string{
+					"Check if command exists and is executable",
+					"Verify system permissions",
+					"Ensure all required dependencies are available",
+				}),
 		}
 	}
 
@@ -212,7 +227,13 @@ func (e *Executor) executeSingleAttempt(opts ExecutionOptions) *ExecutionResult 
 	// Handle different error types
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			result.Error = errors.ErrTimeout("command execution", opts.Timeout)
+			result.Error = model.NewTimeoutError("command execution").
+				WithContext(fmt.Sprintf("command: %s, timeout: %v", opts.Command, opts.Timeout)).
+				WithSuggestions([]string{
+					"Increase timeout duration",
+					"Check if command is hanging",
+					"Verify command execution requirements",
+				})
 			result.ExitCode = 124 // Standard timeout exit code
 		} else {
 			result.Error = err
@@ -311,7 +332,9 @@ func (e *Executor) StreamExecute(opts ExecutionOptions, stdout, stderr io.Writer
 		return &ExecutionResult{
 			Command:  opts.Command,
 			ExitCode: 1,
-			Error:    errors.ErrInvalidInput("command", opts.Command, "command cannot be empty"),
+			Error:    model.NewValidationError("command cannot be empty").
+				WithContext(opts.Command).
+				WithSuggestion("Provide a valid command to execute"),
 		}
 	}
 
@@ -342,7 +365,13 @@ func (e *Executor) StreamExecute(opts ExecutionOptions, stdout, stderr io.Writer
 
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			result.Error = errors.ErrTimeout("command execution", opts.Timeout)
+			result.Error = model.NewTimeoutError("command execution").
+				WithContext(fmt.Sprintf("command: %s, timeout: %v", opts.Command, opts.Timeout)).
+				WithSuggestions([]string{
+					"Increase timeout duration",
+					"Check if command is hanging",
+					"Verify command execution requirements",
+				})
 			result.ExitCode = 124
 		} else {
 			result.Error = err

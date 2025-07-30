@@ -174,7 +174,7 @@ type StateTransition struct {
 //
 // Usage Example:
 //   gitManager := NewGitVersionManager()
-//   err := gitManager.AutoVersionOnWrite("state.json", "update", "Updated epic status")
+//   err := gitManager.AutoVersionOnWrite("stories.json", "update", "Updated epic status")
 type GitVersionManager interface {
 	// AutoVersionOnWrite creates a Git commit after file modifications
 	AutoVersionOnWrite(filePath string, commitType interface{}, description string) error
@@ -212,7 +212,7 @@ type GitCommit struct {
 //
 // Usage Example:
 //   lockManager := NewLockManager()
-//   release, err := lockManager.LockFile("state.json", LockOptions{Timeout: 30*time.Second})
+//   release, err := lockManager.LockFile("stories.json", LockOptions{Timeout: 30*time.Second})
 //   defer release()
 type LockManager interface {
 	// LockFile acquires an exclusive lock on a file

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"claude-wm-cli/internal/model"
 	"claude-wm-cli/internal/project"
 	"claude-wm-cli/internal/state"
 )
@@ -217,7 +218,7 @@ func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
 	// Find current story (either by meta.current_story or by status in_progress)
 	for _, story := range storiesFile.Stories {
 		if story.Metadata.ID == storiesFile.Meta.CurrentStory ||
-			story.Status == state.StatusInProgress {
+			story.Status == model.StatusInProgress {
 			return &story, nil
 		}
 	}
@@ -287,7 +288,7 @@ func (wa *WorkflowAnalyzer) loadCurrentTasks() ([]state.TaskState, error) {
 		// Try to parse as task state
 		var task state.TaskState
 		if err := json.Unmarshal(data, &task); err == nil {
-			if task.Status == state.StatusTodo || task.Status == state.StatusInProgress || task.Status == state.StatusBlocked {
+			if task.Status == state.StatusTodo || task.Status == model.StatusInProgress || task.Status == model.StatusBlocked {
 				tasks = append(tasks, task)
 			}
 		}
@@ -440,7 +441,7 @@ func (wa *WorkflowAnalyzer) detectBlockers(analysis *WorkflowAnalysis) {
 
 	// Check for blocked tasks
 	for _, task := range analysis.CurrentTasks {
-		if task.Status == state.StatusBlocked {
+		if task.Status == model.StatusBlocked {
 			analysis.Blockers = append(analysis.Blockers, WorkflowBlocker{
 				Type:        BlockerMissingDependency,
 				Severity:    "high",
@@ -472,7 +473,7 @@ func (wa *WorkflowAnalyzer) generateRecommendations(analysis *WorkflowAnalysis) 
 		inProgressTasks := 0
 		todoTasks := 0
 		for _, task := range analysis.CurrentTasks {
-			if task.Status == state.StatusInProgress {
+			if task.Status == model.StatusInProgress {
 				inProgressTasks++
 			} else if task.Status == state.StatusTodo {
 				todoTasks++

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"claude-wm-cli/internal/errors"
+	"claude-wm-cli/internal/model"
 )
 
 // GitVersionManager interface for optional Git integration
@@ -88,9 +88,9 @@ func (aw *AtomicWriter) WriteJSON(filePath string, data interface{}, opts *Atomi
 	// Serialize data to JSON
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return errors.NewCLIError("Failed to serialize JSON data", 1).
-			WithDetails(err.Error()).
-			WithContext("file", filePath)
+		return model.NewInternalError("failed to serialize JSON data").
+			WithCause(err).
+			WithContext(filePath)
 	}
 
 	return aw.writeBytes(filePath, jsonData, opts)
@@ -145,15 +145,24 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 	// Ensure target directory exists
 	targetDir := filepath.Dir(filePath)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		return errors.ErrPermissionDenied(targetDir).
-			WithDetails(err.Error()).
-			WithSuggestion("Check directory permissions or run with appropriate privileges")
+		return model.NewFileSystemError("create_directory", targetDir, err).
+			WithSuggestions([]string{
+				"Check directory permissions",
+				"Run with appropriate privileges",
+				"Ensure parent directory exists",
+			})
 	}
 
 	// Create backup if requested and file exists
 	if opts.Backup && fileExists(filePath) {
 		if err := aw.createBackup(filePath); err != nil {
-			return fmt.Errorf("failed to create backup: %w", err)
+			return model.NewInternalError("failed to create backup").
+				WithCause(err).
+				WithContext(filePath).
+				WithSuggestions([]string{
+					"Check write permissions in target directory",
+					"Ensure sufficient disk space",
+				})
 		}
 	}
 
@@ -173,16 +182,22 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 	if opts.Verify {
 		if err := aw.verifyWrite(tempFile, data); err != nil {
 			os.Remove(tempFile)
-			return fmt.Errorf("write verification failed: %w", err)
+			return model.NewValidationError("write verification failed").
+				WithCause(err).
+				WithContext(tempFile).
+				WithSuggestion("Data integrity check failed during atomic write")
 		}
 	}
 
 	// Atomic rename - this is the critical atomic operation
 	if err := os.Rename(tempFile, filePath); err != nil {
 		os.Remove(tempFile)
-		return errors.ErrPermissionDenied(filePath).
-			WithDetails(err.Error()).
-			WithSuggestion("Check file permissions and ensure target directory is writable")
+		return model.NewFileSystemError("rename", filePath, err).
+			WithSuggestions([]string{
+				"Check file permissions",
+				"Ensure target directory is writable",
+				"Verify no other process is using the file",
+			})
 	}
 
 	// Update checksum for integrity tracking
@@ -210,9 +225,12 @@ func (aw *AtomicWriter) writeBytes(filePath string, data []byte, opts *AtomicWri
 func (aw *AtomicWriter) writeToTempFile(tempFile string, data []byte, opts *AtomicWriteOptions) error {
 	file, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, opts.Permissions)
 	if err != nil {
-		return errors.ErrPermissionDenied(tempFile).
-			WithDetails(err.Error()).
-			WithContext("operation", "create_temp_file")
+		return model.NewFileSystemError("create_temp_file", tempFile, err).
+			WithSuggestions([]string{
+				"Check directory permissions",
+				"Ensure sufficient disk space",
+				"Verify temp directory is writable",
+			})
 	}
 	defer file.Close()
 
@@ -221,14 +239,22 @@ func (aw *AtomicWriter) writeToTempFile(tempFile string, data []byte, opts *Atom
 	for written < len(data) {
 		n, err := file.Write(data[written:])
 		if err != nil {
-			return fmt.Errorf("failed to write data to temp file: %w", err)
+			return model.NewFileSystemError("write", tempFile, err).
+				WithSuggestions([]string{
+					"Check disk space availability",
+					"Verify temp directory permissions",
+				})
 		}
 		written += n
 	}
 
 	// Ensure data is flushed to disk
 	if err := file.Sync(); err != nil {
-		return fmt.Errorf("failed to sync temp file: %w", err)
+		return model.NewFileSystemError("sync", tempFile, err).
+		WithSuggestions([]string{
+			"Check disk health and available space",
+			"Verify filesystem supports sync operations",
+		})
 	}
 
 	return nil
@@ -238,20 +264,23 @@ func (aw *AtomicWriter) writeToTempFile(tempFile string, data []byte, opts *Atom
 func (aw *AtomicWriter) verifyWrite(tempFile string, originalData []byte) error {
 	readData, err := os.ReadFile(tempFile)
 	if err != nil {
-		return fmt.Errorf("failed to read temp file for verification: %w", err)
+		return model.NewFileSystemError("read", tempFile, err).
+		WithSuggestion("Failed to read back written data for verification")
 	}
 
 	if len(readData) != len(originalData) {
-		return fmt.Errorf("verification failed: data size mismatch (expected %d, got %d)",
-			len(originalData), len(readData))
+		return model.NewValidationError("data size mismatch during verification").
+		WithContext(fmt.Sprintf("expected %d bytes, got %d bytes", len(originalData), len(readData))).
+		WithSuggestion("Atomic write may have been interrupted")
 	}
 
 	originalChecksum := calculateMD5(originalData)
 	readChecksum := calculateMD5(readData)
 
 	if originalChecksum != readChecksum {
-		return fmt.Errorf("verification failed: checksum mismatch (expected %s, got %s)",
-			originalChecksum, readChecksum)
+		return model.NewValidationError("checksum mismatch during verification").
+		WithContext(fmt.Sprintf("expected %s, got %s", originalChecksum, readChecksum)).
+		WithSuggestion("Data corruption detected during atomic write")
 	}
 
 	return nil
@@ -263,20 +292,29 @@ func (aw *AtomicWriter) createBackup(filePath string) error {
 
 	sourceFile, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to open source file for backup: %w", err)
+		return model.NewFileSystemError("open", filePath, err).
+		WithSuggestion("Cannot create backup - source file not accessible")
 	}
 	defer sourceFile.Close()
 
 	backupFile, err := os.Create(backupPath)
 	if err != nil {
-		return fmt.Errorf("failed to create backup file: %w", err)
+		return model.NewFileSystemError("create", backupPath, err).
+		WithSuggestions([]string{
+			"Check write permissions in target directory",
+			"Ensure sufficient disk space for backup",
+		})
 	}
 	defer backupFile.Close()
 
 	_, err = io.Copy(backupFile, sourceFile)
 	if err != nil {
 		os.Remove(backupPath) // Clean up failed backup
-		return fmt.Errorf("failed to copy data to backup file: %w", err)
+		return model.NewFileSystemError("copy", backupPath, err).
+			WithSuggestions([]string{
+				"Check available disk space",
+				"Verify backup directory permissions",
+			})
 	}
 
 	return nil
@@ -293,9 +331,9 @@ func (aw *AtomicWriter) ReadJSON(filePath string, target interface{}) error {
 	}
 
 	if err := json.Unmarshal(data, target); err != nil {
-		return errors.NewCLIError("Failed to parse JSON data", 1).
-			WithDetails(err.Error()).
-			WithContext("file", filePath).
+		return model.NewValidationError("failed to parse JSON data").
+			WithCause(err).
+			WithContext(filePath).
 			WithSuggestion("Check if the file contains valid JSON")
 	}
 
@@ -305,23 +343,25 @@ func (aw *AtomicWriter) ReadJSON(filePath string, target interface{}) error {
 // ReadBytes atomically reads raw bytes from a file
 func (aw *AtomicWriter) ReadBytes(filePath string) ([]byte, error) {
 	if !fileExists(filePath) {
-		return nil, errors.ErrFileNotFound(filePath)
+		return nil, model.NewNotFoundError("file").WithContext(filePath)
 	}
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, errors.ErrPermissionDenied(filePath).
-			WithDetails(err.Error()).
-			WithSuggestion("Check file permissions and ensure file is readable")
+		return nil, model.NewFileSystemError("read", filePath, err).
+			WithSuggestions([]string{
+				"Check file permissions",
+				"Ensure file is readable",
+				"Verify file is not locked by another process",
+			})
 	}
 
 	// Verify integrity if we have a stored checksum
 	if expectedChecksum, exists := aw.checksums[filePath]; exists {
 		actualChecksum := calculateMD5(data)
 		if actualChecksum != expectedChecksum {
-			return nil, errors.NewCLIError("File integrity check failed", 1).
-				WithDetails(fmt.Sprintf("Expected checksum %s, got %s", expectedChecksum, actualChecksum)).
-				WithContext("file", filePath).
+			return nil, model.NewValidationError("file integrity check failed").
+				WithContext(fmt.Sprintf("%s: expected %s, got %s", filePath, expectedChecksum, actualChecksum)).
 				WithSuggestion("File may have been corrupted or modified externally")
 		}
 	}
@@ -345,14 +385,20 @@ func (aw *AtomicWriter) Delete(filePath string, createBackup bool) error {
 
 	if createBackup {
 		if err := aw.createBackup(filePath); err != nil {
-			return fmt.Errorf("failed to create backup before deletion: %w", err)
+			return model.NewInternalError("failed to create backup before deletion").
+				WithCause(err).
+				WithContext(filePath).
+				WithSuggestion("Cannot safely delete file without backup")
 		}
 	}
 
 	if err := os.Remove(filePath); err != nil {
-		return errors.ErrPermissionDenied(filePath).
-			WithDetails(err.Error()).
-			WithSuggestion("Check file permissions")
+		return model.NewFileSystemError("delete", filePath, err).
+			WithSuggestions([]string{
+				"Check file permissions",
+				"Ensure file is not locked by another process",
+				"Verify you have delete permissions for the directory",
+			})
 	}
 
 	// Remove from checksum tracking
@@ -412,11 +458,14 @@ func (aw *AtomicWriter) ListBackups(filePath string) ([]string, error) {
 func (aw *AtomicWriter) RestoreFromBackup(filePath string) error {
 	backups, err := aw.ListBackups(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to list backups: %w", err)
+		return model.NewFileSystemError("list", filepath.Dir(filePath), err).
+		WithSuggestion("Cannot access backup directory")
 	}
 
 	if len(backups) == 0 {
-		return fmt.Errorf("no backups found for file: %s", filePath)
+		return model.NewNotFoundError("backups").
+		WithContext(filePath).
+		WithSuggestion("No backup files available for restoration")
 	}
 
 	// Use the most recent backup (highest timestamp)
@@ -424,7 +473,8 @@ func (aw *AtomicWriter) RestoreFromBackup(filePath string) error {
 
 	data, err := os.ReadFile(latestBackup)
 	if err != nil {
-		return fmt.Errorf("failed to read backup file: %w", err)
+		return model.NewFileSystemError("read", latestBackup, err).
+		WithSuggestion("Backup file may be corrupted or inaccessible")
 	}
 
 	opts := &AtomicWriteOptions{
@@ -535,7 +585,10 @@ func (ao *AtomicOperation) Execute() error {
 				for _, backup := range backupPaths {
 					os.Remove(backup)
 				}
-				return fmt.Errorf("failed to create transaction backup: %w", err)
+				return model.NewInternalError("failed to create transaction backup").
+					WithCause(err).
+					WithContext(op.filePath).
+					WithSuggestion("Cannot proceed with atomic operation without backup")
 			}
 			backupPaths[op.filePath] = backupPath
 		}
@@ -550,14 +603,20 @@ func (ao *AtomicOperation) Execute() error {
 			if err := ao.writer.writeBytes(op.filePath, op.data, op.opts); err != nil {
 				// Rollback all executed operations
 				ao.rollback(executedOps, backupPaths)
-				return fmt.Errorf("atomic operation failed at write %s: %w", op.filePath, err)
+				return model.NewInternalError("atomic operation failed during write").
+					WithCause(err).
+					WithContext(op.filePath).
+					WithSuggestion("All changes have been rolled back")
 			}
 			executedOps = append(executedOps, op.filePath)
 
 		case "delete":
 			if err := os.Remove(op.filePath); err != nil && !os.IsNotExist(err) {
 				ao.rollback(executedOps, backupPaths)
-				return fmt.Errorf("atomic operation failed at delete %s: %w", op.filePath, err)
+				return model.NewInternalError("atomic operation failed during delete").
+					WithCause(err).
+					WithContext(op.filePath).
+					WithSuggestion("All changes have been rolled back")
 			}
 			executedOps = append(executedOps, op.filePath)
 		}

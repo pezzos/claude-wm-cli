@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+
+	"claude-wm-cli/internal/model"
 )
 
 // ValidationError represents a validation failure
@@ -356,7 +358,16 @@ func isValidName(name string) bool {
 }
 
 func isValidStatus(status Status) bool {
-	validStatuses := []Status{StatusTodo, StatusInProgress, StatusDone, StatusBlocked, StatusCancelled}
+	validStatuses := []Status{
+		StatusTodo,                // Legacy: "todo" -> "planned"
+		model.StatusInProgress,    // Standard: "in_progress"
+		StatusDone,                // Legacy: "done" -> "completed"
+		model.StatusBlocked,       // Standard: "blocked"
+		model.StatusCancelled,     // Standard: "cancelled"
+		model.StatusPlanned,       // Standard: "planned"
+		model.StatusCompleted,     // Standard: "completed"
+		model.StatusOnHold,        // Standard: "on_hold"
+	}
 	for _, valid := range validStatuses {
 		if status == valid {
 			return true
@@ -366,7 +377,12 @@ func isValidStatus(status Status) bool {
 }
 
 func isValidPriority(priority Priority) bool {
-	validPriorities := []Priority{PriorityP0, PriorityP1, PriorityP2, PriorityP3}
+	validPriorities := []Priority{
+		model.PriorityP0, // Critical
+		model.PriorityP1, // High
+		model.PriorityP2, // Medium  
+		model.PriorityP3, // Low
+	}
 	for _, valid := range validPriorities {
 		if priority == valid {
 			return true

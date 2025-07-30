@@ -3,14 +3,14 @@ package story
 import (
 	"time"
 
-	"claude-wm-cli/internal/epic"
+	"claude-wm-cli/internal/model"
 )
 
 // Status represents the status of a story or task
-type Status = epic.Status
+type Status = model.Status
 
 // Priority represents the priority of a story
-type Priority = epic.Priority
+type Priority = model.Priority
 
 // Story represents an individual user story
 type Story struct {
@@ -117,11 +117,11 @@ func (s *Story) CalculateProgress() ProgressMetrics {
 	var completedTasks, inProgressTasks, pendingTasks int
 	for _, task := range s.Tasks {
 		switch task.Status {
-		case epic.StatusCompleted:
+		case model.StatusCompleted:
 			completedTasks++
-		case epic.StatusInProgress:
+		case model.StatusInProgress:
 			inProgressTasks++
-		case epic.StatusPlanned:
+		case model.StatusPlanned:
 			pendingTasks++
 		}
 	}
@@ -139,23 +139,23 @@ func (s *Story) CalculateProgress() ProgressMetrics {
 
 // IsActive returns true if the story is currently being worked on
 func (s *Story) IsActive() bool {
-	return s.Status == epic.StatusInProgress
+	return s.Status == model.StatusInProgress
 }
 
 // CanStart returns true if the story can be started
 func (s *Story) CanStart() bool {
-	return s.Status == epic.StatusPlanned
+	return s.Status == model.StatusPlanned
 }
 
 // CanComplete returns true if the story can be completed
 func (s *Story) CanComplete() bool {
-	if s.Status != epic.StatusInProgress {
+	if s.Status != model.StatusInProgress {
 		return false
 	}
 
 	// Check if all tasks are completed
 	for _, task := range s.Tasks {
-		if task.Status != epic.StatusCompleted {
+		if task.Status != model.StatusCompleted {
 			return false
 		}
 	}

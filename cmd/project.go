@@ -8,6 +8,7 @@ import (
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/executor"
+	"claude-wm-cli/internal/model"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -139,7 +140,12 @@ func importFeedback() error {
 	// Read and process feedback
 	content, err := os.ReadFile(feedbackPath)
 	if err != nil {
-		return fmt.Errorf("failed to read FEEDBACK.md: %w", err)
+		return model.NewFileSystemError("read", feedbackPath, err).
+			WithSuggestions([]string{
+				"Check if FEEDBACK.md exists in the docs/1-project/ directory",
+				"Ensure you have read permissions for the file",
+				"Run 'project challenge' to create a new FEEDBACK.md",
+			})
 	}
 
 	fmt.Printf("✅ Feedback imported (%d bytes)\n", len(content))
@@ -170,7 +176,14 @@ func importFeedback() error {
 	description := "Import and process feedback with AI analysis for actionable insights"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude import feedback command: %w", err)
+		return model.NewInternalError("failed to execute Claude import feedback command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Try running the command manually to debug",
+			})
 	}
 	
 	// Archive processed feedback and reset with template
@@ -190,17 +203,33 @@ func importFeedback() error {
 func archiveAndResetFeedback() error {
 	projectPath, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get current directory: %w", err)
+		return model.NewInternalError("failed to get current directory").
+			WithCause(err).
+			WithSuggestions([]string{
+				"Check if current directory exists",
+				"Verify working directory permissions",
+			})
 	}
 	
 	// Archive current FEEDBACK.md
 	if err := archiveFeedbackFile(projectPath); err != nil {
-		return fmt.Errorf("failed to archive feedback file: %w", err)
+		return model.NewInternalError("failed to archive feedback file").
+			WithCause(err).
+			WithSuggestions([]string{
+				"Check write permissions in docs/archive directory",
+				"Ensure sufficient disk space",
+			})
 	}
 	
 	// Copy template FEEDBACK.md
 	if err := copyFeedbackTemplate(projectPath); err != nil {
-		return fmt.Errorf("failed to copy feedback template: %w", err)
+		return model.NewInternalError("failed to copy feedback template").
+			WithCause(err).
+			WithSuggestions([]string{
+				"Check if template file exists in .claude/commands/template/",
+				"Verify read permissions on template file",
+				"Check write permissions in docs/1-project/",
+			})
 	}
 	
 	return nil
@@ -224,12 +253,23 @@ func archiveFeedbackFile(projectPath string) error {
 	// Ensure archive directory exists
 	archiveDir := filepath.Join(projectPath, "docs/archive")
 	if err := os.MkdirAll(archiveDir, 0755); err != nil {
-		return fmt.Errorf("failed to create archive directory: %w", err)
+		return model.NewFileSystemError("create_directory", archiveDir, err).
+			WithSuggestions([]string{
+				"Check parent directory permissions",
+				"Verify sufficient disk space",
+				"Ensure docs directory exists",
+			})
 	}
 	
 	// Move file to archive
 	if err := os.Rename(sourcePath, archivePath); err != nil {
-		return fmt.Errorf("failed to move FEEDBACK.md to archive: %w", err)
+		return model.NewFileSystemError("move", sourcePath, err).
+			WithContext(fmt.Sprintf("moving to %s", archivePath)).
+			WithSuggestions([]string{
+				"Check source file permissions",
+				"Verify archive directory is writable",
+				"Ensure no other process is using the file",
+			})
 	}
 	
 	fmt.Printf("📁 FEEDBACK.md archived as %s\n", archiveFileName)
@@ -249,7 +289,13 @@ func copyFeedbackTemplate(projectPath string) error {
 	
 	// Copy template file
 	if err := copyFile(templatePath, destPath); err != nil {
-		return fmt.Errorf("failed to copy template: %w", err)
+		return model.NewFileSystemError("copy", templatePath, err).
+			WithContext(fmt.Sprintf("copying to %s", destPath)).
+			WithSuggestions([]string{
+				"Check template file permissions",
+				"Verify destination directory is writable",
+				"Ensure sufficient disk space",
+			})
 	}
 	
 	fmt.Println("📄 Fresh FEEDBACK.md template copied")
@@ -264,7 +310,13 @@ func challengeDocumentation() error {
 	// Check for existing documentation
 	docsPath := "docs/1-project"
 	if _, err := os.Stat(docsPath); os.IsNotExist(err) {
-		return fmt.Errorf("project documentation not found at %s", docsPath)
+		return model.NewNotFoundError("project documentation").
+			WithContext(docsPath).
+			WithSuggestions([]string{
+				"Run 'project init' to create project documentation",
+				"Check if you're in the correct project directory",
+				"Verify docs/1-project directory exists",
+			})
 	}
 
 	// Create Claude executor
@@ -285,7 +337,14 @@ func challengeDocumentation() error {
 	description := "Challenge documentation and assumptions with deep codebase analysis"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude challenge command: %w", err)
+		return model.NewInternalError("failed to execute Claude challenge command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Check if command exists in .claude/commands/",
+			})
 	}
 
 	fmt.Println("✅ Documentation review complete")
@@ -318,7 +377,12 @@ func enrichContext() error {
 - Run 'project status-update' to update overall status
 `
 		if err := os.WriteFile(contextPath, []byte(contextContent), 0644); err != nil {
-			return fmt.Errorf("failed to write context file: %w", err)
+			return model.NewFileSystemError("write", contextPath, err).
+				WithSuggestions([]string{
+					"Check write permissions in docs/1-project/",
+					"Ensure sufficient disk space",
+					"Verify directory exists",
+				})
 		}
 		
 		fmt.Println("✅ Context enrichment complete")
@@ -331,7 +395,14 @@ func enrichContext() error {
 	description := "Enrich project context with AI-powered analysis and insights"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude enrich context command: %w", err)
+		return model.NewInternalError("failed to execute Claude enrich context command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Check if command exists in .claude/commands/",
+			})
 	}
 
 	fmt.Println("✅ Context enrichment complete")
@@ -361,7 +432,14 @@ func updateProjectStatus() error {
 	description := "Update overall project status with comprehensive analysis"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude update project status command: %w", err)
+		return model.NewInternalError("failed to execute Claude update project status command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Check if command exists in .claude/commands/",
+			})
 	}
 	
 	fmt.Println("✅ Project status updated")
@@ -391,7 +469,14 @@ func reviewImplementationStatus() error {
 	description := "Review implementation status across all epics and stories with detailed analysis"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude review implementation status command: %w", err)
+		return model.NewInternalError("failed to execute Claude review implementation status command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Check if command exists in .claude/commands/",
+			})
 	}
 	
 	fmt.Println("✅ Implementation status review complete")
@@ -431,7 +516,12 @@ func planEpics() error {
   }
 }`
 		if err := os.WriteFile(epicsPath, []byte(defaultEpics), 0644); err != nil {
-			return fmt.Errorf("failed to write epics.json: %w", err)
+			return model.NewFileSystemError("write", epicsPath, err).
+				WithSuggestions([]string{
+					"Check write permissions in docs/1-project/",
+					"Ensure sufficient disk space",
+					"Verify directory exists",
+				})
 		}
 		
 		fmt.Println("✅ Epic roadmap planning complete")
@@ -445,7 +535,14 @@ func planEpics() error {
 	description := "Plan epic roadmap with AI-powered analysis and strategic planning"
 	
 	if err := claudeExecutor.ExecutePrompt(prompt, description); err != nil {
-		return fmt.Errorf("failed to execute Claude plan epics command: %w", err)
+		return model.NewInternalError("failed to execute Claude plan epics command").
+			WithCause(err).
+			WithContext(prompt).
+			WithSuggestions([]string{
+				"Check if Claude CLI is properly installed",
+				"Verify Claude CLI authentication",
+				"Check if command exists in .claude/commands/",
+			})
 	}
 
 	fmt.Println("✅ Epic roadmap planning complete")

@@ -3,31 +3,38 @@ package state
 import (
 	"encoding/json"
 	"time"
+
+	"claude-wm-cli/internal/model"
 )
 
 // SchemaVersion represents the current schema version for migration compatibility
 const SchemaVersion = "1.0.0"
 
 // Priority levels for tasks and stories
-type Priority string
-
-const (
-	PriorityP0 Priority = "P0" // Critical
-	PriorityP1 Priority = "P1" // High
-	PriorityP2 Priority = "P2" // Medium
-	PriorityP3 Priority = "P3" // Low
-)
+// Now uses the centralized model.Priority type
+type Priority = model.Priority
 
 // Status represents the current state of an entity
-type Status string
+// Now uses the centralized model.Status type
+type Status = model.Status
 
+// Legacy status constants for backward compatibility
 const (
-	StatusTodo       Status = "todo"
-	StatusInProgress Status = "in_progress"
-	StatusDone       Status = "done"
-	StatusBlocked    Status = "blocked"
-	StatusCancelled  Status = "cancelled"
+	StatusTodo = model.StatusPlanned // "todo" maps to "planned"
+	StatusDone = model.StatusCompleted // "done" maps to "completed" 
 )
+
+// MigrateLegacyStatus converts legacy state status to standardized Status
+func MigrateLegacyStatus(legacy string) Status {
+	switch legacy {
+	case "todo":
+		return model.StatusPlanned
+	case "done":
+		return model.StatusCompleted
+	default:
+		return model.StatusFromLegacy(legacy)
+	}
+}
 
 // Metadata contains common fields for all state entities
 type Metadata struct {
