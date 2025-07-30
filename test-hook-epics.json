@@ -1,0 +1,29 @@
+{
+  "epics": [
+    {
+      "id": "EPIC-001",
+      "title": "Hook Test Epic",
+      "description": "Testing if hooks work",
+      "status": "todo",
+      "priority": "high",
+      "business_value": "Validate hook system",
+      "target_users": "Developers",
+      "success_criteria": ["Hook triggers successfully"],
+      "dependencies": [],
+      "blockers": [],
+      "story_themes": ["Testing"],
+      "userStories": [
+        {
+          "id": "US-001",
+          "title": "THIS SHOULD BE BLOCKED BY HOOK"
+        }
+      ]
+    }
+  ],
+  "project_context": {
+    "current_epic": "EPIC-001",
+    "total_epics": 1,
+    "completed_epics": 0,
+    "project_phase": "development"
+  }
+}
