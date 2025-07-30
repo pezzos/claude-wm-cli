@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	TicketsFileName = "tickets.json"
-	TicketsVersion  = "1.0.0"
+	StoriesFileName = "stories.json"  // Tasks are now stored within stories
+	StoriesVersion  = "1.0.0"
 )
 
 // Manager handles ticket operations and persistence
@@ -453,7 +453,7 @@ func (m *Manager) DeleteTicket(ticketID string) error {
 // Helper methods
 
 func (m *Manager) loadTicketCollection() (*TicketCollection, error) {
-	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", TicketsFileName)
+	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", StoriesFileName)
 
 	// Check if file exists
 	if _, err := os.Stat(ticketsPath); os.IsNotExist(err) {
@@ -461,7 +461,7 @@ func (m *Manager) loadTicketCollection() (*TicketCollection, error) {
 		return &TicketCollection{
 			Tickets: make(map[string]*Ticket),
 			Metadata: TicketMetadata{
-				Version:     TicketsVersion,
+				Version:     StoriesVersion,
 				LastUpdated: time.Now(),
 			},
 		}, nil
@@ -487,7 +487,7 @@ func (m *Manager) loadTicketCollection() (*TicketCollection, error) {
 }
 
 func (m *Manager) saveTicketCollection(collection *TicketCollection) error {
-	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", TicketsFileName)
+	ticketsPath := filepath.Join(m.rootPath, "docs", "2-current-epic", StoriesFileName)
 
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(ticketsPath), 0755); err != nil {
@@ -496,7 +496,7 @@ func (m *Manager) saveTicketCollection(collection *TicketCollection) error {
 
 	// Update metadata
 	collection.Metadata.LastUpdated = time.Now()
-	collection.Metadata.Version = TicketsVersion
+	collection.Metadata.Version = StoriesVersion
 
 	// Marshal to JSON
 	data, err := json.MarshalIndent(collection, "", "  ")
@@ -600,7 +600,7 @@ func (m *Manager) validateAndMigrateCollection(collection *TicketCollection) err
 
 	// Set default metadata if missing
 	if collection.Metadata.Version == "" {
-		collection.Metadata.Version = TicketsVersion
+		collection.Metadata.Version = StoriesVersion
 	}
 
 	// Validate each ticket

@@ -481,8 +481,8 @@ func listTickets(_ *cobra.Command) {
 	debug.LogStub("TICKET", "listTickets", "Ticket listing - no matching Claude prompt available")
 	fmt.Println("📋 Listing tickets...")
 
-	// Read and display tickets from current epic tickets.json file
-	if err := displayTicketsFromFile(wd, listTicketStatus, listTicketPriority, listTicketType, listTicketAll); err != nil {
+	// Read and display tasks from current story in stories.json file
+	if err := displayTasksFromCurrentStory(wd, listTicketStatus); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to display tickets: %v\n", err)
 		os.Exit(1)
 	}
@@ -1000,72 +1000,105 @@ type TicketsJSON struct {
 	} `json:"metadata"`
 }
 
-// displayTicketsFromFile reads tickets.json and displays formatted ticket list
-func displayTicketsFromFile(wd, statusFilter, priorityFilter, typeFilter string, showAll bool) error {
-	// Read tickets.json file
-	ticketsPath := filepath.Join(wd, "docs/2-current-epic/tickets.json")
-	data, err := os.ReadFile(ticketsPath)
+// displayTasksFromCurrentStory reads current story from stories.json and displays its tasks
+func displayTasksFromCurrentStory(wd, statusFilter string) error {
+	// Read stories.json file to get current story's tasks
+	storiesPath := filepath.Join(wd, "docs/2-current-epic/stories.json")
+	data, err := os.ReadFile(storiesPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("🎫 No tickets found. Create tickets with 'ticket create'.")
+			fmt.Println("📋 No stories found. Use 'Start Story' to begin working on tasks.")
 			return nil
 		}
-		return fmt.Errorf("failed to read tickets.json: %w", err)
+		return fmt.Errorf("failed to read stories.json: %w", err)
 	}
 
-	// Parse JSON
-	var ticketsData TicketsJSON
-	if err := json.Unmarshal(data, &ticketsData); err != nil {
-		return fmt.Errorf("failed to parse tickets.json: %w", err)
+	// Read current story selection
+	currentStoryPath := filepath.Join(wd, "docs/2-current-epic/current-story.json")
+	var currentStoryID string
+	if currentStoryData, err := os.ReadFile(currentStoryPath); err == nil {
+		var currentStory struct {
+			Story struct {
+				ID string `json:"id"`
+			} `json:"story"`
+		}
+		if json.Unmarshal(currentStoryData, &currentStory) == nil {
+			currentStoryID = currentStory.Story.ID
+		}
 	}
 
-	// Filter tickets
-	filteredTickets := make([]struct {
-		ID          string `json:"id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Type        string `json:"type"`
-		Status      string `json:"status"`
-		Priority    string `json:"priority"`
-		Estimations struct {
-			EstimatedHours float64 `json:"estimated_hours"`
-			StoryPoints    int     `json:"story_points"`
-		} `json:"estimations"`
-		CreatedAt  string `json:"created_at"`
-		UpdatedAt  string `json:"updated_at"`
-		StartedAt  string `json:"started_at,omitempty"`
-		ResolvedAt string `json:"resolved_at,omitempty"`
-	}, 0)
+	// Parse stories JSON
+	var storiesData struct {
+		Stories []struct {
+			ID    string `json:"id"`
+			Title string `json:"title"`
+			Tasks []struct {
+				ID       string `json:"id"`
+				Title    string `json:"title"`
+				Status   string `json:"status"`
+				Priority string `json:"priority"`
+			} `json:"tasks,omitempty"`
+		} `json:"stories"`
+	}
+	if err := json.Unmarshal(data, &storiesData); err != nil {
+		return fmt.Errorf("failed to parse stories.json: %w", err)
+	}
 
-	for _, ticket := range ticketsData.Tickets {
-		// Apply filters
-		if statusFilter != "" && ticket.Status != statusFilter {
+	// Find current story and its tasks
+	var currentStory *struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+		Tasks []struct {
+			ID       string `json:"id"`
+			Title    string `json:"title"`
+			Status   string `json:"status"`
+			Priority string `json:"priority"`
+		} `json:"tasks,omitempty"`
+	}
+
+	// If we have a current story ID, find that specific story
+	if currentStoryID != "" {
+		for _, story := range storiesData.Stories {
+			if story.ID == currentStoryID {
+				currentStory = &story
+				break
+			}
+		}
+	}
+
+	// If no current story found, show message
+	if currentStory == nil {
+		fmt.Println("📋 No current story selected. Use 'Start Story' to select a story and view its tasks.")
+		return nil
+	}
+
+	// Filter tasks
+	var filteredTasks []struct {
+		ID       string `json:"id"`
+		Title    string `json:"title"`
+		Status   string `json:"status"`
+		Priority string `json:"priority"`
+	}
+
+	for _, task := range currentStory.Tasks {
+		// Apply status filter
+		if statusFilter != "" && task.Status != statusFilter {
 			continue
 		}
-		if priorityFilter != "" && ticket.Priority != priorityFilter {
-			continue
-		}
-		if typeFilter != "" && ticket.Type != typeFilter {
-			continue
-		}
-		// Skip closed/resolved tickets unless showAll is true
-		if !showAll && (ticket.Status == "closed" || ticket.Status == "resolved") {
-			continue
-		}
-		filteredTickets = append(filteredTickets, ticket)
+		filteredTasks = append(filteredTasks, task)
 	}
 
 	// Display header
-	fmt.Printf("🎫 Current Epic Tickets\n")
-	fmt.Printf("======================\n\n")
+	fmt.Printf("📋 Tasks in Story: %s\n", currentStory.Title)
+	fmt.Printf("=======================================\n\n")
 
-	if len(filteredTickets) == 0 {
-		fmt.Printf("No tickets found")
-		if statusFilter != "" || priorityFilter != "" || typeFilter != "" {
-			fmt.Printf(" matching the specified filters")
+	if len(filteredTasks) == 0 {
+		fmt.Printf("No tasks found")
+		if statusFilter != "" {
+			fmt.Printf(" matching the specified status filter")
 		}
 		fmt.Printf(".\n\n")
-		fmt.Printf("💡 Create tickets with: claude-wm-cli ticket create \"Ticket Title\"\n")
+		fmt.Printf("💡 Tasks are managed within stories. Current story has no tasks defined.\n")
 		return nil
 	}
 
@@ -1073,38 +1106,26 @@ func displayTicketsFromFile(wd, statusFilter, priorityFilter, typeFilter string,
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	// Print header
-	fmt.Fprintf(w, "ID\tTITLE\tTYPE\tSTATUS\tPRIORITY\tCURRENT\n")
-	fmt.Fprintf(w, "──\t─────\t────\t──────\t────────\t───────\n")
+	fmt.Fprintf(w, "ID\tTITLE\tSTATUS\tPRIORITY\n")
+	fmt.Fprintf(w, "──\t─────\t──────\t────────\n")
 
-	// Print each ticket
-	for _, ticket := range filteredTickets {
-		// Check if this is the current ticket
-		isCurrent := ""
-		if ticket.ID == ticketsData.CurrentTicket {
-			isCurrent = "→"
-		}
+	// Print each task
+	for _, task := range filteredTasks {
+		// Format status and priority with emoji
+		statusIcon := getTaskStatusIcon(task.Status)
+		priorityIcon := getTaskPriorityIcon(task.Priority)
 
-		// Format type, status and priority with emoji
-		typeIcon := getTicketTypeIconFromString(ticket.Type)
-		statusIcon := getTicketStatusIconFromString(ticket.Status)
-		priorityIcon := getTicketPriorityIconFromString(ticket.Priority)
-
-		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\t%s %s\t%s\n",
-			ticket.ID,
-			truncateTicketString(ticket.Title, 30),
-			typeIcon, ticket.Type,
-			statusIcon, ticket.Status,
-			priorityIcon, ticket.Priority,
-			isCurrent)
+		fmt.Fprintf(w, "%s\t%s\t%s %s\t%s %s\n",
+			task.ID,
+			truncateTicketString(task.Title, 40),
+			statusIcon, task.Status,
+			priorityIcon, task.Priority)
 	}
 
 	w.Flush()
 
 	// Show summary
-	fmt.Printf("\n📊 Summary: %d ticket(s) displayed", len(filteredTickets))
-	if ticketsData.CurrentTicket != "" {
-		fmt.Printf(" • Current: %s", ticketsData.CurrentTicket)
-	}
+	fmt.Printf("\n📊 Summary: %d task(s) in current story", len(filteredTasks))
 	fmt.Printf("\n\n")
 
 	// Show next actions

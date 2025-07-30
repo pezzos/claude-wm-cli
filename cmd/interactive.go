@@ -458,7 +458,7 @@ func createCurrentStoryMenu(_ *navigation.ProjectContext) *navigation.Menu {
 
 	// Current story management options
 	addOption("story-start", "🚀 Start Story", "Identify highest priority unstarted story and start implementation", "/3-story:1-manage:1-Start-Story")
-	addOption("ticket-list", "📋 List Tickets", "List all tickets and interruptions with status and priority", "ticket-list")
+	addOption("task-list", "📋 List Tasks", "List all tasks in current story with status and priority", "task-list")
 	addOption("story-complete", "✅ Complete Story", "Mark story complete and prepare for next story or epic completion", "/3-story:1-manage:2-Complete-Story")
 
 	return menu
@@ -635,8 +635,8 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 	// Legacy Ticket Management (keeping for compatibility)
 	case "ticket-create":
 		return executeTicketCommand([]string{"create"}, menuDisplay)
-	case "ticket-list":
-		return executeTicketCommand([]string{"list"}, menuDisplay)
+	case "task-list":
+		return executeTaskListFromStory(ctx, menuDisplay)
 	case "ticket-current":
 		return executeTicketCommand([]string{"current"}, menuDisplay)
 	case "ticket-execute-full":
