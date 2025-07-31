@@ -45,6 +45,25 @@ internal/
 │   └── cli/             # Adaptateurs pour l'interface CLI
 │       └── epic_adapter.go      # Conversion CLI ↔ Domain
 │
+├── config/              # 📦 SYSTÈME EMBARQUÉ (Templates & Config)
+│   ├── manager.go       # Gestionnaire de configuration package-style
+│   ├── paths.go         # Configuration des chemins système
+│   ├── types.go         # Types pour la gestion de config
+│   └── system/          # 🎯 TEMPLATES SYSTÈME EMBARQUÉS
+│       ├── commands/    # 45+ commandes Claude pour projets utilisateur
+│       │   ├── 1-project/      # Commandes niveau projet
+│       │   ├── 2-epic/         # Commandes niveau epic
+│       │   ├── 3-story/        # Commandes niveau story
+│       │   ├── 4-task/         # Commandes niveau tâche
+│       │   └── templates/      # Templates JSON + schémas
+│       ├── hooks/       # 34+ hooks pour intégration Claude Code
+│       │   ├── smart-notify.sh              # Notifications intelligentes
+│       │   ├── post-write-json-validator-simple.sh  # Validation JSON
+│       │   ├── obsolete-file-detector.sh    # Détection fichiers obsolètes
+│       │   ├── agile/          # Hooks workflows agiles
+│       │   └── common/         # Hooks utilitaires communs
+│       └── settings.json.template  # Configuration Claude Code complète
+│
 └── model/              # 📝 TYPES COMMUNS (Transversal)
     ├── entity.go        # Types de base
     ├── errors.go        # Système d'erreurs riche (CLIError)
@@ -77,6 +96,181 @@ internal/
 - ✅ Infrastructure facilement remplaçable (JSON → Database)
 - ✅ Interface CLI découplée de la logique métier
 - ✅ Chaque couche testable indépendamment
+- ✅ Système de templates embarqués pour déploiement automatique
+
+## 📦 Système de Templates Embarqués (Embedded System)
+
+### Architecture des Templates
+
+**Claude WM CLI** embarque un système complet de templates qui sont automatiquement déployés dans les projets utilisateur. Cette approche garantit une expérience cohérente et des mises à jour centralisées.
+
+#### Couche de Configuration (`internal/config/`)
+
+**Configuration Manager** (`internal/config/manager.go`):
+```go
+type Manager struct {
+    WorkspaceRoot string // .claude-wm root directory
+    SystemPath    string // system/ - templates (read-only)
+    UserPath      string // user/ - user overrides
+    RuntimePath   string // runtime/ - effective config (generated)
+}
+
+// Package-manager style workflow
+func (m *Manager) Initialize() error        // Crée structure workspace
+func (m *Manager) InstallSystemTemplates() error  // Installe templates embarqués
+func (m *Manager) Sync() error             // Merge system+user → runtime → .claude
+```
+
+**Templates Embarqués** (`//go:embed system`):
+```go
+//go:embed system
+var embeddedSystem embed.FS
+
+// Templates copiés depuis internal/config/system/ vers projets utilisateur
+func (m *Manager) copyEmbeddedSystem() error {
+    return fs.WalkDir(embeddedSystem, "system", func(path string, d fs.DirEntry, err error) error {
+        // Copy embedded files to target system directory
+    })
+}
+```
+
+#### Structure des Templates Système
+
+**Commands Templates** (`internal/config/system/commands/`):
+- **45+ commandes** organisées hiérarchiquement
+- **1-project/**: Commandes niveau projet (import feedback, challenges, épics)
+- **2-epic/**: Commandes niveau epic (start, manage, status)
+- **3-story/**: Commandes niveau story (start, complete)
+- **4-task/**: Commandes niveau tâche (from story/issue, execute, validate)
+- **templates/**: Templates JSON avec schémas de validation
+
+**Hooks Templates** (`internal/config/system/hooks/`):
+- **8 hooks essentiels** créés automatiquement
+- **smart-notify.sh**: Système de notifications intelligent
+- **post-write-json-validator-simple.sh**: Validation JSON post-écriture
+- **obsolete-file-detector.sh**: Détection fichiers obsolètes
+- **agile/**: Hooks pour workflows agiles (pre-start, post-iterate)
+- **common/**: Hooks utilitaires (backup-state, run-tests)
+
+**Settings Template** (`internal/config/system/settings.json.template`):
+```json
+{
+  "cleanupPeriodDays": 5,
+  "enableAllProjectMcpServers": true,
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
+    "DISABLE_BUG_COMMAND": "true",
+    "DISABLE_ERROR_REPORTING": "true",
+    "DISABLE_TELEMETRY": "true"
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": ["Bash(*)", "Edit(*)", "Read(*)", "mcp__*", ...]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git *)",
+        "hooks": [{"type": "command", "command": "claude-wm-cli hook git-validation"}]
+      }
+    ],
+    "PostToolUse": [...],
+    "Notification": [...],
+    "Stop": [...]
+  }
+}
+```
+
+### Flux de Déploiement des Templates
+
+#### Installation dans un Nouveau Projet
+```
+1. claude-wm-cli config init
+   ↓
+2. Manager.Initialize()
+   ↓ [Crée structure .claude-wm/]
+3. Manager.InstallSystemTemplates()
+   ↓ [Copie templates embarqués → system/]
+4. Manager.Sync()
+   ↓ [Merge system + user → runtime]
+5. syncToClaudeDir()
+   ↓ [Copie runtime → .claude/ pour Claude Code]
+6. copyDirWithPathCorrection()
+   ↓ [Corrige chemins .claude-wm/.claude/ → .claude/]
+```
+
+#### Architecture Package-Manager Style
+
+**Workspace Structure Générée**:
+```
+project/
+├── .claude-wm/                    # Workspace de configuration
+│   ├── system/                    # Templates système (read-only)
+│   │   ├── commands/ (45 files)   # Commandes embarquées
+│   │   ├── hooks/ (8 files)       # Hooks essentiels
+│   │   └── settings.json.template # Config complète (140 lignes)
+│   ├── user/                      # Personnalisations utilisateur
+│   │   ├── commands/              # Commandes custom
+│   │   ├── hooks/                 # Hooks custom
+│   │   └── settings.json          # Overrides utilisateur
+│   └── runtime/                   # Configuration effective (merged)
+│       ├── commands/              # system + user commands
+│       ├── hooks/                 # system + user hooks
+│       └── settings.json          # configuration finale
+│
+└── .claude/                       # Configuration Claude Code (sync automatique)
+    ├── commands/ (45 files)       # Commandes disponibles
+    ├── hooks/ (8 files)           # Hooks actifs
+    └── settings.json (140 lines)  # Config complète
+```
+
+### Avantages du Système Embarqué
+
+**🚀 Déploiement Automatique**:
+- Un seul binaire contient tout l'écosystème
+- Installation instantanée avec `claude-wm-cli config init`
+- Pas de dépendances externes à télécharger
+
+**🔄 Mises à Jour Centralisées**:
+- Nouvelles commandes/hooks via mise à jour binaire
+- Workflow de migration automatique pour versions
+- Personnalisations utilisateur préservées
+
+**📦 Package Manager Style**:
+- **system/**: Templates par défaut (immutables)
+- **user/**: Personnalisations (modifiables)
+- **runtime/**: Configuration effective (générée)
+- **Merge intelligent** avec priorité utilisateur
+
+**🎯 Architecture Simplifiée**:
+- **Source unique**: `internal/config/system/`
+- **Pas de duplication**: Templates embarqués directement
+- **Maintenance facile**: Modifier templates → rebuild → déployer
+
+### Maintenance des Templates
+
+**Workflow de Développement**:
+```bash
+# 1. Modifier les templates système
+vim internal/config/system/commands/1-project/2-update/1-Import-feedback.md
+vim internal/config/system/hooks/smart-notify.sh
+vim internal/config/system/settings.json.template
+
+# 2. Rebuild le binaire (embed automatique)
+make build
+
+# 3. Test avec nouveau projet
+./claude-wm-cli config init
+
+# 4. Vérification complète
+find .claude/ -type f | wc -l  # Doit montrer tous les fichiers
+```
+
+**Intégration Continue**:
+- Templates embarqués lors du build
+- Tests d'installation automatique
+- Validation de tous les fichiers générés
+- Vérification des permissions et chemins
 
 ## 🏗️ Implémentation Détaillée des Couches
 
