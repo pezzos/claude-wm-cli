@@ -1,0 +1,66 @@
+{
+  "id": "TASK-001",
+  "title": "Critical Production Bug - User Login Failure",
+  "description": "Users unable to log in. Error: 'Authentication service unavailable'. Affecting 500+ users.",
+  "type": "bug",
+  "priority": "critical",
+  "status": "in_progress",
+  "technical_context": {
+    "affected_components": ["authentication-service", "user-database"],
+    "environment": "production",
+    "version": "v2.1.4"
+  },
+  "analysis": {
+    "observations": [
+      "Error started after v2.1.4 deployment at 14:28",
+      "Database connection pool shows exhaustion",
+      "No circuit breaker in place for database connections"
+    ],
+    "approach": "Immediate rollback to stable version, then systematic fix with proper testing",
+    "similar_patterns": [
+      "Previous timeout issues in v2.0.8 - solved with connection pooling",
+      "Similar pattern in payment service - required circuit breaker"
+    ],
+    "reasoning": [
+      "Rollback first to restore service for users", 
+      "Investigate timeout configuration changes in v2.1.4",
+      "Implement proper connection pool monitoring",
+      "Add circuit breaker to prevent cascade failures"
+    ]
+  },
+  "reproduction": {
+    "steps": [
+      "Navigate to login page",
+      "Enter valid credentials", 
+      "Click login button",
+      "Observe error"
+    ],
+    "reproducible": true
+  },
+  "investigation": {
+    "findings": ["Database connection pool exhausted", "Recent deployment changed timeout"],
+    "root_cause": "Connection timeout misconfiguration"
+  },
+  "implementation": {
+    "proposed_solution": "Rollback + config fix + monitoring",
+    "file_changes": [
+      "config/database.js: Restore connection timeout to 30s",
+      "middleware/db-health.js: Add connection pool monitoring",
+      "routes/auth.js: Add circuit breaker for login endpoint"
+    ],
+    "testing_approach": "Smoke tests on rollback, load testing on fix"
+  },
+  "resolution": {
+    "steps": [
+      "1. Rollback to v2.1.3",
+      "2. Verify functionality",
+      "3. Fix timeout config",
+      "4. Re-deploy with testing"
+    ],
+    "completed_steps": ["1"]
+  },
+  "interruption_context": {
+    "blocked_work": "STORY-002 implementation paused",
+    "notes": "Stashed changes, continue with integration testing after fix"
+  }
+}

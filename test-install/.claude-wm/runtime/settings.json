@@ -1,0 +1,15 @@
+{
+  "custom": true,
+  "env": {},
+  "hooks": {
+    "PostToolUse": [],
+    "PreToolUse": []
+  },
+  "model": "haiku",
+  "permissions": {
+    "allowed_tools": [
+      "*"
+    ]
+  },
+  "version": "1.0.0"
+}

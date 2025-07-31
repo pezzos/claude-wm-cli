@@ -1,0 +1,57 @@
+# /2-Complete-Story
+Mark story complete and update stories.json status.
+
+## Steps
+1. Verify all tasks in the current story (within stories.json) are ✅ completed and acceptance criteria met
+2. Mark story as "✅ Completed" in stories.json with completion metrics
+3. Remove docs/2-current-epic/current-story.json to clear current selection
+4. Update IMPLEMENTATION.md with the story's implementation details
+
+## Important
+Run tests and validate acceptance criteria before marking complete. Store lessons learned **with mem0**. Tasks are stored within stories.json, not in separate todo.json files.
+
+# Exit codes:
+- 0: Success
+- 1: Needs iteration
+- 2: Blocked
+- 3: User input needed
+## JSON Schema Validation
+<!-- JSON_SCHEMA_VALIDATION -->
+
+### MANDATORY: Schema Compliance for current-story.json
+
+Before generating or updating JSON files, Claude MUST use schema-aware prompts:
+
+```bash
+# Show schema requirements
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-story
+```
+
+### Schema-Aware Generation
+When updating docs/2-current-epic/current-story.json, include this in your Claude prompt:
+
+**CRITICAL: SCHEMA COMPLIANCE REQUIRED**
+
+You MUST generate JSON that strictly follows the schema. Use:
+```bash
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-story
+```
+
+All required fields must be present with correct types and values.
+
+### Post-Generation Validation
+After completing the main task, validate the generated JSON:
+
+```bash
+# Validate with auto-correction
+if ! .claude-wm/.claude/commands/tools/simple-validator.sh validate-file docs/2-current-epic/current-story.json; then
+    echo "⚠ JSON validation failed - attempting auto-correction"
+    .claude-wm/.claude/commands/tools/json-validator.sh auto-correct docs/2-current-epic/current-story.json
+    exit 1  # Needs iteration
+fi
+```
+
+### Exit Code Integration
+The command should exit with code 1 if validation fails, triggering iteration.
+
+<!-- /JSON_SCHEMA_VALIDATION -->

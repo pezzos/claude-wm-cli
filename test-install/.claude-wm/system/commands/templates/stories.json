@@ -1,0 +1,124 @@
+{
+  "stories": {
+    "STORY-001": {
+      "id": "STORY-001",
+      "title": "User Authentication System",
+      "description": "As a user, I want to securely log in to access my account, so that my data is protected",
+      "epic_id": "EPIC-001",
+      "status": "done",
+      "priority": "high",
+      "acceptance_criteria": [
+        "✅ User can log in with email/password",
+        "✅ Session management works correctly",
+        "✅ Password reset functionality",
+        "✅ Multi-factor authentication support"
+      ],
+      "blockers": [],
+      "dependencies": [],
+      "tasks": [
+        {
+          "id": "STORY-001-TASK-1",
+          "title": "Backend authentication API",
+          "description": "Implement JWT-based authentication endpoints",
+          "status": "done"
+        },
+        {
+          "id": "STORY-001-TASK-2", 
+          "title": "Frontend login components",
+          "description": "Create login/signup UI components",
+          "status": "done"
+        },
+        {
+          "id": "STORY-001-TASK-3",
+          "title": "Security testing",
+          "description": "Test authentication flows and security",
+          "status": "done"
+        }
+      ]
+    },
+    "STORY-002": {
+      "id": "STORY-002",
+      "title": "User Profile Management",
+      "description": "As a user, I want to update my profile information, so that I can keep my account current",
+      "epic_id": "EPIC-001", 
+      "status": "in_progress",
+      "priority": "medium",
+      "acceptance_criteria": [
+        "🚧 User can edit profile fields",
+        "✅ Profile data validation",
+        "📋 Avatar upload functionality",
+        "📋 Privacy settings management"
+      ],
+      "blockers": [
+        {
+          "description": "Waiting for design system components",
+          "impact": "UI implementation delayed"
+        }
+      ],
+      "dependencies": ["STORY-001"],
+      "tasks": [
+        {
+          "id": "STORY-002-TASK-1",
+          "title": "Profile API endpoints",
+          "description": "Create CRUD endpoints for user profiles",
+          "status": "done"
+        },
+        {
+          "id": "STORY-002-TASK-2",
+          "title": "Profile UI components", 
+          "description": "Build profile editing interface",
+          "status": "in_progress"
+        },
+        {
+          "id": "STORY-002-TASK-3",
+          "title": "Avatar upload system",
+          "description": "Implement file upload for profile pictures",
+          "status": "todo"
+        }
+      ]
+    },
+    "STORY-003": {
+      "id": "STORY-003",
+      "title": "Dashboard Analytics",
+      "description": "As a user, I want to see usage analytics on my dashboard, so that I can track my activity",
+      "epic_id": "EPIC-001",
+      "status": "todo", 
+      "priority": "low",
+      "acceptance_criteria": [
+        "📋 Display activity metrics",
+        "📋 Interactive charts and graphs",
+        "📋 Export data functionality",
+        "📋 Time period filtering"
+      ],
+      "blockers": [],
+      "dependencies": ["STORY-002"],
+      "tasks": [
+        {
+          "id": "STORY-003-TASK-1",
+          "title": "Analytics data collection",
+          "description": "Implement tracking for user activities",
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-2",
+          "title": "Dashboard components",
+          "description": "Create analytics visualization components", 
+          "status": "planned"
+        },
+        {
+          "id": "STORY-003-TASK-3",
+          "title": "Export functionality",
+          "description": "Add data export in various formats",
+          "status": "planned"
+        }
+      ]
+    }
+  },
+  "epic_context": {
+    "id": "EPIC-001",
+    "title": "User Management System",
+    "current_story": "STORY-002",
+    "total_stories": 3,
+    "completed_stories": 1
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "file_type_triggers": {
+    "*.py": ["security-validator", "style-consistency.py", "no-mock-code.py"],
+    "*.js|*.ts|*.jsx|*.tsx": ["security-validator", "style-consistency.py", "mcp-tool-enforcer"],
+    "*.go": ["security-validator", "style-consistency.py"],
+    "*.md": ["documentation-standards.sh", "timestamp-validator.py"],
+    "*.sh": ["pre-implement-context7.sh", "security-validator"],
+    "*.json|*.yaml|*.yml": ["env-sync-validator", "security-validator"],
+    "package.json|requirements.txt|go.mod": ["env-sync-validator", "duplicate-detector-go"],
+    "Dockerfile|docker-compose.yml": ["security-validator"],
+    "Bash": ["security-validator", "no-mock-code.py", "git-validator-optimized", "log-commands.py", "mcp-tool-enforcer", "pre-implement-context7.sh", "pre-commit-validator.py"],
+    "Write": ["duplicate-detector-go", "timestamp-validator.py", "security-validator"],
+    "Edit": ["security-validator", "timestamp-validator.py", "style-consistency.py"],
+    "MultiEdit": ["security-validator", "timestamp-validator.py", "style-consistency.py"],
+    "Write_Edit_MultiEdit": ["security-validator", "api-endpoint-verifier.py", "style-consistency.py", "no-mock-code.py", "env-sync-validator", "mcp-tool-enforcer", "timestamp-validator.py", "documentation-standards.sh", "development-operations.sh"],
+    "PostToolUse": ["enhanced-error-logger.py", "protocol-before-fixed.sh", "hook-integration-wrapper.sh"],
+    "*": ["git-validator-optimized", "timestamp-validator.py"]
+  },
+  "hook_triggers": {
+    "security-validator": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go", "*.sh", "*.json", "*.yaml", "*.yml", "Dockerfile", "docker-compose.yml"],
+      "tool_names": ["Bash", "Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Runs security scans on code files and configuration files"
+    },
+    "git-validator-optimized": {
+      "file_patterns": ["*"],
+      "tool_names": ["Bash", "*"],
+      "always_run": true,
+      "description": "Always runs to validate git repository state and commit integrity"
+    },
+    "duplicate-detector-go": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go", "*.java", "*.cpp", "*.c", "*.h"],
+      "tool_names": ["Write", "MultiEdit"],
+      "always_run": false,
+      "description": "Detects duplicate code in programming files when new files are created"
+    },
+    "mcp-tool-enforcer": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go"],
+      "tool_names": ["Bash", "Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Enforces MCP tool usage rules in code files"
+    },
+    "env-sync-validator": {
+      "file_patterns": ["*.env", "*.env.*", "package.json", "requirements.txt", "go.mod", "Cargo.toml", "pom.xml"],
+      "tool_names": ["Write", "Edit"],
+      "always_run": false,
+      "description": "Validates environment variable synchronization in config files"
+    },
+    "style-consistency.py": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go", "*.java", "*.cpp", "*.c", "*.h"],
+      "tool_names": ["Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Checks code style and formatting consistency"
+    },
+    "no-mock-code.py": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go", "*.java"],
+      "tool_names": ["Bash", "Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Prevents mock or placeholder code from being committed"
+    },
+    "timestamp-validator.py": {
+      "file_patterns": ["*"],
+      "tool_names": ["Write", "Edit", "MultiEdit"],
+      "always_run": true,
+      "description": "Always runs to validate timestamps and file modification dates"
+    },
+    "api-endpoint-verifier.py": {
+      "file_patterns": ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.go", "*.java", "*.rb", "*.php"],
+      "tool_names": ["Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Verifies API endpoint definitions and documentation"
+    },
+    "pre-commit-validator.py": {
+      "file_patterns": ["*"],
+      "tool_names": ["Bash"],
+      "always_run": false,
+      "description": "Runs pre-commit validations when using Bash commands"
+    },
+    "pre-implement-context7.sh": {
+      "file_patterns": ["*.sh"],
+      "tool_names": ["Bash"],
+      "always_run": false,
+      "description": "Runs context validation before implementing shell scripts"
+    },
+    "documentation-standards.sh": {
+      "file_patterns": ["*.md", "*.rst", "*.txt", "README*"],
+      "tool_names": ["Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Validates documentation standards and formatting"
+    },
+    "development-operations.sh": {
+      "file_patterns": ["*.md", "*.json", "*.yaml", "*.yml", "Dockerfile", "docker-compose.yml"],
+      "tool_names": ["Write", "Edit", "MultiEdit"],
+      "always_run": false,
+      "description": "Validates development operations and configuration files"
+    },
+    "log-commands.py": {
+      "file_patterns": [],
+      "tool_names": ["Bash"],
+      "always_run": false,
+      "description": "Logs command execution for audit purposes"
+    },
+    "enhanced-error-logger.py": {
+      "file_patterns": [],
+      "tool_names": ["PostToolUse"],
+      "always_run": false,
+      "description": "Logs enhanced error information after tool execution"
+    },
+    "protocol-before-fixed.sh": {
+      "file_patterns": [],
+      "tool_names": ["PostToolUse"],
+      "always_run": false,
+      "description": "Runs protocol validation before marking tasks as fixed"
+    },
+    "hook-integration-wrapper.sh": {
+      "file_patterns": [],
+      "tool_names": ["PostToolUse"],
+      "always_run": false,
+      "description": "Wrapper for hook integration and coordination"
+    },
+    "tool-reliability-analyzer.py": {
+      "file_patterns": [],
+      "tool_names": ["PostToolUse"],
+      "always_run": false,
+      "description": "Analyzes tool reliability and performance metrics"
+    }
+  },
+  "optimization_settings": {
+    "enable_git_diff_analysis": true,
+    "enable_tool_based_filter": true,
+    "enable_file_type_filter": true,
+    "max_files_for_full_scan": 100,
+    "conservative_mode": false,
+    "debug_filtering": false
+  },
+  "performance_targets": {
+    "max_hook_execution_time_ms": 5000,
+    "target_filtering_reduction_percent": 30,
+    "max_concurrent_file_analysis": 10
+  },
+  "exclusion_patterns": {
+    "skip_directories": [
+      "node_modules",
+      ".git",
+      "venv",
+      "__pycache__",
+      ".pytest_cache",
+      "target",
+      "dist",
+      "build"
+    ],
+    "skip_file_extensions": [
+      ".pyc",
+      ".pyo",
+      ".class",
+      ".o",
+      ".obj",
+      ".exe",
+      ".dll",
+      ".so",
+      ".dylib"
+    ]
+  }
+}

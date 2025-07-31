@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "current-story.schema.json",
+  "title": "Current Story Schema",
+  "description": "Schema for validating current story data structure",
+  "type": "object",
+  "properties": {
+    "story": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^STORY-[0-9]{3}$",
+          "description": "Story identifier in format STORY-XXX"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Story title"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "description": "User story description following 'As a... I want... so that...' format"
+        },
+        "epic_id": {
+          "type": "string",
+          "pattern": "^EPIC-[0-9]{3}$",
+          "description": "Parent epic identifier"
+        },
+        "epic_title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Parent epic title"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["todo", "in_progress", "done", "blocked"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        }
+      },
+      "required": ["id", "title", "description", "epic_id", "epic_title", "status", "priority"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["story"],
+  "additionalProperties": false
+}

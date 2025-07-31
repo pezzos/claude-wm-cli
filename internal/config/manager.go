@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Manager handles the package manager style configuration system
@@ -54,6 +55,38 @@ func (m *Manager) Initialize() error {
 
 // InstallSystemTemplates installs default templates to system directory
 func (m *Manager) InstallSystemTemplates() error {
+	// Get the path to the embedded system templates (in the claude-wm-cli repo)
+	execPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("failed to get executable path: %w", err)
+	}
+	
+	// Try to find the system templates relative to the executable
+	execDir := filepath.Dir(execPath)
+	embeddedSystemPath := filepath.Join(execDir, ".claude-wm", "system")
+	
+	// If not found relative to executable, try relative to working directory (for development)
+	if _, err := os.Stat(embeddedSystemPath); os.IsNotExist(err) {
+		cwd, _ := os.Getwd()
+		embeddedSystemPath = filepath.Join(cwd, ".claude-wm", "system")
+	}
+	
+	// Check if embedded system templates exist
+	if _, err := os.Stat(embeddedSystemPath); os.IsNotExist(err) {
+		// Fallback to basic templates if no embedded system found
+		return m.installBasicTemplates()
+	}
+
+	// Copy embedded system templates to user's system directory
+	if err := copyDir(embeddedSystemPath, m.SystemPath); err != nil {
+		return fmt.Errorf("failed to copy system templates: %w", err)
+	}
+
+	return nil
+}
+
+// installBasicTemplates creates minimal templates when embedded system is not available
+func (m *Manager) installBasicTemplates() error {
 	// Create default settings.json template
 	defaultSettings := map[string]interface{}{
 		"version": "1.0.0",
@@ -77,7 +110,7 @@ func (m *Manager) InstallSystemTemplates() error {
 		return fmt.Errorf("failed to write settings template: %w", err)
 	}
 
-	// Create default template files
+	// Create minimal template files
 	templates := map[string]string{
 		"commands/templates/current-task.json": `{
   "id": "",
@@ -166,6 +199,11 @@ func (m *Manager) Sync() error {
 	// Merge hooks
 	if err := m.mergeDirectory("hooks"); err != nil {
 		return fmt.Errorf("failed to merge hooks: %w", err)
+	}
+
+	// Sync runtime configuration to .claude/ directory for Claude Code
+	if err := m.syncToClaudeDir(); err != nil {
+		return fmt.Errorf("failed to sync to .claude directory: %w", err)
 	}
 
 	return nil
@@ -283,6 +321,77 @@ func copyDir(src, dst string) error {
 
 		return copyFile(path, dstPath)
 	})
+}
+
+// syncToClaudeDir copies the runtime configuration to .claude/ directory
+func (m *Manager) syncToClaudeDir() error {
+	// Get project root (parent of .claude-wm)
+	projectRoot := filepath.Dir(m.WorkspaceRoot)
+	claudeDir := filepath.Join(projectRoot, ".claude")
+
+	// Clean and recreate .claude directory
+	if err := os.RemoveAll(claudeDir); err != nil {
+		return fmt.Errorf("failed to clean .claude directory: %w", err)
+	}
+	if err := os.MkdirAll(claudeDir, 0755); err != nil {
+		return fmt.Errorf("failed to create .claude directory: %w", err)
+	}
+
+	// Copy runtime configuration to .claude with path corrections
+	if err := m.copyDirWithPathCorrection(m.RuntimePath, claudeDir); err != nil {
+		return fmt.Errorf("failed to copy runtime to .claude: %w", err)
+	}
+
+	return nil
+}
+
+// copyDirWithPathCorrection copies a directory while correcting path references in text files
+func (m *Manager) copyDirWithPathCorrection(src, dst string) error {
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Calculate relative path
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		dstPath := filepath.Join(dst, relPath)
+
+		if d.IsDir() {
+			return os.MkdirAll(dstPath, 0755)
+		}
+
+		// For text files (.md, .sh, .json), correct path references
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext == ".md" || ext == ".sh" || ext == ".json" {
+			return m.copyFileWithPathCorrection(path, dstPath)
+		}
+
+		// For other files, copy directly
+		return copyFile(path, dstPath)
+	})
+}
+
+// copyFileWithPathCorrection copies a file while correcting path references
+func (m *Manager) copyFileWithPathCorrection(src, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	// Replace .claude-wm/.claude/ references with .claude/
+	content := string(data)
+	content = strings.ReplaceAll(content, ".claude-wm/.claude/", ".claude/")
+
+	// Create destination directory if needed
+	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(dst, []byte(content), 0644)
 }
 
 func mergeMap(dst, src map[string]interface{}) {

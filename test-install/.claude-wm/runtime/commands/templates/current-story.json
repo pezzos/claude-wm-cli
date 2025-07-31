@@ -1,0 +1,11 @@
+{
+  "story": {
+    "id": "STORY-001",
+    "title": "User Authentication System",
+    "description": "As a user, I want to securely log in to access my account, so that my data is protected",
+    "epic_id": "EPIC-001",
+    "epic_title": "User Management System",
+    "status": "done",
+    "priority": "high"
+  }
+}
