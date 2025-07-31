@@ -217,6 +217,8 @@ func runInteractiveNavigation(
 			menu = createTicketMenu(ctx)
 		case "claude":
 			menu = createClaudeMenu(ctx)
+		case "metrics":
+			menu = createMetricsMenu(ctx)
 		default:
 			menu = createMainMenu(ctx, suggestions)
 			currentMenu = "main"
@@ -300,6 +302,10 @@ func runInteractiveNavigation(
 			menuStack = append(menuStack, currentMenu)
 			currentMenu = "claude"
 
+		case "metrics-menu":
+			menuStack = append(menuStack, currentMenu)
+			currentMenu = "metrics"
+
 		default:
 			// Handle action execution
 			err := executeAction(result.Action, ctx, menuDisplay)
@@ -339,6 +345,7 @@ func createMainMenu(_ *navigation.ProjectContext, _ []*navigation.Suggestion) *n
 	addOption("current-epic-menu", "Current epic management", "Start epic/Plan stories/Complete epic", "current-epic-menu")
 	addOption("current-story-menu", "Current story management", "Start story/Complete story", "current-story-menu")
 	addOption("ticket-menu", "Ticket management", "Create/Plan/Execute/Complete", "ticket-menu")
+	addOption("metrics-menu", "Performance metrics", "Analyze/Profile/Optimize", "metrics-menu")
 	addOption("claude-menu", ".claude management", "Import/Install", "claude-menu")
 
 	return menu
@@ -580,6 +587,55 @@ func createClaudeMenu(_ *navigation.ProjectContext) *navigation.Menu {
 	return menu
 }
 
+// createMetricsMenu builds the Performance metrics submenu
+func createMetricsMenu(_ *navigation.ProjectContext) *navigation.Menu {
+	menu := &navigation.Menu{
+		Title:       "📊 Performance Metrics",
+		Options:     []navigation.MenuOption{},
+		ShowNumbers: true,
+		ShowHelp:    true,
+		AllowBack:   true,
+		AllowQuit:   true,
+	}
+
+	// Helper function to add regular option
+	addOption := func(id, label, description, action string) {
+		menu.Options = append(menu.Options, navigation.MenuOption{
+			ID:          id,
+			Label:       label,
+			Description: description,
+			Action:      action,
+			Enabled:     true,
+		})
+	}
+
+	// Overview section header
+	menu.Options = append(menu.Options, navigation.MenuOption{
+		ID:          "overview-header",
+		Label:       "Overview",
+		Description: "",
+		Action:      "",
+		Enabled:     false,
+	})
+	addOption("metrics-status", "🔍 Status", "Show metrics collection status and database info", "metrics-status")
+	addOption("metrics-commands", "📋 Commands", "List all commands with execution statistics", "metrics-commands")
+	addOption("metrics-slow", "🐌 Slow Commands", "Show slowest commands that need optimization", "metrics-slow")
+
+	// Analysis section header
+	menu.Options = append(menu.Options, navigation.MenuOption{
+		ID:          "analysis-header",
+		Label:       "Detailed Analysis",
+		Description: "",
+		Action:      "",
+		Enabled:     false,
+	})
+	addOption("metrics-command", "⚡ Analyze Command", "Detailed statistics for a specific command", "metrics-command")
+	addOption("metrics-steps", "🔬 Analyze Steps", "Step-by-step performance breakdown", "metrics-steps")
+	addOption("metrics-projects", "📈 Projects Comparison", "Compare performance across different projects", "metrics-projects")
+
+	return menu
+}
+
 // executeAction handles the execution of selected actions
 func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
 	switch action {
@@ -675,6 +731,20 @@ func executeAction(action string, ctx *navigation.ProjectContext, menuDisplay *n
 		return executeConfigSync(ctx, menuDisplay)
 	case "config-upgrade":
 		return executeConfigUpgrade(ctx, menuDisplay)
+
+	// Metrics Management
+	case "metrics-status":
+		return executeMetricsStatus(ctx, menuDisplay)
+	case "metrics-commands":
+		return executeMetricsCommands(ctx, menuDisplay)
+	case "metrics-slow":
+		return executeMetricsSlow(ctx, menuDisplay)
+	case "metrics-projects":
+		return executeMetricsProjects(ctx, menuDisplay)
+	case "metrics-command":
+		return executeMetricsCommand(ctx, menuDisplay)
+	case "metrics-steps":
+		return executeMetricsSteps(ctx, menuDisplay)
 
 	// Legacy actions
 	case "init-project":
@@ -1979,5 +2049,91 @@ func executeConfigUpgrade(ctx *navigation.ProjectContext, menuDisplay *navigatio
 
 	menuDisplay.ShowSuccess("✅ System templates upgraded successfully!")
 	menuDisplay.ShowMessage("💡 Your user customizations have been preserved")
+	return nil
+}
+
+// Metrics execution functions
+
+// executeMetricsStatus shows metrics collection status
+func executeMetricsStatus(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := []string{"metrics", "status"}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsCommands shows all commands with statistics
+func executeMetricsCommands(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := []string{"metrics", "commands"}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsSlow shows slowest commands
+func executeMetricsSlow(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := []string{"metrics", "slow"}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsProjects shows project comparison
+func executeMetricsProjects(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	cmdArgs := []string{"metrics", "projects"}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsCommand shows detailed command analysis with user input
+func executeMetricsCommand(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Get command name from user
+	commandName, err := menuDisplay.PromptString("Enter command name to analyze (e.g., 'interactive', 'version')")
+	if err != nil {
+		return err
+	}
+	
+	if strings.TrimSpace(commandName) == "" {
+		menuDisplay.ShowError("Command name cannot be empty")
+		return fmt.Errorf("empty command name")
+	}
+	
+	cmdArgs := []string{"metrics", "command", strings.TrimSpace(commandName)}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsSteps shows step-by-step analysis with user input
+func executeMetricsSteps(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
+	// Get command name from user
+	commandName, err := menuDisplay.PromptString("Enter command name to analyze steps (e.g., 'interactive')")
+	if err != nil {
+		return err
+	}
+	
+	if strings.TrimSpace(commandName) == "" {
+		menuDisplay.ShowError("Command name cannot be empty")
+		return fmt.Errorf("empty command name")
+	}
+	
+	cmdArgs := []string{"metrics", "steps", strings.TrimSpace(commandName)}
+	return executeMetricsSubcommand(cmdArgs, menuDisplay)
+}
+
+// executeMetricsSubcommand executes a metrics subcommand
+func executeMetricsSubcommand(args []string, menuDisplay *navigation.MenuDisplay) error {
+	execPath, err := os.Executable()
+	if err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to get executable path: %v", err))
+		return err
+	}
+
+	buildPath := filepath.Join(filepath.Dir(filepath.Dir(execPath)), "build", "claude-wm-cli")
+	if _, err := os.Stat(buildPath); err == nil {
+		execPath = buildPath
+	}
+
+	cmd := exec.Command(execPath, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		menuDisplay.ShowError(fmt.Sprintf("Failed to execute metrics %s: %v", args[1], err))
+		return err
+	}
+
+	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Metrics %s completed successfully", args[1]))
 	return nil
 }
