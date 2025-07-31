@@ -3,10 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/claude-wm-cli/internal/hooks"
+	"claude-wm-cli/internal/hooks"
 )
 
 var hookCmd = &cobra.Command{

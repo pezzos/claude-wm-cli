@@ -3,11 +3,12 @@ package hooks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
-	"github.com/claude-wm-cli/internal/formatting"
-	"github.com/claude-wm-cli/internal/git"
-	"github.com/claude-wm-cli/internal/validation"
+	"claude-wm-cli/internal/formatting"
+	"claude-wm-cli/internal/git"
+	"claude-wm-cli/internal/validation"
 )
 
 // ToolInput represents input from Claude Code hooks
@@ -31,7 +32,7 @@ func NewHookHandler(projectRoot string) *HookHandler {
 // HandleGitValidation handles git validation hooks
 func (h *HookHandler) HandleGitValidation() error {
 	// Read input from stdin
-	inputBytes, err := os.ReadAll(os.Stdin)
+	inputBytes, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return fmt.Errorf("error reading input: %v", err)
 	}
@@ -71,7 +72,7 @@ func (h *HookHandler) HandleAutoFormat() error {
 // HandleDuplicateDetection handles duplicate detection hooks
 func (h *HookHandler) HandleDuplicateDetection() error {
 	// Read input from stdin
-	inputBytes, err := os.ReadAll(os.Stdin)
+	inputBytes, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return fmt.Errorf("error reading input: %v", err)
 	}
