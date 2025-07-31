@@ -1,11 +1,9 @@
 {
-  "custom": true,
   "env": {},
   "hooks": {
     "PostToolUse": [],
     "PreToolUse": []
   },
-  "model": "haiku",
   "permissions": {
     "allowed_tools": [
       "*"
