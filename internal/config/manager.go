@@ -439,7 +439,7 @@ func (m *Manager) createEssentialHooks() error {
 		}
 	}
 	
-	// Create essential hook files
+	// Create essential hook files based on the real project
 	hooks := map[string]string{
 		"README.md": `# Claude WM CLI Hooks
 
@@ -447,29 +447,144 @@ This directory contains hooks for Claude WM CLI integration.
 
 ## Available Hooks
 
-- agile/: Agile workflow hooks
-- common/: Common utility hooks
-- config/: Configuration hooks
+- post-write-json-validator-simple.sh: Validates JSON files after write operations
+- smart-notify.sh: Smart notification system for workflows
+- obsolete-file-detector.sh: Detects and reports obsolete files
 
 ## Usage
 
-Hooks are automatically executed by Claude Code based on configuration.
+Hooks are automatically executed by Claude Code based on configuration in settings.json.
+`,
+		"post-write-json-validator-simple.sh": `#!/bin/bash
+# Simple JSON validator for post-write operations
+# Usage: post-write-json-validator-simple.sh <file_path>
+
+FILE_PATH="$1"
+
+if [[ -z "$FILE_PATH" ]]; then
+    exit 0
+fi
+
+# Only validate JSON files
+if [[ "$FILE_PATH" == *.json ]]; then
+    if command -v jq >/dev/null 2>&1; then
+        if ! jq empty "$FILE_PATH" >/dev/null 2>&1; then
+            echo "⚠️  JSON validation failed for $FILE_PATH" >&2
+            exit 1
+        else
+            echo "✅ JSON validation passed for $FILE_PATH"
+        fi
+    else
+        # Fallback to basic Python validation if jq not available
+        if command -v python3 >/dev/null 2>&1; then
+            if ! python3 -m json.tool "$FILE_PATH" >/dev/null 2>&1; then
+                echo "⚠️  JSON validation failed for $FILE_PATH" >&2
+                exit 1
+            else
+                echo "✅ JSON validation passed for $FILE_PATH"
+            fi
+        fi
+    fi
+fi
+
+exit 0
+`,
+		"smart-notify.sh": `#!/bin/bash
+# Smart notification system for Claude WM CLI
+# Usage: smart-notify.sh <event_type>
+
+EVENT_TYPE="$1"
+
+case "$EVENT_TYPE" in
+    "question-waiting")
+        echo "🤔 Claude is waiting for your input..." >&2
+        ;;
+    "task-completed")
+        echo "✅ Task completed successfully!" >&2
+        ;;
+    "error-occurred")
+        echo "❌ An error occurred during execution" >&2
+        ;;
+    *)
+        echo "📋 Claude WM CLI notification: $EVENT_TYPE" >&2
+        ;;
+esac
+
+# Optional: Send system notification if available
+if command -v osascript >/dev/null 2>&1; then
+    # macOS notification
+    osascript -e "display notification \"$EVENT_TYPE\" with title \"Claude WM CLI\"" 2>/dev/null || true
+elif command -v notify-send >/dev/null 2>&1; then
+    # Linux notification
+    notify-send "Claude WM CLI" "$EVENT_TYPE" 2>/dev/null || true
+fi
+
+exit 0
+`,
+		"obsolete-file-detector.sh": `#!/bin/bash
+# Detects obsolete files in the project
+# Usage: obsolete-file-detector.sh
+
+echo "🔍 Checking for obsolete files..."
+
+# Common obsolete file patterns
+OBSOLETE_PATTERNS=(
+    "*.tmp"
+    "*.bak"
+    "*.old"
+    "*~"
+    ".DS_Store"
+    "Thumbs.db"
+    "*.log"
+    "node_modules/.cache"
+)
+
+FOUND_OBSOLETE=false
+
+for pattern in "${OBSOLETE_PATTERNS[@]}"; do
+    while IFS= read -r -d '' file; do
+        if [[ -f "$file" ]]; then
+            echo "⚠️  Found obsolete file: $file"
+            FOUND_OBSOLETE=true
+        fi
+    done < <(find . -name "$pattern" -type f -print0 2>/dev/null)
+done
+
+if [[ "$FOUND_OBSOLETE" == "false" ]]; then
+    echo "✅ No obsolete files detected"
+fi
+
+exit 0
 `,
 		"agile/pre-start.sh": `#!/bin/bash
 # Pre-start hook for agile workflows
-echo "Starting agile workflow..."
+echo "🚀 Starting agile workflow..."
+echo "📋 Initializing project context..."
 `,
 		"agile/post-iterate.sh": `#!/bin/bash
 # Post-iterate hook for agile workflows  
-echo "Iteration completed!"
+echo "✅ Iteration completed!"
+echo "📊 Updating project metrics..."
 `,
 		"common/backup-state.sh": `#!/bin/bash
 # Backup project state
-echo "Backing up project state..."
+echo "💾 Backing up project state..."
+if [[ -d ".claude-wm" ]]; then
+    echo "📁 Found .claude-wm directory"
+fi
 `,
 		"common/run-tests.sh": `#!/bin/bash
 # Run project tests
-echo "Running tests..."
+echo "🧪 Running tests..."
+if [[ -f "package.json" ]] && command -v npm >/dev/null 2>&1; then
+    npm test
+elif [[ -f "go.mod" ]] && command -v go >/dev/null 2>&1; then
+    go test ./...
+elif [[ -f "requirements.txt" ]] && command -v python3 >/dev/null 2>&1; then
+    python3 -m pytest
+else
+    echo "ℹ️  No recognized test framework found"
+fi
 `,
 	}
 	
