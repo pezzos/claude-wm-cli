@@ -1004,7 +1004,7 @@ func displayTasksFromCurrentStory(wd, statusFilter string) error {
 
 	// Parse stories JSON
 	var storiesData struct {
-		Stories []struct {
+		Stories map[string]struct {
 			ID    string `json:"id"`
 			Title string `json:"title"`
 			Tasks []struct {
