@@ -5,6 +5,11 @@
   "description": "Schema for validating epics collection data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/epics\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "epics": {
       "type": "array",
       "items": {
@@ -120,6 +125,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["epics", "project_context"],
+  "required": ["$schema", "epics", "project_context"],
   "additionalProperties": false
 }

@@ -15,6 +15,7 @@ import (
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/epic"
 	"claude-wm-cli/internal/executor"
+	"claude-wm-cli/internal/validation"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -305,6 +306,13 @@ func createEpic(title string, _ *cobra.Command) {
 }
 
 func listEpics(_ *cobra.Command) {
+	// Validate JSON files before proceeding
+	validator := validation.NewJSONValidator()
+	if err := validator.ValidateSpecificJSON("epics"); err != nil {
+		fmt.Fprintf(os.Stderr, "❌ JSON validation failed: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Get current working directory
 	wd, err := os.Getwd()
 	if err != nil {

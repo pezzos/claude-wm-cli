@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"claude-wm-cli/internal/model"
+	"claude-wm-cli/internal/validation"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,6 +63,20 @@ CONFIGURATION:
   Default config file: ~/.claude-wm-cli.yaml or ./.claude-wm-cli.yaml
   Environment variables: CLAUDE_WM_* (e.g., CLAUDE_WM_VERBOSE=true)`,
 	Version: Version,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Skip validation for init, config, help, and version commands
+		cmdName := cmd.Name()
+		if cmdName == "init" || cmdName == "config" || cmdName == "help" || cmdName == "version" {
+			return
+		}
+
+		// Validate all JSON files at startup
+		if err := validation.ValidateOnStartup(); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ JSON validation failed at startup:\n%v\n", err)
+			fmt.Fprintf(os.Stderr, "\n💡 Use hooks to auto-correct JSON files or fix manually\n")
+			os.Exit(1)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

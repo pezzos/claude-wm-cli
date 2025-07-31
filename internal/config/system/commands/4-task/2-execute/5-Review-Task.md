@@ -101,7 +101,7 @@ Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
 ```bash
 # Show schema requirements
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements iterations
 ```
 
 ### Schema-Aware Generation
@@ -114,8 +114,10 @@ You MUST generate JSON that strictly follows the schema. Use:
 .claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements iterations
 ```
 
-All required fields must be present with correct types and values.
-
+**MANDATORY REQUIREMENTS:**
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/iterations.schema.json"
+2. All required fields must be present with correct types and values
+3. All nested objects must have their required fields
 ### Post-Generation Validation
 After completing the main task, validate the generated JSON:
 

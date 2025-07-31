@@ -5,6 +5,11 @@
   "description": "Schema for validating stories collection data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/stories\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "stories": {
       "type": "object",
       "patternProperties": {
@@ -145,6 +150,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["stories", "epic_context"],
+  "required": ["$schema", "stories", "epic_context"],
   "additionalProperties": false
 }

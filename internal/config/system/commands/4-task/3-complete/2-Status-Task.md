@@ -37,8 +37,10 @@ You MUST generate JSON that strictly follows the schema. Use:
 .claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
 ```
 
-All required fields must be present with correct types and values.
-
+**MANDATORY REQUIREMENTS:**
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/current-task.schema.json"
+2. All required fields must be present with correct types and values
+3. All nested objects must have their required fields
 ### Post-Generation Validation
 After completing the main task, validate the generated JSON:
 

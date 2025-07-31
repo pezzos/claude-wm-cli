@@ -5,10 +5,10 @@ Archive completed epic, update metrics
 1. Verify all stories in stories.json are ✅ completed
 2. Archive docs/2-current-epic/ to docs/archive/{epic-name}-{date}/
 3. Update epics.json status to "✅ Completed" with metrics
-4. Enrich METRICS.md with the stats of the epic
+4. Enrich metrics.json with the stats of the epic
 
 ## Important
-Validate epic success criteria before completing. Update METRICS.md with epic performance data.
+Validate epic success criteria before completing. Update metrics.json with epic performance data.
 
 # Exit codes:
 - 0: Success
@@ -18,35 +18,37 @@ Validate epic success criteria before completing. Update METRICS.md with epic pe
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-epic.json
+### MANDATORY: Schema Compliance for metrics.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
 ```bash
 # Show schema requirements
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-epic
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements metrics
 ```
 
 ### Schema-Aware Generation
-When updating docs/2-current-epic/current-epic.json, include this in your Claude prompt:
+When updating docs/2-current-epic/metrics.json, include this in your Claude prompt:
 
 **CRITICAL: SCHEMA COMPLIANCE REQUIRED**
 
 You MUST generate JSON that strictly follows the schema. Use:
 ```bash
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-epic
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements metrics
 ```
 
-All required fields must be present with correct types and values.
-
+**MANDATORY REQUIREMENTS:**
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/metrics.schema.json"
+2. All required fields must be present with correct types and values
+3. All nested objects must have their required fields
 ### Post-Generation Validation
 After completing the main task, validate the generated JSON:
 
 ```bash
 # Validate with auto-correction
-if ! .claude-wm/.claude/commands/tools/simple-validator.sh validate-file docs/2-current-epic/current-epic.json; then
+if ! .claude-wm/.claude/commands/tools/simple-validator.sh validate-file docs/2-current-epic/metrics.json; then
     echo "⚠ JSON validation failed - attempting auto-correction"
-    .claude-wm/.claude/commands/tools/json-validator.sh auto-correct docs/2-current-epic/current-epic.json
+    .claude-wm/.claude/commands/tools/json-validator.sh auto-correct docs/2-current-epic/metrics.json
     exit 1  # Needs iteration
 fi
 ```

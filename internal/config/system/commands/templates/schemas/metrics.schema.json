@@ -5,6 +5,11 @@
   "description": "Schema for validating project metrics data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/metrics\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "project_overview": {
       "type": "object",
       "properties": {
@@ -277,6 +282,6 @@
       "description": "ISO 8601 datetime when metrics were last updated"
     }
   },
-  "required": ["project_overview", "current_epic", "iteration_performance", "time_analytics", "quality_metrics", "team_performance", "trend_indicators", "last_updated"],
+  "required": ["$schema", "project_overview", "current_epic", "iteration_performance", "time_analytics", "quality_metrics", "team_performance", "trend_indicators", "last_updated"],
   "additionalProperties": false
 }

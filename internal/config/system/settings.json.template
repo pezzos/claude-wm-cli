@@ -108,7 +108,25 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write",
+        "matcher": "Write(*.json)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-write-json-validator-simple.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit(*.json)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-write-json-validator-simple.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "MultiEdit(*.json)",
         "hooks": [
           {
             "type": "command",

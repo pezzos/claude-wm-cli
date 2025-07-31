@@ -5,6 +5,11 @@
   "description": "Schema for validating current story data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/current-story\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "story": {
       "type": "object",
       "properties": {
@@ -47,6 +52,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["story"],
+  "required": ["$schema", "story"],
   "additionalProperties": false
 }

@@ -5,6 +5,11 @@
   "description": "Schema for validating task iteration data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/iterations\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "task_context": {
       "type": "object",
       "properties": {
@@ -170,6 +175,6 @@
       "description": "Recommendations for future similar tasks"
     }
   },
-  "required": ["task_context", "iterations", "final_outcome", "recommendations"],
+  "required": ["$schema", "task_context", "iterations", "final_outcome", "recommendations"],
   "additionalProperties": false
 }

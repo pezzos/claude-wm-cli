@@ -5,6 +5,11 @@
   "description": "Schema for validating current task data structure",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/current-task\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
     "id": {
       "type": "string",
       "pattern": "^TASK-[0-9]{3}$",
@@ -194,6 +199,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["id", "title", "description", "type", "priority", "status", "technical_context", "analysis", "reproduction", "investigation", "implementation", "resolution", "interruption_context"],
+  "required": ["$schema", "id", "title", "description", "type", "priority", "status", "technical_context", "analysis", "reproduction", "investigation", "implementation", "resolution", "interruption_context"],
   "additionalProperties": false
 }

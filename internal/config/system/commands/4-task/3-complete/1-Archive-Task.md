@@ -18,27 +18,29 @@ Capture reusable patterns and lessons learned. Clean up current task workspace.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for stories.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
 ```bash
 # Show schema requirements
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements stories
 ```
 
 ### Schema-Aware Generation
-When updating docs/3-current-task/current-task.json, include this in your Claude prompt:
+When updating docs/3-current-task/stories.json, include this in your Claude prompt:
 
 **CRITICAL: SCHEMA COMPLIANCE REQUIRED**
 
 You MUST generate JSON that strictly follows the schema. Use:
 ```bash
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
+.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements stories
 ```
 
-All required fields must be present with correct types and values.
-
+**MANDATORY REQUIREMENTS:**
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/stories.schema.json"
+2. All required fields must be present with correct types and values
+3. All nested objects must have their required fields
 ### Post-Generation Validation
 After completing the main task, validate the generated JSON:
 
