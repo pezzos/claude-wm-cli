@@ -14,6 +14,7 @@ import (
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/errors"
 	"claude-wm-cli/internal/executor"
+	"claude-wm-cli/internal/metrics"
 	"claude-wm-cli/internal/navigation"
 	"claude-wm-cli/internal/preprocessing"
 	"claude-wm-cli/internal/workflow"
@@ -86,20 +87,30 @@ func init() {
 
 // runInteractive executes the interactive command
 func runInteractive(cmd *cobra.Command, args []string) error {
+	// Start performance monitoring for interactive command
+	timer := metrics.InstrumentCommandInteractive("interactive")
+	defer timer.Stop()
+
 	// Enable debug mode if flag is set
 	debug.SetDebugMode(debugMode || viper.GetBool("debug"))
 
 	debug.LogExecution("INTERACTIVE", "start navigation", "Initialize interactive menu system")
 
-	// Get current working directory
+	// Step 1: Working directory detection
+	workDirStep := timer.ProfileStep("working_directory_detection")
 	workDir, err := os.Getwd()
 	if err != nil {
+		workDirStep.StopWithError(err)
+		timer.SetExitCode(1)
 		return errors.NewCLIError("Failed to get current directory", 1).
 			WithDetails(err.Error()).
 			WithSuggestion("Ensure you have proper permissions to access the current directory")
 	}
+	workDirStep.SetMetadata("working_directory", workDir)
+	workDirStep.Stop()
 
-	// Initialize navigation components
+	// Step 2: Initialize navigation components
+	initStep := timer.ProfileStep("navigation_initialization")
 	contextDetector := navigation.NewContextDetector(workDir)
 	suggestionEngine := navigation.NewSuggestionEngine()
 	menuDisplay := navigation.NewMenuDisplay()
@@ -107,15 +118,23 @@ func runInteractive(cmd *cobra.Command, args []string) error {
 
 	// Set display width from flag
 	stateDisplay.SetWidth(displayWidth)
+	initStep.SetMetadata("display_width", displayWidth)
+	initStep.Stop()
 
-	// Detect current project context
+	// Step 3: Detect current project context
+	contextStep := timer.ProfileContextDetection(workDir)
 	projectContext, err := contextDetector.DetectContext()
 	if err != nil {
+		contextStep.StopWithError(err)
+		timer.SetExitCode(1)
 		return errors.NewCLIError("Failed to detect project context", 1).
 			WithDetails(err.Error()).
 			WithSuggestion("Check that you're in a valid directory and have necessary permissions").
 			WithContext("directory", workDir)
 	}
+	contextStep.SetMetadata("project_state", projectContext.State.String())
+	contextStep.SetMetadata("issues_count", len(projectContext.Issues))
+	contextStep.Stop()
 
 	if verbose {
 		fmt.Fprintf(os.Stderr, "Detected project state: %s\n", projectContext.State.String())
@@ -1112,41 +1131,77 @@ func preprocessPlanTicketCommand(projectPath string, menuDisplay *navigation.Men
 
 // executeClaudeCommandInteractive executes a Claude slash command from interactive menu
 func executeClaudeCommandInteractive(command string, menuDisplay *navigation.MenuDisplay) error {
+	// Start performance monitoring
+	timer := metrics.InstrumentClaudeCommand(command)
+	defer timer.Stop()
+
 	menuDisplay.ShowMessage(fmt.Sprintf("🚀 Executing Claude command: %s", command))
 
+	// Step 1: Preprocessing
+	preprocessStep := timer.ProfileStep(metrics.StepPreprocessing)
+	
 	// Special preprocessing for Plan-Ticket command
 	if command == "/4-task:2-execute:1-Plan-Ticket" {
 		// Get current working directory for preprocessing
 		workDir, err := os.Getwd()
 		if err != nil {
+			preprocessStep.StopWithError(err)
 			menuDisplay.ShowError(fmt.Sprintf("Failed to get current directory: %v", err))
+			timer.SetExitCode(1)
 			return err
 		}
 
 		// Execute preprocessing
 		if err := preprocessPlanTicketCommand(workDir, menuDisplay); err != nil {
+			preprocessStep.StopWithError(err)
 			menuDisplay.ShowError(fmt.Sprintf("Failed to prepare task workspace: %v", err))
+			timer.SetExitCode(1)
 			return err
 		}
 	}
+	preprocessStep.Stop()
 
-	// Create Claude executor
+	// Step 2: Claude preparation and validation
+	claudeValidationStep := timer.ProfileStep("claude_validation")
 	claudeExecutor := executor.NewClaudeExecutor()
 
 	// Validate Claude is available
 	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
+		claudeValidationStep.StopWithError(err)
 		menuDisplay.ShowError(fmt.Sprintf("Claude CLI not available: %v", err))
 		menuDisplay.ShowMessage("💡 Please install Claude CLI to use this functionality")
+		timer.SetExitCode(1)
 		return err
 	}
+	claudeValidationStep.Stop()
 
-	// Execute the slash command
+	// Step 3: Claude execution (this is the potentially slow part)
+	claudeExecutionStep := timer.ProfileClaudeExecution(command)
 	description := fmt.Sprintf("Interactive menu command: %s", command)
+	
+	// Add additional context for Start Story command
+	if command == "/3-story:1-manage:1-Start-Story" {
+		claudeExecutionStep.SetMetadata("is_start_story", true)
+		claudeExecutionStep.SetMetadata("workflow_phase", "story_start")
+		claudeExecutionStep.SetMetadata("expected_operations", []string{
+			"story_analysis", "priority_selection", "context_preparation", "claude_interaction",
+		})
+	}
+	
 	if err := claudeExecutor.ExecuteSlashCommand(command, description); err != nil {
+		claudeExecutionStep.StopWithError(err)
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute Claude command: %v", err))
+		timer.SetExitCode(1)
 		return err
 	}
+	claudeExecutionStep.Stop()
 
+	// Step 4: Post-processing
+	postProcessStep := timer.ProfileStep(metrics.StepPostprocessing)
+	// Add any post-processing logic here if needed
+	postProcessStep.Stop()
+
+	timer.SetExitCode(0)
 	menuDisplay.ShowSuccess(fmt.Sprintf("✅ Claude command %s completed successfully", command))
 	return nil
 }

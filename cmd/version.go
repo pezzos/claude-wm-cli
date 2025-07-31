@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"claude-wm-cli/internal/metrics"
+
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +34,12 @@ This information is useful for debugging and support.`,
   claude-wm-cli version --short       # Show version number only
   claude-wm-cli version --output json # Output as JSON`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Start performance monitoring
+		timer := metrics.InstrumentCommand("version")
+		defer timer.Stop()
+		
 		showVersionInfo()
+		timer.SetExitCode(0)
 	},
 }
 

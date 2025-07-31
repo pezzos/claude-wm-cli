@@ -13,6 +13,7 @@ import (
 
 	"claude-wm-cli/internal/debug"
 	"claude-wm-cli/internal/epic"
+	"claude-wm-cli/internal/metrics"
 	"claude-wm-cli/internal/story"
 	"claude-wm-cli/internal/validation"
 
@@ -257,29 +258,49 @@ func createStory(title string, _ *cobra.Command) {
 }
 
 func listStories(_ *cobra.Command) {
-	// Validate JSON files before proceeding
+	// Start performance monitoring
+	timer := metrics.InstrumentCommand("story list")
+	defer timer.Stop()
+
+	// Step 1: JSON validation
+	validationStep := timer.ProfileJSONValidation("stories")
 	validator := validation.NewJSONValidator()
 	if err := validator.ValidateSpecificJSON("stories"); err != nil {
+		validationStep.StopWithError(err)
+		timer.SetExitCode(1)
 		fmt.Fprintf(os.Stderr, "❌ JSON validation failed: %v\n", err)
 		os.Exit(1)
 	}
+	validationStep.Stop()
 
-	// Get current working directory
+	// Step 2: Working directory detection
+	workDirStep := timer.ProfileStep("working_directory_detection")
 	wd, err := os.Getwd()
 	if err != nil {
+		workDirStep.StopWithError(err)
+		timer.SetExitCode(1)
 		fmt.Fprintf(os.Stderr, "Error: Failed to get working directory: %v\n", err)
 		os.Exit(1)
 	}
+	workDirStep.SetMetadata("working_directory", wd)
+	workDirStep.Stop()
 
 	// Note: No specific Claude prompt available for story listing - using basic implementation
 	debug.LogStub("STORY", "listStories", "Story listing - no matching Claude prompt available")
 	fmt.Println("📋 Listing stories...")
 
-	// Read and display stories from current epic stories.json file
+	// Step 3: Display stories from file
+	displayStep := timer.ProfileStep("story_display_processing")
+	displayStep.SetMetadata("status_filter", listStoryStatus)
 	if err := displayStoriesFromFile(wd, listStoryStatus); err != nil {
+		displayStep.StopWithError(err)
+		timer.SetExitCode(1)
 		fmt.Fprintf(os.Stderr, "Error: Failed to display stories: %v\n", err)
 		os.Exit(1)
 	}
+	displayStep.Stop()
+
+	timer.SetExitCode(0)
 }
 
 func updateStory(storyID string, cmd *cobra.Command) {
