@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "current-task.schema.json",
+  "title": "Current Task Schema",
+  "description": "Schema for validating current task data structure",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^.*/current-task\\.schema\\.json$",
+      "description": "Reference to the JSON schema for validation"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^TASK-[0-9]{3}$",
+      "description": "Task identifier in format TASK-XXX"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Task title"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Detailed task description"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["bug", "feature", "enhancement", "refactor", "documentation"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["todo", "in_progress", "done", "blocked"]
+    },
+    "technical_context": {
+      "type": "object",
+      "properties": {
+        "affected_components": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["development", "staging", "production"]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Version in format vX.Y.Z"
+        }
+      },
+      "required": ["affected_components", "environment", "version"],
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "approach": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Planned approach to solve the task"
+        },
+        "similar_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Similar patterns or issues encountered before"
+        },
+        "reasoning": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Step-by-step reasoning for the approach"
+        }
+      },
+      "required": ["observations", "approach", "similar_patterns", "reasoning"],
+      "additionalProperties": false
+    },
+    "reproduction": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "reproducible": {
+          "type": "boolean"
+        }
+      },
+      "required": ["steps", "reproducible"],
+      "additionalProperties": false
+    },
+    "investigation": {
+      "type": "object",
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "root_cause": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["findings", "root_cause"],
+      "additionalProperties": false
+    },
+    "implementation": {
+      "type": "object",
+      "properties": {
+        "proposed_solution": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file_changes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "testing_approach": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["proposed_solution", "file_changes", "testing_approach"],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "completed_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": ["steps", "completed_steps"],
+      "additionalProperties": false
+    },
+    "interruption_context": {
+      "type": "object",
+      "properties": {
+        "blocked_work": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Description of work that was interrupted"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Notes for resuming work"
+        }
+      },
+      "required": ["blocked_work", "notes"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "id", "title", "description", "type", "priority", "status", "technical_context", "analysis", "reproduction", "investigation", "implementation", "resolution", "interruption_context"],
+  "additionalProperties": false
+}

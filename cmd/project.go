@@ -226,7 +226,7 @@ func archiveAndResetFeedback() error {
 		return model.NewInternalError("failed to copy feedback template").
 			WithCause(err).
 			WithSuggestions([]string{
-				"Check if template file exists in .claude/commands/template/",
+				"Check if template file exists in internal/config/system/commands/templates/",
 				"Verify read permissions on template file",
 				"Check write permissions in docs/1-project/",
 			})
@@ -278,7 +278,7 @@ func archiveFeedbackFile(projectPath string) error {
 
 // copyFeedbackTemplate copies the FEEDBACK.md template to project directory
 func copyFeedbackTemplate(projectPath string) error {
-	templatePath := filepath.Join(projectPath, ".claude/commands/template/FEEDBACK.md")
+	templatePath := filepath.Join(projectPath, "internal/config/system/commands/templates/FEEDBACK.md")
 	destPath := filepath.Join(projectPath, "docs/1-project/FEEDBACK.md")
 	
 	// Check if template exists

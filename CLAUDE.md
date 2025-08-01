@@ -31,6 +31,7 @@ This project uses the Claude Code agile workflow system:
 - **Target Platform**: Command-line interface
 - **Integration Points**: AI services, window management APIs
 - **Architecture Style**: Modular CLI design
+- The .claude and .claude-wm folders are used to manage the project but are not part of the core of the project, just like .git and .vscode, which are also folders used to manage the project. You should therefore not modify any files in there unless explicitly requested.
 
 ### Quality Standards
 - Follow established CLI best practices

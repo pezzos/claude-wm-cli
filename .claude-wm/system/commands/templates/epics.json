@@ -1,0 +1,84 @@
+{
+  "epics": [
+    {
+      "id": "EPIC-001",
+      "title": "User Management System",
+      "description": "Complete user authentication, profiles, and account management functionality for the platform",
+      "status": "done",
+      "priority": "high",
+      "business_value": "Enable user onboarding and retention",
+      "target_users": "End users, administrators",
+      "success_criteria": [
+        "✅ Secure user authentication",
+        "✅ Profile management capabilities", 
+        "✅ Account security features",
+        "✅ Admin user management tools"
+      ],
+      "dependencies": [],
+      "blockers": [],
+      "story_themes": [
+        "User authentication and security",
+        "Profile management and customization",
+        "Admin tools and user oversight",
+        "Account recovery and support"
+      ]
+    },
+    {
+      "id": "EPIC-002",
+      "title": "Analytics Dashboard",
+      "description": "Real-time analytics and reporting system for tracking user engagement and platform performance",
+      "status": "in_progress",
+      "priority": "medium",
+      "business_value": "Data-driven decision making and performance optimization",
+      "target_users": "Product managers, analysts, executives",
+      "success_criteria": [
+        "🚧 Real-time data visualization",
+        "📋 Custom report generation",
+        "📋 Performance monitoring alerts",
+        "📋 Export and sharing capabilities"
+      ],
+      "dependencies": ["EPIC-001"],
+      "blockers": [
+        {
+          "description": "Data warehouse setup pending",
+          "impact": "Cannot start advanced analytics features"
+        }
+      ],
+      "story_themes": [
+        "Core metrics dashboard",
+        "User behavior analytics",
+        "Performance monitoring",
+        "Custom reporting tools"
+      ]
+    },
+    {
+      "id": "EPIC-003",
+      "title": "Mobile Application",
+      "description": "Native mobile apps for iOS and Android to extend platform access",
+      "status": "todo",
+      "priority": "low",
+      "business_value": "Increased user engagement and accessibility",
+      "target_users": "Mobile users, on-the-go professionals",
+      "success_criteria": [
+        "📋 Cross-platform mobile apps",
+        "📋 Offline functionality support",
+        "📋 Push notifications system",
+        "📋 Mobile-optimized user experience"
+      ],
+      "dependencies": ["EPIC-001", "EPIC-002"],
+      "blockers": [],
+      "story_themes": [
+        "Core mobile functionality",
+        "Offline synchronization",
+        "Push notification system",
+        "Mobile UX optimization"
+      ]
+    }
+  ],
+  "project_context": {
+    "current_epic": "EPIC-002",
+    "total_epics": 3,
+    "completed_epics": 1,
+    "project_phase": "development"
+  }
+}
