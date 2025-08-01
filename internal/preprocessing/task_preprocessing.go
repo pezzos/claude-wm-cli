@@ -323,7 +323,7 @@ func PreprocessTestDesign(projectPath string, menuDisplay *navigation.MenuDispla
 	menuDisplay.ShowMessage("🧪 Preprocessing: Test Design initialization...")
 
 	// Create TEST.md from template (kept as Markdown for test scenarios)
-	templatePath := filepath.Join(projectPath, ".claude-wm/.claude/commands/templates/TEST.md")
+	templatePath := filepath.Join(projectPath, ".claude/commands/templates/TEST.md")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/TEST.md")
 
 	if err := copyFile(templatePath, destPath); err != nil {
@@ -706,9 +706,22 @@ func initializeCurrentTaskFromInput(projectPath string, description string) erro
 }
 
 func copyJSONTemplate(projectPath, templateName string) error {
-	templatePath := filepath.Join(projectPath, ".claude-wm/.claude/commands/templates", templateName)
+	// Try multiple possible template locations in order of preference
+	possiblePaths := []string{
+		filepath.Join(projectPath, ".claude/commands/templates", templateName),
+		filepath.Join(projectPath, ".claude-wm/runtime/commands/templates", templateName),
+		filepath.Join(projectPath, ".claude-wm/system/commands/templates", templateName),
+	}
+	
 	destPath := filepath.Join(projectPath, "docs/3-current-task", templateName)
-	return copyFile(templatePath, destPath)
+	
+	for _, templatePath := range possiblePaths {
+		if _, err := os.Stat(templatePath); err == nil {
+			return copyFile(templatePath, destPath)
+		}
+	}
+	
+	return fmt.Errorf("template %s not found in any of the expected locations", templateName)
 }
 
 func copyFile(src, dst string) error {

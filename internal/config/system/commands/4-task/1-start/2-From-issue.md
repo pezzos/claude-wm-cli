@@ -30,7 +30,7 @@ Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
 ```bash
 # Show schema requirements
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
+.claude/commands/tools/schema-enforcer.sh show-requirements current-task
 ```
 
 ### Schema-Aware Generation
@@ -40,7 +40,7 @@ When updating docs/3-current-task/current-task.json, include this in your Claude
 
 You MUST generate JSON that strictly follows the schema. Use:
 ```bash
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements current-task
+.claude/commands/tools/schema-enforcer.sh show-requirements current-task
 ```
 
 **MANDATORY REQUIREMENTS:**
@@ -52,7 +52,7 @@ After completing the main task, validate the generated JSON:
 
 ```bash
 # Validate with auto-correction
-if ! .claude-wm/.claude/commands/tools/json-validator.sh validate; then
+if ! .claude/commands/tools/json-validator.sh validate; then
     echo "⚠ JSON validation failed - files auto-corrected"
     exit 1  # Needs iteration
 fi

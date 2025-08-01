@@ -64,7 +64,7 @@ Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
 ```bash
 # Show schema requirements
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements stories
+.claude/commands/tools/schema-enforcer.sh show-requirements stories
 ```
 
 ### Schema-Aware Generation
@@ -74,7 +74,7 @@ When updating docs/2-current-epic/stories.json, include this in your Claude prom
 
 You MUST generate JSON that strictly follows the schema. Use:
 ```bash
-.claude-wm/.claude/commands/tools/schema-enforcer.sh show-requirements stories
+.claude/commands/tools/schema-enforcer.sh show-requirements stories
 ```
 
 **MANDATORY REQUIREMENTS:**
@@ -86,9 +86,9 @@ After completing the main task, validate the generated JSON:
 
 ```bash
 # Validate with auto-correction
-if ! .claude-wm/.claude/commands/tools/simple-validator.sh validate-file docs/2-current-epic/stories.json; then
+if ! .claude/commands/tools/simple-validator.sh validate-file docs/2-current-epic/stories.json; then
     echo "⚠ JSON validation failed - attempting auto-correction"
-    .claude-wm/.claude/commands/tools/json-validator.sh auto-correct docs/2-current-epic/stories.json
+    .claude/commands/tools/json-validator.sh auto-correct docs/2-current-epic/stories.json
     exit 1  # Needs iteration
 fi
 ```
