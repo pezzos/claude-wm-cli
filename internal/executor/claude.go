@@ -1,9 +1,13 @@
 package executor
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,21 +94,36 @@ func (ce *ClaudeExecutor) ExecuteSlashCommandWithExitCode(slashCommand, descript
 	// Build the command
 	cmd := exec.Command("claude", "-p", slashCommand)
 	
-	// Set up environment and output
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	// Create pipes to capture both stdout and stderr while still showing output to user
+	var stdoutBuf, stderrBuf bytes.Buffer
+	
+	// Create multiwriters to tee output to both buffer and terminal
+	stdoutWriter := io.MultiWriter(os.Stdout, &stdoutBuf)
+	stderrWriter := io.MultiWriter(os.Stderr, &stderrBuf)
+	
+	cmd.Stdout = stdoutWriter
+	cmd.Stderr = stderrWriter
 	cmd.Stdin = os.Stdin
 	
 	// In development mode, run without timeout
 	if debug.DevMode {
 		debug.LogExecution("CLAUDE", "dev mode", "Running without timeout - kill manually if needed (Ctrl+C)")
 		err := cmd.Run()
-		exitCode := getExitCode(err)
 		
+		// Parse Claude's output for EXIT_CODE
+		claudeExitCode := parseClaudeExitCode(stdoutBuf.String(), stderrBuf.String())
+		if claudeExitCode != -1 {
+			debug.LogResult("CLAUDE", "execute slash command with exit code", 
+				fmt.Sprintf("Command completed with exit code: %d", claudeExitCode), claudeExitCode == 0)
+			return claudeExitCode, nil
+		}
+		
+		// Fallback to system exit code if Claude didn't specify one
+		systemExitCode := getExitCode(err)
 		debug.LogResult("CLAUDE", "execute slash command with exit code", 
-			fmt.Sprintf("Command completed with exit code: %d", exitCode), err == nil)
+			fmt.Sprintf("Command completed with exit code: %d", systemExitCode), err == nil)
 		
-		return exitCode, nil
+		return systemExitCode, nil
 	}
 	
 	// Run with timeout in production mode
@@ -115,10 +134,19 @@ func (ce *ClaudeExecutor) ExecuteSlashCommandWithExitCode(slashCommand, descript
 	
 	select {
 	case err := <-done:
-		exitCode := getExitCode(err)
+		// Parse Claude's output for EXIT_CODE
+		claudeExitCode := parseClaudeExitCode(stdoutBuf.String(), stderrBuf.String())
+		if claudeExitCode != -1 {
+			debug.LogResult("CLAUDE", "execute slash command with exit code", 
+				fmt.Sprintf("Command completed with exit code: %d", claudeExitCode), claudeExitCode == 0)
+			return claudeExitCode, nil
+		}
+		
+		// Fallback to system exit code if Claude didn't specify one
+		systemExitCode := getExitCode(err)
 		debug.LogResult("CLAUDE", "execute slash command with exit code", 
-			fmt.Sprintf("Command completed with exit code: %d", exitCode), err == nil)
-		return exitCode, nil
+			fmt.Sprintf("Command completed with exit code: %d", systemExitCode), err == nil)
+		return systemExitCode, nil
 		
 	case <-time.After(ce.timeout):
 		if cmd.Process != nil {
@@ -128,6 +156,29 @@ func (ce *ClaudeExecutor) ExecuteSlashCommandWithExitCode(slashCommand, descript
 			fmt.Sprintf("Command timed out after %v", ce.timeout), false)
 		return -1, fmt.Errorf("claude command timed out after %v", ce.timeout)
 	}
+}
+
+// parseClaudeExitCode parses Claude Code's output for EXIT_CODE=X pattern
+func parseClaudeExitCode(stdout, stderr string) int {
+	// Combine both stdout and stderr for parsing
+	combined := stdout + "\n" + stderr
+	
+	// Pattern to match EXIT_CODE=X where X is a number
+	pattern := regexp.MustCompile(`EXIT_CODE=(\d+)`)
+	
+	// Find the last occurrence (in case there are multiple)
+	matches := pattern.FindAllStringSubmatch(combined, -1)
+	if len(matches) > 0 {
+		lastMatch := matches[len(matches)-1]
+		if len(lastMatch) > 1 {
+			if code, err := strconv.Atoi(lastMatch[1]); err == nil {
+				return code
+			}
+		}
+	}
+	
+	// No EXIT_CODE found in output
+	return -1
 }
 
 // getExitCode extracts exit code from error
