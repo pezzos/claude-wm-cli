@@ -222,6 +222,7 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 		return nil, nil
 	}
 
+	// Read epic metadata
 	data, err := os.ReadFile(currentEpicPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read docs/2-current-epic/current-epic.json: %w", err)
@@ -229,13 +230,10 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 
 	var epicData struct {
 		Epic struct {
-			ID          string `json:"id"`
-			Title       string `json:"title"`
-			Status      string `json:"status"`
-			Priority    string `json:"priority"`
-			UserStories []struct {
-				Status string `json:"status"`
-			} `json:"userStories"`
+			ID       string `json:"id"`
+			Title    string `json:"title"`
+			Status   string `json:"status"`
+			Priority string `json:"priority"`
 		} `json:"epic"`
 	}
 
@@ -243,14 +241,8 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 		return nil, fmt.Errorf("failed to parse docs/2-current-epic/current-epic.json: %w", err)
 	}
 
-	// Calculate progress
-	totalStories := len(epicData.Epic.UserStories)
-	completedStories := 0
-	for _, story := range epicData.Epic.UserStories {
-		if story.Status == "completed" {
-			completedStories++
-		}
-	}
+	// Read stories from stories.json to get counts
+	totalStories, completedStories := cd.getStoriesCount()
 
 	progress := 0.0
 	if totalStories > 0 {
@@ -260,9 +252,9 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	return &EpicContext{
 		ID:               epicData.Epic.ID,
 		Title:            epicData.Epic.Title,
-		Status:           epicData.Epic.Status, // Use status string directly
-		StatusCode:       "",                   // No longer available in simplified format
-		StatusDetails:    "",                   // No longer available in simplified format
+		Status:           epicData.Epic.Status,
+		StatusCode:       "",
+		StatusDetails:    "",
 		Priority:         epicData.Epic.Priority,
 		Progress:         progress,
 		TotalStories:     totalStories,
@@ -298,6 +290,14 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 		return nil, fmt.Errorf("failed to parse docs/2-current-epic/current-story.json: %w", err)
 	}
 
+	// Get task counts from stories.json
+	totalTasks, completedTasks := cd.getTasksCount(storyData.Story.ID)
+
+	progress := 0.0
+	if totalTasks > 0 {
+		progress = float64(completedTasks) / float64(totalTasks)
+	}
+
 	// Return the current story context
 	return &StoryContext{
 		ID:             storyData.Story.ID,
@@ -305,9 +305,9 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 		Description:    storyData.Story.Description,
 		Status:         storyData.Story.Status,
 		Priority:       storyData.Story.Priority,
-		Progress:       0.0, // TODO: Calculate from tasks
-		TotalTasks:     0,   // TODO: Calculate from tasks
-		CompletedTasks: 0,   // TODO: Calculate from tasks
+		Progress:       progress,
+		TotalTasks:     totalTasks,
+		CompletedTasks: completedTasks,
 	}, nil
 }
 
@@ -435,4 +435,79 @@ func (cd *ContextDetector) GetRecommendedAction(ctx *ProjectContext) string {
 	default:
 		return "help"
 	}
+}
+
+// getStoriesCount reads stories.json and counts total and completed stories
+func (cd *ContextDetector) getStoriesCount() (int, int) {
+	storiesPath := filepath.Join(cd.projectPath, "docs/2-current-epic/stories.json")
+	if !cd.pathExists(storiesPath) {
+		return 0, 0
+	}
+
+	data, err := os.ReadFile(storiesPath)
+	if err != nil {
+		return 0, 0
+	}
+
+	var storiesData struct {
+		Stories map[string]struct {
+			Status string `json:"status"`
+		} `json:"stories"`
+	}
+
+	if err := json.Unmarshal(data, &storiesData); err != nil {
+		return 0, 0
+	}
+
+	totalStories := len(storiesData.Stories)
+	completedStories := 0
+
+	for _, story := range storiesData.Stories {
+		if story.Status == "done" || story.Status == "completed" {
+			completedStories++
+		}
+	}
+
+	return totalStories, completedStories
+}
+
+// getTasksCount reads stories.json and counts tasks for a specific story
+func (cd *ContextDetector) getTasksCount(storyID string) (int, int) {
+	storiesPath := filepath.Join(cd.projectPath, "docs/2-current-epic/stories.json")
+	if !cd.pathExists(storiesPath) {
+		return 0, 0
+	}
+
+	data, err := os.ReadFile(storiesPath)
+	if err != nil {
+		return 0, 0
+	}
+
+	var storiesData struct {
+		Stories map[string]struct {
+			Tasks []struct {
+				Status string `json:"status"`
+			} `json:"tasks"`
+		} `json:"stories"`
+	}
+
+	if err := json.Unmarshal(data, &storiesData); err != nil {
+		return 0, 0
+	}
+
+	story, exists := storiesData.Stories[storyID]
+	if !exists {
+		return 0, 0
+	}
+
+	totalTasks := len(story.Tasks)
+	completedTasks := 0
+
+	for _, task := range story.Tasks {
+		if task.Status == "done" || task.Status == "completed" {
+			completedTasks++
+		}
+	}
+
+	return totalTasks, completedTasks
 }
