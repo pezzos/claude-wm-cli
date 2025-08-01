@@ -7,10 +7,10 @@ Generate intelligent task analysis and planning from current story context.
 
 ## Focus
 Claude should focus on intelligent analysis and content generation:
-1. Analyze task complexity and requirements from current-task.json
+1. Analyze task complexity and requirements from docs/3-current-task/current-task.json
 2. Generate comprehensive task description and approach
 3. Create implementation strategy based on story context
-4. Update current-task.json with intelligent insights
+4. Update docs/3-current-task/current-task.json with intelligent insights
 
 ## Important
 Preprocessing has already handled file management, task selection, and status updates.
@@ -24,7 +24,7 @@ Focus on intelligent content generation and analysis.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
@@ -44,7 +44,7 @@ You MUST generate JSON that strictly follows the schema. Use:
 ```
 
 **MANDATORY REQUIREMENTS:**
-1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/current-task.schema.json"
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value "internal/config/system/commands/templates/schemas/current-task.schema.json"
 2. All required fields must be present with correct types and values
 3. All nested objects must have their required fields
 

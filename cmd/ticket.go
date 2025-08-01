@@ -481,7 +481,7 @@ func listTickets(_ *cobra.Command) {
 	debug.LogStub("TICKET", "listTickets", "Ticket listing - no matching Claude prompt available")
 	fmt.Println("📋 Listing tickets...")
 
-	// Read and display tasks from current story in stories.json file
+	// Read and display tasks from current story in docs/2-current-epic/stories.json file
 	if err := displayTasksFromCurrentStory(wd, listTicketStatus); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to display tickets: %v\n", err)
 		os.Exit(1)
@@ -974,10 +974,9 @@ func formatTicketDuration(d time.Duration) string {
 	}
 }
 
-
-// displayTasksFromCurrentStory reads current story from stories.json and displays its tasks
+// displayTasksFromCurrentStory reads current story from docs/2-current-epic/stories.json and displays its tasks
 func displayTasksFromCurrentStory(wd, statusFilter string) error {
-	// Read stories.json file to get current story's tasks
+	// Read docs/2-current-epic/stories.json file to get current story's tasks
 	storiesPath := filepath.Join(wd, "docs/2-current-epic/stories.json")
 	data, err := os.ReadFile(storiesPath)
 	if err != nil {
@@ -985,7 +984,7 @@ func displayTasksFromCurrentStory(wd, statusFilter string) error {
 			fmt.Println("📋 No stories found. Use 'Start Story' to begin working on tasks.")
 			return nil
 		}
-		return fmt.Errorf("failed to read stories.json: %w", err)
+		return fmt.Errorf("failed to read docs/2-current-epic/stories.json: %w", err)
 	}
 
 	// Read current story selection
@@ -1016,7 +1015,7 @@ func displayTasksFromCurrentStory(wd, statusFilter string) error {
 		} `json:"stories"`
 	}
 	if err := json.Unmarshal(data, &storiesData); err != nil {
-		return fmt.Errorf("failed to parse stories.json: %w", err)
+		return fmt.Errorf("failed to parse docs/2-current-epic/stories.json: %w", err)
 	}
 
 	// Find current story and its tasks
@@ -1110,7 +1109,6 @@ func displayTasksFromCurrentStory(wd, statusFilter string) error {
 
 	return nil
 }
-
 
 // executeFullTicketWorkflow executes the complete ticket workflow automatically
 func executeFullTicketWorkflow() {

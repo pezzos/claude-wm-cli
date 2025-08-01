@@ -9,9 +9,9 @@ Generate comprehensive implementation plan with intelligent analysis.
 ## Focus
 Claude should focus on intelligent planning:
 1. Search similar solutions **with mem0** for proven patterns
-2. Enhance current-task.json with comprehensive approach, file changes, and implementation steps
+2. Enhance docs/3-current-task/current-task.json with comprehensive approach, file changes, and implementation steps
 3. **Plan Regression Testing**: Include tests that must be added for continuous validation of non-regression
-4. Document risks and assumptions clearly in current-task.json
+4. Document risks and assumptions clearly in docs/3-current-task/current-task.json
 
 ## Regression Testing Requirements (MANDATORY)
 When planning implementation, ALWAYS include:
@@ -41,7 +41,7 @@ Research existing patterns before planning new approach. Plan for 3 iteration ma
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
@@ -61,7 +61,7 @@ You MUST generate JSON that strictly follows the schema. Use:
 ```
 
 **MANDATORY REQUIREMENTS:**
-1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/current-task.schema.json"
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value "internal/config/system/commands/templates/schemas/current-task.schema.json"
 2. All required fields must be present with correct types and values
 3. All nested objects must have their required fields
 ### Post-Generation Validation

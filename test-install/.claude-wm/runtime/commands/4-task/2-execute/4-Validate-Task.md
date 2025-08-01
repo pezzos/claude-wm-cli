@@ -10,7 +10,7 @@ Execute comprehensive testing with intelligent user journey analysis.
 1. **Review Test Results**: Analyze automated test results (pre-executed by preprocessing)
 2. **MCP UI Testing**: Execute Playwright/Puppeteer automated UI tests when applicable
 3. **Complex Journey Testing**: Use `mcp__sequential-thinking__` to break down and validate multi-step user workflows
-4. **Manual Test Scenarios**: Execute remaining manual test scenarios from TEST.md
+4. **Manual Test Scenarios**: Execute remaining manual test scenarios from docs/3-current-task/TEST.md
 5. **Performance & Security**: Review performance baselines and security requirements (pre-checked by preprocessing)
 6. **Visual Regression**: Compare UI screenshots for consistency (when UI tests exist)
 
@@ -24,8 +24,8 @@ For user journeys involving multiple steps or complex interactions:
 
 ## Iteration Management
 Review iteration status from preprocessing:
-- If tests fail and iterations < 3: update iterations.json and provide guidance for next iteration
-- If failure AND iterations = 3: document the blockage in iterations.json, stop and ask for help
+- If tests fail and iterations < 3: update docs/3-current-task/iterations.json and provide guidance for next iteration
+- If failure AND iterations = 3: document the blockage in docs/3-current-task/iterations.json, stop and ask for help
 - If success: validate completion status (pre-updated by preprocessing) and provide final validation report
 
 ## Learning Capture
@@ -89,7 +89,7 @@ BLOCK_REASON=[specific reason for blocking]
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for iterations.json
+### MANDATORY: Schema Compliance for docs/3-current-task/iterations.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

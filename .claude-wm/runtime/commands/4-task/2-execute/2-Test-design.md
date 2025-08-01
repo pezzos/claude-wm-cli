@@ -7,7 +7,7 @@ Design comprehensive testing strategy with MCP-powered UI testing capabilities.
 3. **Get Testing Documentation**: Use `mcp__context7__` for current testing framework best practices
 
 ## Test Design Steps
-1. **Enhance TEST.md**: Generate comprehensive test scenarios (template pre-populated by preprocessing)
+1. **Enhance docs/3-current-task/TEST.md**: Generate comprehensive test scenarios (template pre-populated by preprocessing)
 2. **Unit & Integration Tests**: Define traditional testing approaches
 3. **UI Automation Tests**: Design MCP-powered browser testing when UI components present
 4. **Test Data & Validation**: Plan comprehensive data requirements

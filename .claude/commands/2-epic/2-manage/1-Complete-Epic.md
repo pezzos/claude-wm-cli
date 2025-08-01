@@ -2,7 +2,7 @@
 Archive completed epic, update metrics
 
 ## Steps
-1. Verify all stories in stories.json are ✅ completed
+1. Verify all stories in docs/2-current-epic/stories.json are ✅ completed
 2. Archive docs/2-current-epic/ to docs/archive/{epic-name}-{date}/
 3. Update epics.json status to "✅ Completed" with metrics
 4. Enrich metrics.json with the stats of the epic

@@ -410,7 +410,7 @@ func (g *Generator) loadStoryCollection() (*StoryCollection, error) {
 
 		// Convert old stories to new format (but skip since they are not in our expected format)
 		// For now, we'll just create an empty collection and let users create new stories
-		fmt.Printf("Warning: Old stories.json format detected. Creating new story collection.\n")
+		fmt.Printf("Warning: Old docs/2-current-epic/stories.json format detected. Creating new story collection.\n")
 		fmt.Printf("Previous stories data has been preserved but not migrated.\n")
 	}
 

@@ -24,21 +24,21 @@ func TestSchemaConsistency(t *testing.T) {
 			goStructCheck: verifyStoriesStructure,
 		},
 		{
-			name:          "epics.json structure consistency", 
+			name:          "epics.json structure consistency",
 			jsonFile:      "epics.json",
 			schemaFile:    "epics.schema.json",
 			goStructCheck: verifyEpicsStructure,
 		},
 		{
 			name:          "current-story.json structure consistency",
-			jsonFile:      "current-story.json", 
+			jsonFile:      "current-story.json",
 			schemaFile:    "current-story.schema.json",
 			goStructCheck: verifyCurrentStoryStructure,
 		},
 		{
 			name:          "current-epic.json structure consistency",
 			jsonFile:      "current-epic.json",
-			schemaFile:    "current-epic.schema.json", 
+			schemaFile:    "current-epic.schema.json",
 			goStructCheck: verifyCurrentEpicStructure,
 		},
 		{
@@ -97,7 +97,7 @@ func TestSchemaConsistency(t *testing.T) {
 	}
 }
 
-// verifyStoriesStructure vérifie que les structures Go pour stories.json sont cohérentes
+// verifyStoriesStructure vérifie que les structures Go pour docs/2-current-epic/stories.json sont cohérentes
 func verifyStoriesStructure(t *testing.T) {
 	// Vérifier que cmd/story.go utilise la bonne structure
 	storyGoPath := "../../cmd/story.go"
@@ -108,12 +108,12 @@ func verifyStoriesStructure(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	
+
 	// Vérifier que Stories est défini comme map[string]struct et non []struct
 	if strings.Contains(contentStr, "Stories []struct") {
 		t.Errorf("cmd/story.go: Stories should be map[string]struct, not []struct")
 	}
-	
+
 	if !strings.Contains(contentStr, "Stories map[string]struct") {
 		t.Errorf("cmd/story.go: Stories should be defined as map[string]struct")
 	}
@@ -127,12 +127,12 @@ func verifyStoriesStructure(t *testing.T) {
 	}
 
 	ticketContentStr := string(ticketContent)
-	
+
 	// Vérifier que Stories est défini comme map[string]struct et non []struct
 	if strings.Contains(ticketContentStr, "Stories []struct") {
 		t.Errorf("cmd/ticket.go: Stories should be map[string]struct, not []struct")
 	}
-	
+
 	if !strings.Contains(ticketContentStr, "Stories map[string]struct") {
 		t.Errorf("cmd/ticket.go: Stories should be defined as map[string]struct")
 	}
@@ -148,14 +148,14 @@ func verifyEpicsStructure(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	
+
 	// Vérifier que le fichier contient les structures appropriées pour epics.json
 	if !strings.Contains(contentStr, "epics.json") {
 		t.Errorf("cmd/epic.go should reference epics.json")
 	}
 }
 
-// verifyCurrentStoryStructure vérifie que les structures Go pour current-story.json sont cohérentes
+// verifyCurrentStoryStructure vérifie que les structures Go pour docs/2-current-epic/current-story.json sont cohérentes
 func verifyCurrentStoryStructure(t *testing.T) {
 	// Cette structure est utilisée dans plusieurs fichiers, on vérifie les principaux
 	files := []string{
@@ -172,15 +172,15 @@ func verifyCurrentStoryStructure(t *testing.T) {
 
 		contentStr := string(content)
 		if strings.Contains(contentStr, "current-story.json") {
-			// Le fichier utilise current-story.json, vérifier la structure
+			// Le fichier utilise docs/2-current-epic/current-story.json, vérifier la structure
 			if !strings.Contains(contentStr, `"story"`) {
-				t.Errorf("%s: current-story.json structure should have 'story' field", file)
+				t.Errorf("%s: docs/2-current-epic/current-story.json structure should have 'story' field", file)
 			}
 		}
 	}
 }
 
-// verifyCurrentEpicStructure vérifie que les structures Go pour current-epic.json sont cohérentes
+// verifyCurrentEpicStructure vérifie que les structures Go pour docs/2-current-epic/current-epic.json sont cohérentes
 func verifyCurrentEpicStructure(t *testing.T) {
 	// Cette structure est utilisée dans internal/navigation/context.go principalement
 	contextGoPath := "../../internal/navigation/context.go"
@@ -192,14 +192,14 @@ func verifyCurrentEpicStructure(t *testing.T) {
 
 	contentStr := string(content)
 	if strings.Contains(contentStr, "current-epic.json") {
-		// Le fichier utilise current-epic.json, vérifier la structure
+		// Le fichier utilise docs/2-current-epic/current-epic.json, vérifier la structure
 		if !strings.Contains(contentStr, `"epic"`) {
-			t.Errorf("internal/navigation/context.go: current-epic.json structure should have 'epic' field")
+			t.Errorf("internal/navigation/context.go: docs/2-current-epic/current-epic.json structure should have 'epic' field")
 		}
 	}
 }
 
-// verifyCurrentTaskStructure vérifie que les structures Go pour current-task.json sont cohérentes
+// verifyCurrentTaskStructure vérifie que les structures Go pour docs/3-current-task/current-task.json sont cohérentes
 func verifyCurrentTaskStructure(t *testing.T) {
 	// Cette structure est utilisée dans internal/navigation/context.go et workflow/analyzer.go
 	files := []string{
@@ -216,18 +216,18 @@ func verifyCurrentTaskStructure(t *testing.T) {
 
 		contentStr := string(content)
 		if strings.Contains(contentStr, "current-task.json") {
-			// Le fichier utilise current-task.json, vérifier les champs requis
+			// Le fichier utilise docs/3-current-task/current-task.json, vérifier les champs requis
 			requiredFields := []string{"id", "title", "description", "type", "priority", "status"}
 			for _, field := range requiredFields {
 				if !strings.Contains(contentStr, fmt.Sprintf(`"%s"`, field)) {
-					t.Errorf("%s: current-task.json structure should have '%s' field", file, field)
+					t.Errorf("%s: docs/3-current-task/current-task.json structure should have '%s' field", file, field)
 				}
 			}
 		}
 	}
 }
 
-// verifyIterationsStructure vérifie que les structures Go pour iterations.json sont cohérentes
+// verifyIterationsStructure vérifie que les structures Go pour docs/3-current-task/iterations.json sont cohérentes
 func verifyIterationsStructure(t *testing.T) {
 	// La structure principale est définie dans internal/preprocessing/task_preprocessing.go
 	preprocessingGoPath := "../../internal/preprocessing/task_preprocessing.go"
@@ -238,7 +238,7 @@ func verifyIterationsStructure(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	
+
 	// Vérifier que IterationsData a les champs requis
 	if !strings.Contains(contentStr, "type IterationsData struct") {
 		t.Errorf("internal/preprocessing/task_preprocessing.go: IterationsData struct not found")
@@ -252,7 +252,7 @@ func verifyIterationsStructure(t *testing.T) {
 		`FinalOutcome.*json:"final_outcome"`,
 		`Recommendations.*json:"recommendations"`,
 	}
-	
+
 	for _, fieldPattern := range requiredFields {
 		matched, err := filepath.Match("*"+fieldPattern+"*", contentStr)
 		if err != nil || !matched {
@@ -275,7 +275,7 @@ func verifyIterationsStructure(t *testing.T) {
 	if strings.Contains(interactiveContentStr, "iterations.json") {
 		// Vérifier qu'il utilise preprocessing.IterationsData
 		if !strings.Contains(interactiveContentStr, "preprocessing.IterationsData") {
-			t.Errorf("cmd/interactive.go: should use preprocessing.IterationsData for iterations.json")
+			t.Errorf("cmd/interactive.go: should use preprocessing.IterationsData for docs/3-current-task/iterations.json")
 		}
 	}
 }

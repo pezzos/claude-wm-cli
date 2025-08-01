@@ -18,7 +18,7 @@ Show visual progress bars. Highlight blockers requiring immediate attention. Sug
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for stories.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/stories.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
@@ -38,7 +38,7 @@ You MUST generate JSON that strictly follows the schema. Use:
 ```
 
 **MANDATORY REQUIREMENTS:**
-1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/stories.schema.json"
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value "internal/config/system/commands/templates/schemas/stories.schema.json"
 2. All required fields must be present with correct types and values
 3. All nested objects must have their required fields
 ### Post-Generation Validation

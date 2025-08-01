@@ -58,7 +58,7 @@ Use MCP tools for data-driven story creation backed by actual codebase analysis.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for stories.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/stories.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

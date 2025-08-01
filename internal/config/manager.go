@@ -412,6 +412,9 @@ func (m *Manager) copyFileWithPathCorrection(src, dst string) error {
 	// Replace .claude-wm/.claude/ references with .claude/
 	content := string(data)
 	content = strings.ReplaceAll(content, ".claude-wm/.claude/", ".claude/")
+	
+	// Replace internal/config/system/commands/templates/schemas/ with .claude/commands/templates/schemas/
+	content = strings.ReplaceAll(content, "internal/config/system/commands/templates/schemas/", ".claude/commands/templates/schemas/")
 
 	// Create destination directory if needed
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {

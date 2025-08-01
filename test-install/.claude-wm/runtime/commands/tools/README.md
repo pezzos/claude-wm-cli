@@ -85,7 +85,7 @@ Each integrated command includes:
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

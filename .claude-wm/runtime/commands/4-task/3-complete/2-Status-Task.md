@@ -2,7 +2,7 @@
 Analyze task progress and provide comprehensive status report.
 
 ## Steps
-1. Review task documentation (current-task.json, TEST.md, iterations.json) for progress metrics (pre-analyzed by preprocessing)
+1. Review task documentation (current-task.json, docs/3-current-task/TEST.md, docs/3-current-task/iterations.json) for progress metrics (pre-analyzed by preprocessing)
 2. Assess completion readiness against success criteria using preprocessing analysis
 3. Calculate effort vs estimates and quality metrics from JSON data
 4. Enhance status report with intelligent analysis and specific next action recommendations
@@ -18,7 +18,7 @@ Show iteration history and lessons learned. Provide clear completion percentage 
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

@@ -441,7 +441,7 @@ func setupMissingCurrentEpic(dir string) error {
 		return err
 	}
 
-	// current-epic.json is missing (epics exist but none is current)
+	// docs/2-current-epic/current-epic.json is missing (epics exist but none is current)
 	return nil
 }
 

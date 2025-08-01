@@ -31,7 +31,7 @@ Valide les données d'itération de tâches avec historique complet.
 
 ### 6. `current-task.schema.json`
 Valide les données de tâche critique en cours.
-- **Fichier validé**: `current-task.json`
+- **Fichier validé**: `docs/3-current-task/current-task.json`
 - **Structure**: Tâche détaillée avec analysis, reproduction, investigation, implementation et resolution
 
 ### 7. `metrics.schema.json`

@@ -7,10 +7,10 @@ Generate intelligent issue analysis and resolution planning.
 
 ## Focus
 Claude should focus on intelligent issue analysis:
-1. Analyze issue complexity and root cause potential from current-task.json
+1. Analyze issue complexity and root cause potential from docs/3-current-task/current-task.json
 2. Generate comprehensive reproduction steps and debugging approach
 3. Create resolution strategy and implementation plan
-4. Update current-task.json with analysis
+4. Update docs/3-current-task/current-task.json with analysis
 
 ## Important
 Preprocessing has already handled GitHub issue selection, assignment, and workspace setup.
@@ -24,7 +24,7 @@ Focus on intelligent analysis and solution planning.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

@@ -94,7 +94,7 @@ STRATEGIES:
 Examples:
   claude-wm-cli git recover                           # Auto-detect and recover
   claude-wm-cli git recover --strategy conservative  # Safe recovery
-  claude-wm-cli git recover stories.json              # Recover specific file`,
+  claude-wm-cli git recover docs/2-current-epic/stories.json              # Recover specific file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		recoverFromCorruption(args)
 	},

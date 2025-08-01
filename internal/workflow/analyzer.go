@@ -196,7 +196,7 @@ func (wa *WorkflowAnalyzer) loadCurrentEpic() (*state.EpicState, error) {
 
 // loadCurrentStory loads the currently active story
 func (wa *WorkflowAnalyzer) loadCurrentStory() (*state.StoryState, error) {
-	// Try to load from stories.json and find the current one
+	// Try to load from docs/2-current-epic/stories.json and find the current one
 	storiesPath := filepath.Join(wa.rootPath, "docs/2-current-epic/stories.json")
 
 	data, err := os.ReadFile(storiesPath)

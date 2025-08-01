@@ -5,7 +5,7 @@ Archive completed task and capture learnings.
 1. Review archived task documentation (pre-archived by preprocessing from docs/3-current-task/)
 2. Update epic TECHNICAL.md with technical decisions and patterns
 3. Store key learnings **with mem0** and enrich global CLAUDE.md
-4. Validate task completion status (pre-updated by preprocessing in PRD.md and stories.json)
+4. Validate task completion status (pre-updated by preprocessing in PRD.md and docs/2-current-epic/stories.json)
 
 ## Important
 Capture reusable patterns and lessons learned. Clean up current task workspace.
@@ -18,7 +18,7 @@ Capture reusable patterns and lessons learned. Clean up current task workspace.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for stories.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/stories.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

@@ -224,7 +224,7 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 
 	data, err := os.ReadFile(currentEpicPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read current-epic.json: %w", err)
+		return nil, fmt.Errorf("failed to read docs/2-current-epic/current-epic.json: %w", err)
 	}
 
 	var epicData struct {
@@ -240,7 +240,7 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	}
 
 	if err := json.Unmarshal(data, &epicData); err != nil {
-		return nil, fmt.Errorf("failed to parse current-epic.json: %w", err)
+		return nil, fmt.Errorf("failed to parse docs/2-current-epic/current-epic.json: %w", err)
 	}
 
 	// Calculate progress
@@ -270,7 +270,7 @@ func (cd *ContextDetector) loadEpicContext() (*EpicContext, error) {
 	}, nil
 }
 
-// loadStoryContext loads the current story context from current-story.json
+// loadStoryContext loads the current story context from docs/2-current-epic/current-story.json
 func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 	currentStoryPath := filepath.Join(cd.projectPath, "docs/2-current-epic/current-story.json")
 	if !cd.pathExists(currentStoryPath) {
@@ -279,7 +279,7 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 
 	data, err := os.ReadFile(currentStoryPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read current-story.json: %w", err)
+		return nil, fmt.Errorf("failed to read docs/2-current-epic/current-story.json: %w", err)
 	}
 
 	var storyData struct {
@@ -295,42 +295,42 @@ func (cd *ContextDetector) loadStoryContext() (*StoryContext, error) {
 	}
 
 	if err := json.Unmarshal(data, &storyData); err != nil {
-		return nil, fmt.Errorf("failed to parse current-story.json: %w", err)
+		return nil, fmt.Errorf("failed to parse docs/2-current-epic/current-story.json: %w", err)
 	}
 
 	// Return the current story context
 	return &StoryContext{
-		ID:          storyData.Story.ID,
-		Title:       storyData.Story.Title,
-		Description: storyData.Story.Description,
-		Status:      storyData.Story.Status,
-		Priority:    storyData.Story.Priority,
-		Progress:    0.0, // TODO: Calculate from tasks
+		ID:             storyData.Story.ID,
+		Title:          storyData.Story.Title,
+		Description:    storyData.Story.Description,
+		Status:         storyData.Story.Status,
+		Priority:       storyData.Story.Priority,
+		Progress:       0.0, // TODO: Calculate from tasks
 		TotalTasks:     0,   // TODO: Calculate from tasks
 		CompletedTasks: 0,   // TODO: Calculate from tasks
 	}, nil
 }
 
-// loadTaskContext loads the current task context from current-task.json
+// loadTaskContext loads the current task context from docs/3-current-task/current-task.json
 func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 	currentTaskPath := filepath.Join(cd.projectPath, "docs/3-current-task/current-task.json")
-	
+
 	if !cd.pathExists(currentTaskPath) {
 		return nil, nil
 	}
 
 	data, err := os.ReadFile(currentTaskPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read current-task.json: %w", err)
+		return nil, fmt.Errorf("failed to read docs/3-current-task/current-task.json: %w", err)
 	}
 
 	var taskData struct {
-		ID          string `json:"id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Type        string `json:"type"`
-		Priority    string `json:"priority"`
-		Status      string `json:"status"`
+		ID               string `json:"id"`
+		Title            string `json:"title"`
+		Description      string `json:"description"`
+		Type             string `json:"type"`
+		Priority         string `json:"priority"`
+		Status           string `json:"status"`
 		TechnicalContext struct {
 			AffectedComponents []string `json:"affected_components"`
 			Environment        string   `json:"environment"`
@@ -343,7 +343,7 @@ func (cd *ContextDetector) loadTaskContext() (*TaskContext, error) {
 	}
 
 	if err := json.Unmarshal(data, &taskData); err != nil {
-		return nil, fmt.Errorf("failed to parse current-task.json: %w", err)
+		return nil, fmt.Errorf("failed to parse docs/3-current-task/current-task.json: %w", err)
 	}
 
 	// Return current task

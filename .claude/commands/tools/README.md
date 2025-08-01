@@ -57,7 +57,7 @@ Located in `.claude/commands/templates/schemas/`:
 ```bash
 # Simple validator
 ./tools/simple-validator.sh validate
-./tools/simple-validator.sh validate-file current-task.json
+./tools/simple-validator.sh validate-file docs/3-current-task/current-task.json
 ./tools/simple-validator.sh show-schema current-task
 
 # Schema enforcer
@@ -85,7 +85,7 @@ Each integrated command includes:
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

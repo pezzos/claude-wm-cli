@@ -7,10 +7,10 @@ Generate intelligent task analysis from user input and requirements.
 
 ## Focus
 Claude should focus on intelligent requirement analysis:
-1. Analyze user input to determine precise task scope and requirements from current-task.json
+1. Analyze user input to determine precise task scope and requirements from docs/3-current-task/current-task.json
 2. Generate comprehensive requirements analysis and clarification questions
 3. Create detailed implementation strategy and approach
-4. Update current-task.json with intelligent insights and planning
+4. Update docs/3-current-task/current-task.json with intelligent insights and planning
 
 ## Important
 Preprocessing has already handled workspace setup and basic task initialization.
@@ -24,7 +24,7 @@ Focus on intelligent requirements analysis and strategic planning.
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-task.json
+### MANDATORY: Schema Compliance for docs/3-current-task/current-task.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

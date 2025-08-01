@@ -10,9 +10,9 @@ Archive previous epics.json and create new epic planning based on project vision
 6. Define 3-5 epics with story themes (not detailed stories), dependencies, success criteria in structured JSON format
 
 ## JSON Structure Required
-- Use the schema from .claude/commands/templates/schemas/epics.schema.json 
+- Use the schema from internal/config/system/commands/templates/schemas/epics.schema.json 
 - Each epic must include: id, title, description, status, priority, business_value, target_users, success_criteria, dependencies, blockers, story_themes
-- DO NOT include userStories - they belong in stories.json and are linked via epic_id
+- DO NOT include userStories - they belong in docs/2-current-epic/stories.json and are linked via epic_id
 - Include project_context section with current_epic, total_epics, completed_epics, project_phase
 
 ## Important
@@ -47,7 +47,7 @@ You MUST generate JSON that strictly follows the schema. Use:
 ```
 
 **MANDATORY REQUIREMENTS:**
-1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/epics.schema.json"
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value "internal/config/system/commands/templates/schemas/epics.schema.json"
 2. All required fields must be present with correct types and values
 3. No forbidden fields (like userStories) should be included
 

@@ -12,7 +12,7 @@ Archive previous epics.json and create new epic planning based on project vision
 ## JSON Structure Required
 - Use the schema from .claude/commands/templates/schemas/epics.schema.json 
 - Each epic must include: id, title, description, status, priority, business_value, target_users, success_criteria, dependencies, blockers, story_themes
-- DO NOT include userStories - they belong in stories.json and are linked via epic_id
+- DO NOT include userStories - they belong in  docs/2-current-epic/stories.json and are linked via epic_id
 - Include project_context section with current_epic, total_epics, completed_epics, project_phase
 
 ## Important

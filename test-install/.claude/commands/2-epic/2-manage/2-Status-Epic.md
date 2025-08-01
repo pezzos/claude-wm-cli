@@ -18,7 +18,7 @@ Show visual progress bars. Highlight blockers requiring immediate attention. Sug
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-epic.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/current-epic.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

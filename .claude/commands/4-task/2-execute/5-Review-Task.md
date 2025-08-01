@@ -25,7 +25,7 @@ For requirements involving multiple validation points or complex interactions:
 ## Iteration Management
 Review iteration status from preprocessing:
 - Review preprocessing results for quality checks and task status updates
-- If review fails: update iterations.json with specific guidance for re-planning
+- If review fails: update docs/3-current-task/iterations.json with specific guidance for re-planning
 - If review passes: approve for archiving and task completion
 - No iteration limit for review - continue until quality standards are met
 
@@ -95,7 +95,7 @@ BLOCK_REASON=[specific reason for blocking]
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for iterations.json
+### MANDATORY: Schema Compliance for docs/3-current-task/iterations.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

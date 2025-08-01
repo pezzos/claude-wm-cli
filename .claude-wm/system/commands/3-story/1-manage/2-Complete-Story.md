@@ -1,14 +1,14 @@
 # /2-Complete-Story
-Mark story complete and update stories.json status.
+Mark story complete and update docs/2-current-epic/stories.json status.
 
 ## Steps
-1. Verify all tasks in the current story (within stories.json) are ✅ completed and acceptance criteria met
-2. Mark story as "✅ Completed" in stories.json with completion metrics
+1. Verify all tasks in the current story (within docs/2-current-epic/stories.json) are ✅ completed and acceptance criteria met
+2. Mark story as "✅ Completed" in docs/2-current-epic/stories.json with completion metrics
 3. Remove docs/2-current-epic/current-story.json to clear current selection
 4. Update IMPLEMENTATION.md with the story's implementation details
 
 ## Important
-Run tests and validate acceptance criteria before marking complete. Store lessons learned **with mem0**. Tasks are stored within stories.json, not in separate todo.json files.
+Run tests and validate acceptance criteria before marking complete. Store lessons learned **with mem0**. Tasks are stored within docs/2-current-epic/stories.json, not in separate todo.json files.
 
 # Exit codes:
 - 0: Success
@@ -18,7 +18,7 @@ Run tests and validate acceptance criteria before marking complete. Store lesson
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for stories.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/stories.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 

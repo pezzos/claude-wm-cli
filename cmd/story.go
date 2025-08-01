@@ -61,7 +61,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Enable debug mode if flag is set
 		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-		
+
 		createStory(args[0], cmd)
 	},
 }
@@ -82,7 +82,7 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Enable debug mode if flag is set
 		debug.SetDebugMode(debugMode || viper.GetBool("debug"))
-		
+
 		listStories(cmd)
 	},
 }
@@ -215,10 +215,10 @@ func createStory(title string, _ *cobra.Command) {
 
 	// Create story options
 	options := story.StoryCreateOptions{
-		Title:              title,
-		Description:        storyDescription,
-		EpicID:             storyEpicID,
-		Priority:           priority,
+		Title:       title,
+		Description: storyDescription,
+		EpicID:      storyEpicID,
+		Priority:    priority,
 		// StoryPoints not used in current schema
 		AcceptanceCriteria: storyCriteria,
 		Dependencies:       dependencies,
@@ -556,17 +556,17 @@ func truncateStoryString(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// JSON structure for stories.json file (follows schema: stories as object with STORY-XXX keys)
+// JSON structure for docs/2-current-epic/stories.json file (follows schema: stories as object with STORY-XXX keys)
 type StoriesJSON struct {
 	Stories map[string]struct {
-		ID               string `json:"id"`
-		Title            string `json:"title"`
-		Description      string `json:"description"`
-		EpicID           string `json:"epic_id"`
-		Status           string `json:"status"`
-		Priority         string `json:"priority"`
+		ID                 string   `json:"id"`
+		Title              string   `json:"title"`
+		Description        string   `json:"description"`
+		EpicID             string   `json:"epic_id"`
+		Status             string   `json:"status"`
+		Priority           string   `json:"priority"`
 		AcceptanceCriteria []string `json:"acceptance_criteria"`
-		Blockers         []struct {
+		Blockers           []struct {
 			Description string `json:"description"`
 			Impact      string `json:"impact"`
 		} `json:"blockers"`
@@ -587,9 +587,9 @@ type StoriesJSON struct {
 	} `json:"epic_context"`
 }
 
-// displayStoriesFromFile reads stories.json and displays formatted story list
+// displayStoriesFromFile reads docs/2-current-epic/stories.json and displays formatted story list
 func displayStoriesFromFile(wd, statusFilter string) error {
-	// Read stories.json file
+	// Read docs/2-current-epic/stories.json file
 	storiesPath := filepath.Join(wd, "docs/2-current-epic/stories.json")
 	data, err := os.ReadFile(storiesPath)
 	if err != nil {
@@ -597,32 +597,32 @@ func displayStoriesFromFile(wd, statusFilter string) error {
 			fmt.Println("📋 No stories found. Create stories with 'story create' or 'story generate'.")
 			return nil
 		}
-		return fmt.Errorf("failed to read stories.json: %w", err)
+		return fmt.Errorf("failed to read docs/2-current-epic/stories.json: %w", err)
 	}
 
 	// Parse JSON
 	var storiesData StoriesJSON
 	if err := json.Unmarshal(data, &storiesData); err != nil {
-		return fmt.Errorf("failed to parse stories.json: %w", err)
+		return fmt.Errorf("failed to parse docs/2-current-epic/stories.json: %w", err)
 	}
 
 	// Filter stories from map
 	type StoryItem struct {
-		ID               string `json:"id"`
-		Title            string `json:"title"`
-		Description      string `json:"description"`
-		EpicID           string `json:"epic_id"`
-		Status           string `json:"status"`
-		Priority         string `json:"priority"`
+		ID                 string   `json:"id"`
+		Title              string   `json:"title"`
+		Description        string   `json:"description"`
+		EpicID             string   `json:"epic_id"`
+		Status             string   `json:"status"`
+		Priority           string   `json:"priority"`
 		AcceptanceCriteria []string `json:"acceptance_criteria"`
-		Tasks            []struct {
+		Tasks              []struct {
 			ID          string `json:"id"`
 			Title       string `json:"title"`
 			Description string `json:"description"`
 			Status      string `json:"status"`
 		} `json:"tasks"`
 	}
-	
+
 	filteredStories := make([]StoryItem, 0)
 
 	for _, story := range storiesData.Stories {
@@ -630,19 +630,19 @@ func displayStoriesFromFile(wd, statusFilter string) error {
 		if statusFilter != "" && story.Status != statusFilter {
 			continue
 		}
-		
+
 		// Convert to StoryItem
 		storyItem := StoryItem{
-			ID:               story.ID,
-			Title:            story.Title,
-			Description:      story.Description,
-			EpicID:           story.EpicID,
-			Status:           story.Status,
-			Priority:         story.Priority,
+			ID:                 story.ID,
+			Title:              story.Title,
+			Description:        story.Description,
+			EpicID:             story.EpicID,
+			Status:             story.Status,
+			Priority:           story.Priority,
 			AcceptanceCriteria: story.AcceptanceCriteria,
-			Tasks:            story.Tasks,
+			Tasks:              story.Tasks,
 		}
-		
+
 		filteredStories = append(filteredStories, storyItem)
 	}
 

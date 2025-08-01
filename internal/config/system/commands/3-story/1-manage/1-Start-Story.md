@@ -1,15 +1,15 @@
 # /1-Start-Story
-Choose next priority story and create current-story.json.
+Choose next priority story and create docs/2-current-epic/current-story.json.
 
 ## Steps
-1. Read stories.json and identify highest priority unstarted story (P0 > P1 > P2 > P3)
+1. Read docs/2-current-epic/stories.json and identify highest priority unstarted story (P0 > P1 > P2 > P3)
 2. Verify all story dependencies are marked complete
 3. Create docs/2-current-epic/current-story.json with selected story details
-4. Update stories.json: mark story as "🚧 In Progress - {date}"
-5. Extract technical tasks from story and update the tasks field in stories.json
+4. Update docs/2-current-epic/stories.json: mark story as "🚧 In Progress - {date}"
+5. Extract technical tasks from story and update the tasks field in docs/2-current-epic/stories.json
 
 ## Important
-Validate story dependencies are complete. Tasks are stored within the story in stories.json, not in a separate todo.json file.
+Validate story dependencies are complete. Tasks are stored within the story in docs/2-current-epic/stories.json, not in a separate todo.json file.
 
 # Exit codes:
 - 0: Success
@@ -19,7 +19,7 @@ Validate story dependencies are complete. Tasks are stored within the story in s
 ## JSON Schema Validation
 <!-- JSON_SCHEMA_VALIDATION -->
 
-### MANDATORY: Schema Compliance for current-story.json
+### MANDATORY: Schema Compliance for docs/2-current-epic/current-story.json
 
 Before generating or updating JSON files, Claude MUST use schema-aware prompts:
 
@@ -39,7 +39,7 @@ You MUST generate JSON that strictly follows the schema. Use:
 ```
 
 **MANDATORY REQUIREMENTS:**
-1. **$schema field**: The JSON file MUST contain a "$schema" field with the value ".claude/commands/templates/schemas/current-story.schema.json"
+1. **$schema field**: The JSON file MUST contain a "$schema" field with the value "internal/config/system/commands/templates/schemas/current-story.schema.json"
 2. All required fields must be present with correct types and values
 3. All nested objects must have their required fields
 ### Post-Generation Validation

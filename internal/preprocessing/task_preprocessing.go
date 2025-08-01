@@ -19,24 +19,24 @@ type TaskStatus struct {
 	Details string
 }
 
-// StoriesData represents the structure of stories.json
+// StoriesData represents the structure of docs/2-current-epic/stories.json
 type StoriesData struct {
 	Stories     map[string]Story `json:"stories"`
 	EpicContext EpicContext      `json:"epic_context"`
 }
 
-// Story represents a single story in the stories.json file
+// Story represents a single story in the docs/2-current-epic/stories.json file
 type Story struct {
-	ID                string          `json:"id"`
-	Title             string          `json:"title"`
-	Description       string          `json:"description"`
-	EpicID            string          `json:"epic_id"`
-	Status            string          `json:"status"`
-	Priority          string          `json:"priority"`
-	AcceptanceCriteria []string       `json:"acceptance_criteria"`
-	Blockers          []interface{}  `json:"blockers"`
-	Dependencies      []string       `json:"dependencies"`
-	Tasks             []StoryTask    `json:"tasks"`
+	ID                 string        `json:"id"`
+	Title              string        `json:"title"`
+	Description        string        `json:"description"`
+	EpicID             string        `json:"epic_id"`
+	Status             string        `json:"status"`
+	Priority           string        `json:"priority"`
+	AcceptanceCriteria []string      `json:"acceptance_criteria"`
+	Blockers           []interface{} `json:"blockers"`
+	Dependencies       []string      `json:"dependencies"`
+	Tasks              []StoryTask   `json:"tasks"`
 }
 
 // StoryTask represents a task within a story
@@ -47,7 +47,7 @@ type StoryTask struct {
 	Status      string `json:"status"`
 }
 
-// EpicContext represents the epic context in stories.json
+// EpicContext represents the epic context in docs/2-current-epic/stories.json
 type EpicContext struct {
 	ID               string `json:"id"`
 	Title            string `json:"title"`
@@ -56,21 +56,21 @@ type EpicContext struct {
 	CompletedStories int    `json:"completed_stories"`
 }
 
-// CurrentTaskData represents the structure of current-task.json
+// CurrentTaskData represents the structure of docs/3-current-task/current-task.json
 type CurrentTaskData struct {
-	ID                   string                 `json:"id"`
-	Title                string                 `json:"title"`
-	Description          string                 `json:"description"`
-	Type                 string                 `json:"type"`
-	Priority             string                 `json:"priority"`
-	Status               string                 `json:"status"`
-	TechnicalContext     TechnicalContext       `json:"technical_context"`
-	Analysis             TaskAnalysis           `json:"analysis"`
-	Reproduction         ReproductionInfo       `json:"reproduction"`
-	Investigation        InvestigationInfo      `json:"investigation"`
-	Implementation       ImplementationInfo     `json:"implementation"`
-	Resolution           ResolutionInfo         `json:"resolution"`
-	InterruptionContext  InterruptionContext    `json:"interruption_context"`
+	ID                  string              `json:"id"`
+	Title               string              `json:"title"`
+	Description         string              `json:"description"`
+	Type                string              `json:"type"`
+	Priority            string              `json:"priority"`
+	Status              string              `json:"status"`
+	TechnicalContext    TechnicalContext    `json:"technical_context"`
+	Analysis            TaskAnalysis        `json:"analysis"`
+	Reproduction        ReproductionInfo    `json:"reproduction"`
+	Investigation       InvestigationInfo   `json:"investigation"`
+	Implementation      ImplementationInfo  `json:"implementation"`
+	Resolution          ResolutionInfo      `json:"resolution"`
+	InterruptionContext InterruptionContext `json:"interruption_context"`
 }
 
 // TechnicalContext represents technical context for a task
@@ -82,10 +82,10 @@ type TechnicalContext struct {
 
 // TaskAnalysis represents analysis data for a task
 type TaskAnalysis struct {
-	Observations     []string `json:"observations"`
-	Approach         string   `json:"approach"`
-	SimilarPatterns  []string `json:"similar_patterns"`
-	Reasoning        []string `json:"reasoning"`
+	Observations    []string `json:"observations"`
+	Approach        string   `json:"approach"`
+	SimilarPatterns []string `json:"similar_patterns"`
+	Reasoning       []string `json:"reasoning"`
 }
 
 // ReproductionInfo represents reproduction information
@@ -120,12 +120,12 @@ type InterruptionContext struct {
 	Notes       string `json:"notes"`
 }
 
-// IterationsData represents the structure of iterations.json
+// IterationsData represents the structure of docs/3-current-task/iterations.json
 type IterationsData struct {
-	TaskContext    TaskContext         `json:"task_context"`
-	Iterations     []Iteration         `json:"iterations"`
-	FinalOutcome   FinalOutcome        `json:"final_outcome"`
-	Recommendations []string           `json:"recommendations"`
+	TaskContext     TaskContext  `json:"task_context"`
+	Iterations      []Iteration  `json:"iterations"`
+	FinalOutcome    FinalOutcome `json:"final_outcome"`
+	Recommendations []string     `json:"recommendations"`
 }
 
 // TaskContext represents task context in iterations
@@ -141,11 +141,11 @@ type TaskContext struct {
 
 // Iteration represents a single iteration
 type Iteration struct {
-	IterationNumber int       `json:"iteration_number"`
-	Attempt         Attempt   `json:"attempt"`
-	Result          Result    `json:"result"`
-	Learnings       []string  `json:"learnings"`
-	CompletedAt     string    `json:"completed_at"`
+	IterationNumber int      `json:"iteration_number"`
+	Attempt         Attempt  `json:"attempt"`
+	Result          Result   `json:"result"`
+	Learnings       []string `json:"learnings"`
+	CompletedAt     string   `json:"completed_at"`
 }
 
 // Attempt represents an iteration attempt
@@ -177,12 +177,12 @@ type FinalOutcome struct {
 
 // GitHubIssue represents a GitHub issue
 type GitHubIssue struct {
-	Number int    `json:"number"`
-	Title  string `json:"title"`
-	Body   string `json:"body"`
-	State  string `json:"state"`
-	Labels []GitHubLabel `json:"labels"`
-	CreatedAt string `json:"created_at"`
+	Number    int           `json:"number"`
+	Title     string        `json:"title"`
+	Body      string        `json:"body"`
+	State     string        `json:"state"`
+	Labels    []GitHubLabel `json:"labels"`
+	CreatedAt string        `json:"created_at"`
 }
 
 // GitHubLabel represents a label on a GitHub issue
@@ -194,11 +194,11 @@ type GitHubLabel struct {
 func PreprocessFromStory(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("📋 Preprocessing: From Story task initialization...")
 
-	// 1. Parse stories.json
+	// 1. Parse docs/2-current-epic/stories.json
 	storiesPath := filepath.Join(projectPath, "docs/2-current-epic/stories.json")
 	stories, err := parseStoriesJSON(storiesPath)
 	if err != nil {
-		return fmt.Errorf("failed to parse stories.json: %w", err)
+		return fmt.Errorf("failed to parse docs/2-current-epic/stories.json: %w", err)
 	}
 
 	// 2. Find next task with status != "done" based on dependencies
@@ -220,14 +220,14 @@ func PreprocessFromStory(projectPath string, menuDisplay *navigation.MenuDisplay
 	}
 
 	if err := writeStoriesJSON(storiesPath, stories); err != nil {
-		return fmt.Errorf("failed to write updated stories.json: %w", err)
+		return fmt.Errorf("failed to write updated docs/2-current-epic/stories.json: %w", err)
 	}
 
 	menuDisplay.ShowMessage("  ✓ Updated task status to in_progress")
 
-	// 5. Initialize current-task.json with context
+	// 5. Initialize docs/3-current-task/current-task.json with context
 	if err := initializeCurrentTaskFromStory(projectPath, nextTask, stories.EpicContext); err != nil {
-		return fmt.Errorf("failed to initialize current-task.json: %w", err)
+		return fmt.Errorf("failed to initialize docs/3-current-task/current-task.json: %w", err)
 	}
 
 	menuDisplay.ShowSuccess("✅ From Story preprocessing completed successfully")
@@ -265,9 +265,9 @@ func PreprocessFromIssue(projectPath string, menuDisplay *navigation.MenuDisplay
 		menuDisplay.ShowWarning(fmt.Sprintf("Failed to comment on issue: %v", err))
 	}
 
-	// 4. Initialize current-task.json with issue context
+	// 4. Initialize docs/3-current-task/current-task.json with issue context
 	if err := initializeCurrentTaskFromIssue(projectPath, selectedIssue); err != nil {
-		return fmt.Errorf("failed to initialize current-task.json: %w", err)
+		return fmt.Errorf("failed to initialize docs/3-current-task/current-task.json: %w", err)
 	}
 
 	menuDisplay.ShowSuccess("✅ From Issue preprocessing completed successfully")
@@ -283,9 +283,9 @@ func PreprocessFromInput(projectPath string, description string, menuDisplay *na
 		return fmt.Errorf("failed to clean current task directory: %w", err)
 	}
 
-	// 2. Initialize current-task.json with input context
+	// 2. Initialize docs/3-current-task/current-task.json with input context
 	if err := initializeCurrentTaskFromInput(projectPath, description); err != nil {
-		return fmt.Errorf("failed to initialize current-task.json: %w", err)
+		return fmt.Errorf("failed to initialize docs/3-current-task/current-task.json: %w", err)
 	}
 
 	menuDisplay.ShowSuccess("✅ From Input preprocessing completed successfully")
@@ -298,11 +298,11 @@ func PreprocessPlanTask(projectPath string, menuDisplay *navigation.MenuDisplay)
 
 	// 1. Copy JSON templates
 	if err := copyJSONTemplate(projectPath, "current-task.json"); err != nil {
-		return fmt.Errorf("failed to copy current-task.json template: %w", err)
+		return fmt.Errorf("failed to copy docs/3-current-task/current-task.json template: %w", err)
 	}
 
 	if err := copyJSONTemplate(projectPath, "iterations.json"); err != nil {
-		return fmt.Errorf("failed to copy iterations.json template: %w", err)
+		return fmt.Errorf("failed to copy docs/3-current-task/iterations.json template: %w", err)
 	}
 
 	// 2. Initialize with current context
@@ -322,16 +322,16 @@ func PreprocessPlanTask(projectPath string, menuDisplay *navigation.MenuDisplay)
 func PreprocessTestDesign(projectPath string, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("🧪 Preprocessing: Test Design initialization...")
 
-	// Create TEST.md from template (kept as Markdown for test scenarios)
+	// Create docs/3-current-task/TEST.md from template (kept as Markdown for test scenarios)
 	templatePath := filepath.Join(projectPath, "internal/config/system/commands/templates/TEST.md")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/TEST.md")
 
 	if err := copyFile(templatePath, destPath); err != nil {
-		menuDisplay.ShowWarning("⚠️ TEST.md template not found, will be created by Claude")
+		menuDisplay.ShowWarning("⚠️ internal/config/system/commands/templates/TEST.md template not found, will be created by Claude")
 		return nil
 	}
 
-	menuDisplay.ShowMessage("  ✓ Copied TEST.md template")
+	menuDisplay.ShowMessage("  ✓ Copied internal/config/system/commands/templates/TEST.md template")
 	menuDisplay.ShowSuccess("✅ Test Design preprocessing completed successfully")
 	return nil
 }
@@ -356,14 +356,14 @@ func PreprocessValidateTask(projectPath string, menuDisplay *navigation.MenuDisp
 
 		iterations, err := parseIterationsJSON(filepath.Join(projectPath, "docs/3-current-task/iterations.json"))
 		if err != nil {
-			return fmt.Errorf("failed to parse iterations.json: %w", err)
+			return fmt.Errorf("failed to parse docs/3-current-task/iterations.json: %w", err)
 		}
 
 		if iterations.TaskContext.CurrentIteration >= iterations.TaskContext.MaxIterations {
 			return fmt.Errorf("max iterations reached (%d) - needs human intervention", iterations.TaskContext.MaxIterations)
 		}
 
-		menuDisplay.ShowMessage(fmt.Sprintf("  ⚠️ Iteration %d/%d - continuing with Claude", 
+		menuDisplay.ShowMessage(fmt.Sprintf("  ⚠️ Iteration %d/%d - continuing with Claude",
 			iterations.TaskContext.CurrentIteration, iterations.TaskContext.MaxIterations))
 	}
 
@@ -379,7 +379,7 @@ func PreprocessReviewTask(projectPath string, menuDisplay *navigation.MenuDispla
 	qualityReport := runQualityChecks(projectPath)
 	menuDisplay.ShowMessage(fmt.Sprintf("  ◦ Quality check: %s", getQualityResultsString(qualityReport)))
 
-	// 2. Update task status in stories.json
+	// 2. Update task status in docs/2-current-epic/stories.json
 	currentTask, err := getCurrentTaskFromJSON(filepath.Join(projectPath, "docs/3-current-task/current-task.json"))
 	if err != nil {
 		menuDisplay.ShowWarning("⚠️ Could not load current task context")
@@ -390,7 +390,7 @@ func PreprocessReviewTask(projectPath string, menuDisplay *navigation.MenuDispla
 	storiesPath := filepath.Join(projectPath, "docs/2-current-epic/stories.json")
 	stories, err := parseStoriesJSON(storiesPath)
 	if err != nil {
-		menuDisplay.ShowWarning("⚠️ Could not update stories.json status")
+		menuDisplay.ShowWarning("⚠️ Could not update docs/2-current-epic/stories.json status")
 		menuDisplay.ShowSuccess("✅ Review Task preprocessing completed (partial)")
 		return nil
 	}
@@ -399,7 +399,7 @@ func PreprocessReviewTask(projectPath string, menuDisplay *navigation.MenuDispla
 		menuDisplay.ShowWarning(fmt.Sprintf("⚠️ Failed to update task status: %v", err))
 	} else {
 		if err := writeStoriesJSON(storiesPath, stories); err != nil {
-			menuDisplay.ShowWarning(fmt.Sprintf("⚠️ Failed to write stories.json: %v", err))
+			menuDisplay.ShowWarning(fmt.Sprintf("⚠️ Failed to write docs/2-current-epic/stories.json: %v", err))
 		} else {
 			menuDisplay.ShowMessage("  ✓ Updated task status to done")
 		}
@@ -423,11 +423,11 @@ func PreprocessArchiveTask(projectPath string, menuDisplay *navigation.MenuDispl
 	// 1. Archive task JSON documentation
 	currentTask, err := parseTaskJSONFile(filepath.Join(projectPath, "docs/3-current-task/current-task.json"))
 	if err != nil {
-		return fmt.Errorf("failed to parse current-task.json: %w", err)
+		return fmt.Errorf("failed to parse docs/3-current-task/current-task.json: %w", err)
 	}
 
 	epicName := getEpicNameFromTask(currentTask)
-	archivePath := filepath.Join(projectPath, "docs/archive", epicName, "tasks", 
+	archivePath := filepath.Join(projectPath, "docs/archive", epicName, "tasks",
 		fmt.Sprintf("%s-%s", currentTask.ID, time.Now().Format("2006-01-02")))
 
 	if err := os.MkdirAll(archivePath, 0755); err != nil {
@@ -479,19 +479,19 @@ func PreprocessStatusTask(projectPath string, menuDisplay *navigation.MenuDispla
 
 	currentTask, err := parseTaskJSONFile(currentTaskPath)
 	if err != nil {
-		return TaskStatus{Success: false, Message: "Failed to parse current-task.json", Details: err.Error()}, err
+		return TaskStatus{Success: false, Message: "Failed to parse docs/3-current-task/current-task.json", Details: err.Error()}, err
 	}
 
 	iterations, err := parseIterationsJSON(iterationsPath)
 	if err != nil {
-		return TaskStatus{Success: false, Message: "Failed to parse iterations.json", Details: err.Error()}, err
+		return TaskStatus{Success: false, Message: "Failed to parse docs/3-current-task/iterations.json", Details: err.Error()}, err
 	}
 
 	// 2. Calculate metrics from JSON structure
 	status := TaskStatus{
 		Success: true,
 		Message: fmt.Sprintf("Task Status: %s - %s", currentTask.ID, currentTask.Title),
-		Details: fmt.Sprintf("Type: %s, Priority: %s, Status: %s, Iterations: %d/%d", 
+		Details: fmt.Sprintf("Type: %s, Priority: %s, Status: %s, Iterations: %d/%d",
 			currentTask.Type, currentTask.Priority, currentTask.Status,
 			iterations.TaskContext.CurrentIteration, iterations.TaskContext.MaxIterations),
 	}
@@ -554,12 +554,12 @@ func updateTaskStatus(stories *StoriesData, taskID, status string) error {
 
 func cleanCurrentTaskDirectory(projectPath string) error {
 	currentTaskDir := filepath.Join(projectPath, "docs/3-current-task")
-	
+
 	// Remove all contents
 	if err := os.RemoveAll(currentTaskDir); err != nil {
 		return err
 	}
-	
+
 	// Recreate directory
 	return os.MkdirAll(currentTaskDir, 0755)
 }
@@ -575,13 +575,13 @@ func initializeCurrentTaskFromStory(projectPath string, task *StoryTask, epicCon
 		TechnicalContext: TechnicalContext{
 			AffectedComponents: []string{},
 			Environment:        "development",
-			Version:           "current",
+			Version:            "current",
 		},
 		Analysis: TaskAnalysis{
 			Observations:    []string{},
 			Approach:        "",
 			SimilarPatterns: []string{},
-			Reasoning:      []string{},
+			Reasoning:       []string{},
 		},
 		Reproduction: ReproductionInfo{
 			Steps:        []string{},
@@ -622,13 +622,13 @@ func initializeCurrentTaskFromIssue(projectPath string, issue *GitHubIssue) erro
 		TechnicalContext: TechnicalContext{
 			AffectedComponents: []string{},
 			Environment:        "production",
-			Version:           "current",
+			Version:            "current",
 		},
 		Analysis: TaskAnalysis{
 			Observations:    []string{},
 			Approach:        "",
 			SimilarPatterns: []string{},
-			Reasoning:      []string{},
+			Reasoning:       []string{},
 		},
 		Reproduction: ReproductionInfo{
 			Steps:        []string{},
@@ -669,13 +669,13 @@ func initializeCurrentTaskFromInput(projectPath string, description string) erro
 		TechnicalContext: TechnicalContext{
 			AffectedComponents: []string{},
 			Environment:        "development",
-			Version:           "current",
+			Version:            "current",
 		},
 		Analysis: TaskAnalysis{
 			Observations:    []string{},
 			Approach:        "",
 			SimilarPatterns: []string{},
-			Reasoning:      []string{},
+			Reasoning:       []string{},
 		},
 		Reproduction: ReproductionInfo{
 			Steps:        []string{},
@@ -712,15 +712,15 @@ func copyJSONTemplate(projectPath, templateName string) error {
 		filepath.Join(projectPath, ".claude-wm/runtime/commands/templates", templateName),
 		filepath.Join(projectPath, ".claude-wm/system/commands/templates", templateName),
 	}
-	
+
 	destPath := filepath.Join(projectPath, "docs/3-current-task", templateName)
-	
+
 	for _, templatePath := range possiblePaths {
 		if _, err := os.Stat(templatePath); err == nil {
 			return copyFile(templatePath, destPath)
 		}
 	}
-	
+
 	return fmt.Errorf("template %s not found in any of the expected locations", templateName)
 }
 
@@ -751,12 +751,12 @@ func writeJSON(path string, data interface{}) error {
 
 func initializeTaskContext(projectPath string) error {
 	// This would be more complex in real implementation
-	// For now, assume the current-task.json template is sufficient
+	// For now, assume the docs/3-current-task/current-task.json template is sufficient
 	return nil
 }
 
 func initializeIterationContext(projectPath string) error {
-	// Initialize iterations.json with basic structure
+	// Initialize docs/3-current-task/iterations.json with basic structure
 	iterationsData := IterationsData{
 		TaskContext: TaskContext{
 			TaskID:           "TASK-001",
@@ -884,7 +884,7 @@ func getCurrentTaskFromJSON(path string) (*CurrentTaskData, error) {
 
 func updatePRDTaskStatus(projectPath, taskID, status string) error {
 	prdPath := filepath.Join(projectPath, "docs/2-current-epic/PRD.md")
-	
+
 	// Read file
 	data, err := os.ReadFile(prdPath)
 	if err != nil {
@@ -892,13 +892,13 @@ func updatePRDTaskStatus(projectPath, taskID, status string) error {
 	}
 
 	content := string(data)
-	
+
 	// Simple replacement - would need more sophisticated parsing in real implementation
 	oldPattern := fmt.Sprintf("- [ ] %s", taskID)
 	newPattern := fmt.Sprintf("- [x] %s", taskID)
-	
+
 	updatedContent := strings.Replace(content, oldPattern, newPattern, -1)
-	
+
 	return os.WriteFile(prdPath, []byte(updatedContent), 0644)
 }
 
@@ -936,7 +936,7 @@ func incrementIterationJSON(projectPath string, testResults, perfResults TaskSta
 	}
 
 	iterations.TaskContext.CurrentIteration++
-	
+
 	// Add new iteration with results
 	newIteration := Iteration{
 		IterationNumber: iterations.TaskContext.CurrentIteration,

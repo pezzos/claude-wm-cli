@@ -1209,7 +1209,7 @@ func executeClaudeCommandInteractive(command string, menuDisplay *navigation.Men
 
 	// Step 1: Preprocessing
 	preprocessStep := timer.ProfileStep(metrics.StepPreprocessing)
-	
+
 	// Special preprocessing for Plan-Ticket command
 	if command == "/4-task:2-execute:1-Plan-Ticket" {
 		// Get current working directory for preprocessing
@@ -1248,7 +1248,7 @@ func executeClaudeCommandInteractive(command string, menuDisplay *navigation.Men
 	// Step 3: Claude execution (this is the potentially slow part)
 	claudeExecutionStep := timer.ProfileClaudeExecution(command)
 	description := fmt.Sprintf("Interactive menu command: %s", command)
-	
+
 	// Add additional context for Start Story command
 	if command == "/3-story:1-manage:1-Start-Story" {
 		claudeExecutionStep.SetMetadata("is_start_story", true)
@@ -1257,7 +1257,7 @@ func executeClaudeCommandInteractive(command string, menuDisplay *navigation.Men
 			"story_analysis", "priority_selection", "context_preparation", "claude_interaction",
 		})
 	}
-	
+
 	if err := claudeExecutor.ExecuteSlashCommand(command, description); err != nil {
 		claudeExecutionStep.StopWithError(err)
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute Claude command: %v", err))
@@ -1360,7 +1360,7 @@ func executeClaudeImport(ctx *navigation.ProjectContext, menuDisplay *navigation
 	return executeConfigInit(ctx, menuDisplay)
 }
 
-// executeClaudeInit - deprecated, use executeConfigInit instead  
+// executeClaudeInit - deprecated, use executeConfigInit instead
 func executeClaudeInit(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("⚠️  This command is deprecated")
 	menuDisplay.ShowMessage("🔄 Redirecting to new configuration system...")
@@ -1538,12 +1538,12 @@ func executeTicketFullWorkflow(ctx *navigation.ProjectContext, menuDisplay *navi
 		switch validationResult {
 		case ValidationSuccess:
 			menuDisplay.ShowSuccess("✅ Validation successful! Resetting iterations and proceeding to review...")
-			
-			// Reset iterations.json for review phase
+
+			// Reset docs/3-current-task/iterations.json for review phase
 			if err := resetIterationsAfterValidation(ctx.ProjectPath, menuDisplay); err != nil {
-				menuDisplay.ShowWarning(fmt.Sprintf("Failed to reset iterations.json: %v", err))
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to reset docs/3-current-task/iterations.json: %v", err))
 			}
-			
+
 			// Enter review iteration loop (infinite until success or explicit failure)
 			return executeReviewIterationLoop(ctx, menuDisplay)
 
@@ -1597,11 +1597,11 @@ func executeValidationWithIterationCheck(ctx *navigation.ProjectContext, menuDis
 		return ValidationFailedRetry, fmt.Errorf("preprocessing failed: %w", err)
 	}
 
-	// Check current iteration status from iterations.json
+	// Check current iteration status from docs/3-current-task/iterations.json
 	iterationsPath := filepath.Join(ctx.ProjectPath, "docs/3-current-task/iterations.json")
 	iterations, err := parseIterationsJSONFile(iterationsPath)
 	if err != nil {
-		menuDisplay.ShowWarning("⚠️ Could not read iterations.json, continuing with validation")
+		menuDisplay.ShowWarning("⚠️ Could not read docs/3-current-task/iterations.json, continuing with validation")
 	}
 
 	// Execute Claude validation command
@@ -1613,7 +1613,7 @@ func executeValidationWithIterationCheck(ctx *navigation.ProjectContext, menuDis
 	// Execute validation command and capture exit code
 	description := fmt.Sprintf("Validation step (iteration %d/%d)", currentIteration, maxIterations)
 	exitCode, err := claudeExecutor.ExecuteSlashCommandWithExitCode("/4-task:2-execute:4-Validate-Task", description)
-	
+
 	if err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute validation: %v", err))
 		return ValidationFailedRetry, err
@@ -1627,32 +1627,32 @@ func executeValidationWithIterationCheck(ctx *navigation.ProjectContext, menuDis
 
 	case 1: // Needs iteration
 		menuDisplay.ShowMessage("⚠️ Validation indicates iteration needed")
-		
+
 		// Check if we've reached max iterations
 		if currentIteration >= maxIterations {
-			// Update iterations.json to mark as blocked
+			// Update docs/3-current-task/iterations.json to mark as blocked
 			if iterations != nil {
 				if err := updateIterationsAsBlocked(iterationsPath, iterations, "Maximum iterations reached"); err != nil {
-					menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+					menuDisplay.ShowWarning(fmt.Sprintf("Failed to update docs/3-current-task/iterations.json: %v", err))
 				}
 			}
 			return ValidationFailedMaxReached, nil
 		}
-		
-		// Update iterations.json for retry
+
+		// Update docs/3-current-task/iterations.json for retry
 		if iterations != nil {
 			if err := updateIterationsForRetry(iterationsPath, iterations, currentIteration); err != nil {
-				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update docs/3-current-task/iterations.json: %v", err))
 			}
 		}
-		
+
 		return ValidationFailedRetry, nil
 
 	case 2: // Blocked
 		menuDisplay.ShowError("❌ Validation indicates task is blocked")
 		if iterations != nil {
 			if err := updateIterationsAsBlocked(iterationsPath, iterations, "Validation blocked"); err != nil {
-				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update docs/3-current-task/iterations.json: %v", err))
 			}
 		}
 		return ValidationFailedMaxReached, fmt.Errorf("validation blocked")
@@ -1663,11 +1663,11 @@ func executeValidationWithIterationCheck(ctx *navigation.ProjectContext, menuDis
 	}
 }
 
-// updateIterationsForRetry updates iterations.json for a retry scenario
+// updateIterationsForRetry updates docs/3-current-task/iterations.json for a retry scenario
 func updateIterationsForRetry(iterationsPath string, iterations *preprocessing.IterationsData, currentIteration int) error {
 	// Update current iteration
 	iterations.TaskContext.CurrentIteration = currentIteration + 1
-	
+
 	// Add iteration record
 	newIteration := preprocessing.Iteration{
 		IterationNumber: currentIteration,
@@ -1684,14 +1684,14 @@ func updateIterationsForRetry(iterationsPath string, iterations *preprocessing.I
 		Learnings:   []string{"Validation failed", "Need to revisit planning and implementation"},
 		CompletedAt: time.Now().Format(time.RFC3339),
 	}
-	
+
 	iterations.Iterations = append(iterations.Iterations, newIteration)
-	
+
 	// Write back to file
 	return writeJSONToFile(iterationsPath, iterations)
 }
 
-// updateIterationsAsBlocked updates iterations.json when max iterations reached or blocked
+// updateIterationsAsBlocked updates docs/3-current-task/iterations.json when max iterations reached or blocked
 func updateIterationsAsBlocked(iterationsPath string, iterations *preprocessing.IterationsData, reason string) error {
 	// Update final outcome
 	iterations.FinalOutcome = preprocessing.FinalOutcome{
@@ -1701,14 +1701,14 @@ func updateIterationsAsBlocked(iterationsPath string, iterations *preprocessing.
 		Complexity:            "higher_than_estimated",
 		OriginalEstimateHours: 0, // Would be from initial estimate
 	}
-	
+
 	// Add recommendations
-	iterations.Recommendations = append(iterations.Recommendations, 
+	iterations.Recommendations = append(iterations.Recommendations,
 		"Consider breaking down the task into smaller components",
 		"Review approach and seek additional expertise",
 		"Validate requirements and acceptance criteria",
 	)
-	
+
 	// Write back to file
 	return writeJSONToFile(iterationsPath, iterations)
 }
@@ -1722,7 +1722,7 @@ func writeJSONToFile(path string, data interface{}) error {
 	return os.WriteFile(path, jsonData, 0644)
 }
 
-// parseIterationsJSONFile parses iterations.json file locally
+// parseIterationsJSONFile parses docs/3-current-task/iterations.json file locally
 func parseIterationsJSONFile(path string) (*preprocessing.IterationsData, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -1737,10 +1737,10 @@ func parseIterationsJSONFile(path string) (*preprocessing.IterationsData, error)
 	return &iterations, nil
 }
 
-// resetIterationsAfterValidation resets iterations.json by copying template after successful validation
+// resetIterationsAfterValidation resets docs/3-current-task/iterations.json by copying template after successful validation
 func resetIterationsAfterValidation(projectPath string, menuDisplay *navigation.MenuDisplay) error {
-	menuDisplay.ShowMessage("🔄 Resetting iterations.json for review phase...")
-	
+	menuDisplay.ShowMessage("🔄 Resetting docs/3-current-task/iterations.json for review phase...")
+
 	// Ensure config is initialized
 	if err := config.EnsureConfigInitialized(projectPath); err != nil {
 		return fmt.Errorf("failed to initialize config: %w", err)
@@ -1750,23 +1750,23 @@ func resetIterationsAfterValidation(projectPath string, menuDisplay *navigation.
 	manager := config.NewManager(projectPath)
 	templatePath := manager.GetRuntimePath("commands/templates/iterations.json")
 	destPath := filepath.Join(projectPath, "docs/3-current-task/iterations.json")
-	
+
 	if err := copyFile(templatePath, destPath); err != nil {
-		return fmt.Errorf("failed to copy iterations.json template: %w", err)
+		return fmt.Errorf("failed to copy docs/3-current-task/iterations.json template: %w", err)
 	}
-	
+
 	// Initialize with review phase context
 	if err := initializeIterationsForReviewPhase(destPath, projectPath); err != nil {
 		return fmt.Errorf("failed to initialize iterations for review phase: %w", err)
 	}
-	
+
 	menuDisplay.ShowMessage("  ✓ Iterations reset for review phase")
 	return nil
 }
 
-// initializeIterationsForReviewPhase initializes iterations.json for review phase
+// initializeIterationsForReviewPhase initializes docs/3-current-task/iterations.json for review phase
 func initializeIterationsForReviewPhase(iterationsPath, projectPath string) error {
-	// Initialize iterations.json with review phase context
+	// Initialize docs/3-current-task/iterations.json with review phase context
 	iterationsData := preprocessing.IterationsData{
 		TaskContext: preprocessing.TaskContext{
 			TaskID:           "TASK-REVIEW",
@@ -1788,45 +1788,45 @@ func initializeIterationsForReviewPhase(iterationsPath, projectPath string) erro
 // executeReviewIterationLoop handles the review phase with iteration support
 func executeReviewIterationLoop(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay) error {
 	menuDisplay.ShowMessage("👀 Starting review phase with iteration support...")
-	
+
 	reviewIteration := 1
-	
+
 	for {
 		menuDisplay.ShowMessage(fmt.Sprintf("🔄 Review iteration %d", reviewIteration))
-		
+
 		// Execute review with iteration check
 		reviewResult, err := executeReviewWithIterationCheck(ctx, menuDisplay, reviewIteration)
 		if err != nil {
 			return fmt.Errorf("failed at review step: %w", err)
 		}
-		
+
 		switch reviewResult {
 		case ReviewSuccess:
 			menuDisplay.ShowSuccess("✅ Review successful! Proceeding to archive...")
-			
+
 			// Step 7: Archive
 			if err := executeTaskArchive(ctx, menuDisplay); err != nil {
 				return fmt.Errorf("failed at archive step: %w", err)
 			}
-			
+
 			menuDisplay.ShowSuccess("🎉 Full ticket workflow completed successfully!")
 			return nil
-			
+
 		case ReviewFailedRetry:
 			menuDisplay.ShowMessage(fmt.Sprintf("⚠️ Review failed (iteration %d). Starting new implementation cycle...", reviewIteration))
-			
+
 			// Execute full implementation cycle: Plan → Test → Implement → Validate
 			if err := executeImplementationCycleForReview(ctx, menuDisplay, reviewIteration); err != nil {
 				return fmt.Errorf("failed during implementation cycle for review: %w", err)
 			}
-			
+
 			reviewIteration++
 			continue // Go back to review
-			
+
 		case ReviewBlocked:
 			menuDisplay.ShowError("❌ Review indicates task is blocked")
 			return fmt.Errorf("review blocked - task cannot be completed as specified")
-			
+
 		default:
 			return fmt.Errorf("unknown review result: %v", reviewResult)
 		}
@@ -1848,53 +1848,53 @@ func executeReviewWithIterationCheck(ctx *navigation.ProjectContext, menuDisplay
 	if err := preprocessing.PreprocessReviewTask(ctx.ProjectPath, menuDisplay); err != nil {
 		return ReviewFailedRetry, fmt.Errorf("preprocessing failed: %w", err)
 	}
-	
+
 	// Execute Claude review command
 	claudeExecutor := executor.NewClaudeExecutor()
 	if err := claudeExecutor.ValidateClaudeAvailable(); err != nil {
 		return ReviewFailedRetry, fmt.Errorf("Claude CLI not available: %w", err)
 	}
-	
+
 	// Execute review command and capture exit code
 	description := fmt.Sprintf("Review step (iteration %d)", reviewIteration)
 	exitCode, err := claudeExecutor.ExecuteSlashCommandWithExitCode("/4-task:2-execute:5-Review-Task", description)
-	
+
 	if err != nil {
 		menuDisplay.ShowError(fmt.Sprintf("Failed to execute review: %v", err))
 		return ReviewFailedRetry, err
 	}
-	
+
 	// Interpret Claude's exit code
 	switch exitCode {
 	case 0: // Success
 		menuDisplay.ShowSuccess("✅ Review passed!")
 		return ReviewSuccess, nil
-		
+
 	case 1: // Needs iteration
 		menuDisplay.ShowMessage("⚠️ Review indicates iteration needed")
-		
-		// Update iterations.json for review retry with specific feedback
+
+		// Update docs/3-current-task/iterations.json for review retry with specific feedback
 		iterationsPath := filepath.Join(ctx.ProjectPath, "docs/3-current-task/iterations.json")
 		if err := updateIterationsForReviewRetry(iterationsPath, reviewIteration); err != nil {
-			menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+			menuDisplay.ShowWarning(fmt.Sprintf("Failed to update docs/3-current-task/iterations.json: %v", err))
 		}
-		
+
 		return ReviewFailedRetry, nil
-		
+
 	case 2: // Blocked
 		menuDisplay.ShowError("❌ Review indicates task is blocked")
-		
-		// Update iterations.json as blocked
+
+		// Update docs/3-current-task/iterations.json as blocked
 		iterationsPath := filepath.Join(ctx.ProjectPath, "docs/3-current-task/iterations.json")
 		iterations, err := parseIterationsJSONFile(iterationsPath)
 		if err == nil {
 			if err := updateIterationsAsBlocked(iterationsPath, iterations, "Review blocked"); err != nil {
-				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update iterations.json: %v", err))
+				menuDisplay.ShowWarning(fmt.Sprintf("Failed to update docs/3-current-task/iterations.json: %v", err))
 			}
 		}
-		
+
 		return ReviewBlocked, fmt.Errorf("review blocked")
-		
+
 	default:
 		menuDisplay.ShowError(fmt.Sprintf("❌ Review returned unexpected exit code: %d", exitCode))
 		return ReviewFailedRetry, fmt.Errorf("unexpected exit code: %d", exitCode)
@@ -1904,47 +1904,47 @@ func executeReviewWithIterationCheck(ctx *navigation.ProjectContext, menuDisplay
 // executeImplementationCycleForReview executes the full implementation cycle when review fails
 func executeImplementationCycleForReview(ctx *navigation.ProjectContext, menuDisplay *navigation.MenuDisplay, reviewIteration int) error {
 	menuDisplay.ShowMessage(fmt.Sprintf("🔄 Starting implementation cycle for review iteration %d", reviewIteration))
-	
-	// Step 2: Plan Task (with review feedback from iterations.json)
+
+	// Step 2: Plan Task (with review feedback from docs/3-current-task/iterations.json)
 	if err := executeTaskPlan(ctx, menuDisplay); err != nil {
 		return fmt.Errorf("failed at planning step: %w", err)
 	}
-	
+
 	// Step 3: Test Design
 	if err := executeTaskTestDesign(ctx, menuDisplay); err != nil {
 		return fmt.Errorf("failed at test design step: %w", err)
 	}
-	
+
 	// Step 4: Implementation
 	if err := executeClaudeCommandInteractive("/4-task:2-execute:3-Implement", menuDisplay); err != nil {
 		return fmt.Errorf("failed at implementation step: %w", err)
 	}
-	
+
 	// Step 5: Validation (simple execution without iteration - we assume it will pass)
 	menuDisplay.ShowMessage("🔍 Quick validation before returning to review...")
 	if err := preprocessing.PreprocessValidateTask(ctx.ProjectPath, menuDisplay); err != nil {
 		menuDisplay.ShowWarning(fmt.Sprintf("Validation preprocessing failed: %v", err))
 	}
-	
+
 	if err := executeClaudeCommandInteractive("/4-task:2-execute:4-Validate-Task", menuDisplay); err != nil {
 		menuDisplay.ShowWarning(fmt.Sprintf("Validation failed: %v", err))
 		// Continue anyway as review iteration will catch remaining issues
 	}
-	
+
 	menuDisplay.ShowMessage("  ✓ Implementation cycle completed, returning to review")
 	return nil
 }
 
-// updateIterationsForReviewRetry updates iterations.json for a review retry scenario
+// updateIterationsForReviewRetry updates docs/3-current-task/iterations.json for a review retry scenario
 func updateIterationsForReviewRetry(iterationsPath string, reviewIteration int) error {
 	iterations, err := parseIterationsJSONFile(iterationsPath)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update current iteration
 	iterations.TaskContext.CurrentIteration = reviewIteration + 1
-	
+
 	// Add iteration record with review-specific context
 	newIteration := preprocessing.Iteration{
 		IterationNumber: reviewIteration,
@@ -1961,9 +1961,9 @@ func updateIterationsForReviewRetry(iterationsPath string, reviewIteration int) 
 		Learnings:   []string{"Review feedback requires implementation changes", "Need to revisit planning based on review insights"},
 		CompletedAt: time.Now().Format(time.RFC3339),
 	}
-	
+
 	iterations.Iterations = append(iterations.Iterations, newIteration)
-	
+
 	// Write back to file
 	return writeJSONToFile(iterationsPath, iterations)
 }
@@ -2085,12 +2085,12 @@ func executeMetricsCommand(ctx *navigation.ProjectContext, menuDisplay *navigati
 	if err != nil {
 		return err
 	}
-	
+
 	if strings.TrimSpace(commandName) == "" {
 		menuDisplay.ShowError("Command name cannot be empty")
 		return fmt.Errorf("empty command name")
 	}
-	
+
 	cmdArgs := []string{"metrics", "command", strings.TrimSpace(commandName)}
 	return executeMetricsSubcommand(cmdArgs, menuDisplay)
 }
@@ -2102,12 +2102,12 @@ func executeMetricsSteps(ctx *navigation.ProjectContext, menuDisplay *navigation
 	if err != nil {
 		return err
 	}
-	
+
 	if strings.TrimSpace(commandName) == "" {
 		menuDisplay.ShowError("Command name cannot be empty")
 		return fmt.Errorf("empty command name")
 	}
-	
+
 	cmdArgs := []string{"metrics", "steps", strings.TrimSpace(commandName)}
 	return executeMetricsSubcommand(cmdArgs, menuDisplay)
 }

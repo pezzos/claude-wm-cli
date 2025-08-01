@@ -174,7 +174,7 @@ def detect_inconsistencies():
         for usage in go_usages:
             print(f"   - {usage['go_file']}:{usage['line_number']}")
             
-            # Cas spécifique connu: stories.json avec map vs array
+            # Cas spécifique connu: docs/2-current-epic/stories.json avec map vs array
             if json_file == "stories.json":
                 with open(usage['go_file'], 'r') as f:
                     go_content = f.read()
