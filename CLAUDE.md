@@ -35,7 +35,7 @@ This project uses the Claude Code agile workflow system:
 
 ### MCP Tools Configuration
 - **Consult7 Optimization**: Always use exclude patterns to reduce token consumption and costs
-  - **Standard Exclusions**: `".*logs/.*|.*metrics/.*|.*claude(-wm)?/.*|.*backup/.*|.*archive/.*"`
+  - **Standard Exclusions**: `".*logs/.*|.*metrics/.*|.*claude(-wm)?/.*|.*backup/.*|.*archive/.*|.*serena/.*"`
   - **Usage**: Add `exclude_pattern` parameter to all `mcp__consult7__consultation` calls
   - **Benefits**: ~35% cost reduction and faster processing
 

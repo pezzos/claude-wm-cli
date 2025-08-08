@@ -11,9 +11,11 @@ import (
 // SubagentExecutor handles the execution of tasks through specialized subagents
 type SubagentExecutor struct {
 	router       *SubagentRouter
+	serenaRouter *SerenaIntegratedRouter
 	claudePath   string
 	timeout      time.Duration
 	fallbackEnabled bool
+	serenaEnabled   bool
 }
 
 // ExecutionResult represents the result of a subagent execution
@@ -26,24 +28,69 @@ type ExecutionResult struct {
 	TokenSavings     TokenSavings     `json:"token_savings"`
 	RoutingDecision  *RoutingDecision `json:"routing_decision"`
 	FallbackUsed     bool             `json:"fallback_used"`
+	SerenaEnabled    bool             `json:"serena_enabled"`
+	SerenaAnalysis   *SerenaAnalysis  `json:"serena_analysis,omitempty"`
 }
 
 // NewSubagentExecutor creates a new subagent executor
 func NewSubagentExecutor(router *SubagentRouter, claudePath string) *SubagentExecutor {
-	return &SubagentExecutor{
+	se := &SubagentExecutor{
 		router:          router,
 		claudePath:      claudePath,
 		timeout:         120 * time.Second, // 2 minutes default
 		fallbackEnabled: true,
+		serenaEnabled:   false,
 	}
+	
+	// Initialize Serena integration
+	se.serenaRouter = NewSerenaIntegratedRouter(router)
+	
+	// Try to enable Serena if available
+	if err := se.serenaRouter.EnableSerena(); err == nil {
+		se.serenaEnabled = true
+	}
+	
+	return se
+}
+
+// EnableSerenaIntegration enables Serena preprocessing
+func (se *SubagentExecutor) EnableSerenaIntegration() error {
+	if se.serenaRouter == nil {
+		se.serenaRouter = NewSerenaIntegratedRouter(se.router)
+	}
+	
+	if err := se.serenaRouter.EnableSerena(); err != nil {
+		return fmt.Errorf("failed to enable Serena: %w", err)
+	}
+	
+	se.serenaEnabled = true
+	return nil
+}
+
+// DisableSerenaIntegration disables Serena preprocessing
+func (se *SubagentExecutor) DisableSerenaIntegration() {
+	if se.serenaRouter != nil {
+		se.serenaRouter.DisableSerena()
+	}
+	se.serenaEnabled = false
 }
 
 // Execute runs a task through the appropriate subagent or fallback
 func (se *SubagentExecutor) Execute(ctx context.Context, commandPath string, prompt string, contextData map[string]interface{}) (*ExecutionResult, error) {
 	startTime := time.Now()
 
-	// Route to appropriate subagent
-	decision, err := se.router.Route(ctx, commandPath, contextData)
+	// Choose router based on Serena availability
+	var decision *RoutingDecision
+	var err error
+	
+	if se.serenaEnabled && se.serenaRouter != nil {
+		// Use Serena-enhanced routing
+		decision, err = se.serenaRouter.Route(ctx, commandPath, contextData)
+	} else {
+		// Use base router
+		decision, err = se.router.Route(ctx, commandPath, contextData)
+	}
+	
 	if err != nil {
 		return nil, fmt.Errorf("routing failed: %w", err)
 	}
@@ -52,6 +99,7 @@ func (se *SubagentExecutor) Execute(ctx context.Context, commandPath string, pro
 		RoutingDecision: decision,
 		Duration:       time.Since(startTime),
 		TokenSavings:   decision.EstimatedSavings,
+		SerenaEnabled:  se.serenaEnabled,
 	}
 
 	// Execute with chosen subagent or fallback
@@ -297,4 +345,20 @@ func (se *SubagentExecutor) ExecutePlanning(ctx context.Context, storyDescriptio
 // GetMetrics returns current routing and execution metrics
 func (se *SubagentExecutor) GetMetrics() *RoutingMetrics {
 	return se.router.metrics
+}
+
+// GetSerenaStatus returns the current status of Serena integration
+func (se *SubagentExecutor) GetSerenaStatus() map[string]interface{} {
+	if se.serenaRouter != nil {
+		status := se.serenaRouter.GetSerenaStatus()
+		status["executor_enabled"] = se.serenaEnabled
+		return status
+	}
+	
+	return map[string]interface{}{
+		"enabled":            false,
+		"executor_enabled":   se.serenaEnabled,
+		"router_available":   false,
+		"reason":            "serena_router_not_initialized",
+	}
 }

@@ -617,6 +617,11 @@ func (m *Manager) GetSystemCommandsPath() string {
 	return filepath.Join(m.SystemPath, "commands")
 }
 
+// GetConfigDir returns the workspace root directory (for configuration files)
+func (m *Manager) GetConfigDir() string {
+	return m.WorkspaceRoot
+}
+
 func mergeMap(dst, src map[string]interface{}) {
 	for key, value := range src {
 		if srcMap, ok := value.(map[string]interface{}); ok {

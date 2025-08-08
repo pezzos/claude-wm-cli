@@ -1,0 +1,19 @@
+enabled: true
+mcp_server_path: serena-mcp-server
+server_args: []
+timeout_seconds: 30
+context_limits:
+    code_review: 3000
+    general: 5000
+    planning: 8000
+    status_reporting: 1500
+    template_generation: 2000
+analysis_types:
+    dashboard: status_reporting
+    decompose: planning
+    plan: planning
+    review: code_review
+    status: status_reporting
+    template: template_generation
+fallback_enabled: true
+auto_detect: true
