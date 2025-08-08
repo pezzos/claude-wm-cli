@@ -3,7 +3,7 @@ Design comprehensive testing strategy with MCP-powered UI testing capabilities.
 
 ## Pre-Design Intelligence (MANDATORY)
 1. **Load Test Patterns**: Use `mcp__mem0__search_coding_preferences` to find similar testing approaches
-2. **Analyze UI Components**: Use `mcp__consult7__consultation` to identify UI elements requiring testing
+2. **Analyze UI Components**: Use `mcp__consult7__consultation` with optimized exclusions to identify UI elements requiring testing
 3. **Get Testing Documentation**: Use `mcp__context7__` for current testing framework best practices
 
 ## Test Design Steps

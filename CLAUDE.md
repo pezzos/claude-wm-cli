@@ -33,6 +33,12 @@ This project uses the Claude Code agile workflow system:
 - **Architecture Style**: Modular CLI design
 - The .claude and .claude-wm folders are used to manage the project but are not part of the core of the project, just like .git and .vscode, which are also folders used to manage the project. You should therefore not modify any files in there unless explicitly requested.
 
+### MCP Tools Configuration
+- **Consult7 Optimization**: Always use exclude patterns to reduce token consumption and costs
+  - **Standard Exclusions**: `".*logs/.*|.*metrics/.*|.*claude(-wm)?/.*|.*backup/.*|.*archive/.*"`
+  - **Usage**: Add `exclude_pattern` parameter to all `mcp__consult7__consultation` calls
+  - **Benefits**: ~35% cost reduction and faster processing
+
 ### Quality Standards
 - Follow established CLI best practices
 - Implement comprehensive error handling

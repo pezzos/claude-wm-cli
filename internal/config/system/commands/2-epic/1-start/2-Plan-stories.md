@@ -2,7 +2,7 @@
 Extract user stories with intelligent decomposition and data-driven complexity analysis.
 
 ## Intelligent Story Decomposition (MANDATORY)
-1. **Epic Analysis**: Use `mcp__consult7__consultation` to understand current codebase complexity and dependencies
+1. **Epic Analysis**: Use `mcp__consult7__consultation` with exclude patterns to efficiently analyze codebase complexity and dependencies
 2. **Story Breakdown**: Use `mcp__sequential-thinking__` for complex feature decomposition into manageable stories
 3. **Historical Patterns**: Use `mcp__mem0__search_coding_preferences` to find similar story patterns and outcomes
 4. **Framework Guidance**: Use `mcp__context7__` for current best practices in agile story writing

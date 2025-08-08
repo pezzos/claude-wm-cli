@@ -46,6 +46,7 @@ func (m *Manager) Initialize() error {
 		filepath.Join(m.UserPath, "commands"),
 		filepath.Join(m.RuntimePath, "hooks"),
 		filepath.Join(m.RuntimePath, "commands"),
+		filepath.Join(m.WorkspaceRoot, "subagents"), // Subagents configuration
 	}
 
 	for _, dir := range dirs {
@@ -599,6 +600,21 @@ fi
 	}
 	
 	return nil
+}
+
+// GetSubagentsPath returns the path to the subagents configuration directory
+func (m *Manager) GetSubagentsPath() string {
+	return filepath.Join(m.WorkspaceRoot, "subagents")
+}
+
+// GetRuntimeSettingsPath returns the path to the runtime settings file
+func (m *Manager) GetRuntimeSettingsPath() string {
+	return filepath.Join(m.RuntimePath, "settings.json")
+}
+
+// GetSystemCommandsPath returns the path to system commands directory
+func (m *Manager) GetSystemCommandsPath() string {
+	return filepath.Join(m.SystemPath, "commands")
 }
 
 func mergeMap(dst, src map[string]interface{}) {

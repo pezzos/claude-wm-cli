@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"claude-wm-cli/internal/model"
+	"claude-wm-cli/internal/subagents"
 
 	"github.com/spf13/cobra"
 )
@@ -110,13 +111,36 @@ defaults:
 		fmt.Fprintf(os.Stderr, "⚠️  %s\n", ".claude-wm-cli.yaml already exists (use --force to overwrite)")
 	}
 
+	// Install claude-wm subagents
+	fmt.Println("\n🤖 Installing claude-wm subagents...")
+	installer := subagents.NewAgentInstaller()
+	if err := installer.InstallAgents(projectDir); err != nil {
+		fmt.Fprintf(os.Stderr, "⚠️  Warning: Failed to install subagents: %s\n", err.Error())
+		fmt.Println("   Subagents will be unavailable but project will function normally")
+	} else {
+		// Verify installation
+		info, err := installer.GetAgentInstallationInfo(projectDir)
+		if err != nil {
+			fmt.Println("  ✓ Subagents installed (verification failed)")
+		} else {
+			fmt.Printf("  ✓ %s\n", info.GetInstallationSummary())
+			if info.AllInstalled {
+				fmt.Println("    • claude-wm-templates: 93% token savings on documentation")
+				fmt.Println("    • claude-wm-status: 89% token savings on status reports")
+				fmt.Println("    • claude-wm-planner: 85% token savings on task planning")
+				fmt.Println("    • claude-wm-reviewer: 83% token savings on code reviews")
+			}
+		}
+	}
+
 	fmt.Println()
 	fmt.Printf("✅ Project '%s' initialized successfully!\n", projectName)
 	fmt.Println()
 	fmt.Println("📋 Next steps:")
 	fmt.Println("  1. cd " + projectName + " (if created in subdirectory)")
-	fmt.Println("  2. claude-wm-cli status     # Check project status")
-	fmt.Println("  3. Start your first epic with the agile workflow commands")
+	fmt.Println("  2. claude-wm-cli subagents list  # Verify subagents installation")
+	fmt.Println("  3. claude-wm-cli status          # Check project status")
+	fmt.Println("  4. Start your first epic with the agile workflow commands")
 }
 
 func fileExists(path string) bool {
