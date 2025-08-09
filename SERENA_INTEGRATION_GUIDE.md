@@ -44,6 +44,8 @@ Ajoutez la configuration Serena à votre fichier MCP Claude Code :
 }
 ```
 
+claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena-mcp-server --context ide-assistant --project $(pwd)
+
 23:38> uvx --from git+https://github.com/oraios/serena serena config edit
 
 23:39> uvx --from git+https://github.com/oraios/serena serena project generate-yml

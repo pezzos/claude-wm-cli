@@ -45,6 +45,11 @@ This project uses the Claude Code agile workflow system:
 - Maintain clear documentation
 - Ensure cross-platform compatibility
 
+##  Using Serena MCP
+- Project uses Serena MCP for semantic code operations
+- Use Serena's `find_symbol()` and `get_symbols_overview()` instead of reading entire files to reduce token consumption.
+- Always run `/mcp__serena__initial_instructions` at session start.
+
 ---
 
 *Auto-generated during project initialization*
