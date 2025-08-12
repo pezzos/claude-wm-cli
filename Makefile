@@ -11,7 +11,7 @@ GIT_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Build flags
-LDFLAGS=-ldflags "-X claude-wm-cli/cmd.Version=$(VERSION) -X claude-wm-cli/cmd.GitCommit=$(GIT_COMMIT) -X claude-wm-cli/cmd.BuildTime=$(BUILD_TIME)"
+LDFLAGS=-ldflags "-X claude-wm-cli/internal/meta.Version=$(VERSION) -X claude-wm-cli/internal/meta.Commit=$(GIT_COMMIT) -X claude-wm-cli/internal/meta.BuildDate=$(BUILD_TIME)"
 
 # Generate system manifest
 manifest:

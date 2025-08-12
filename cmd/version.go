@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"claude-wm-cli/internal/meta"
 	"claude-wm-cli/internal/metrics"
 
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ import (
 var (
 	versionOutput string
 	versionShort  bool
+	versionSimple bool
 )
 
 // versionCmd represents the version command
@@ -45,7 +47,12 @@ This information is useful for debugging and support.`,
 
 func showVersionInfo() {
 	if versionShort {
-		fmt.Println(Version)
+		fmt.Println(meta.Version)
+		return
+	}
+	
+	if versionSimple {
+		fmt.Printf("%s (commit %s, %s)\n", meta.Version, meta.Commit, meta.BuildDate)
 		return
 	}
 
@@ -65,8 +72,8 @@ func showVersionDefault() {
 
 	// Core version info
 	fmt.Printf("Version:     %s\n", getVersionString())
-	fmt.Printf("Git Commit:  %s\n", GitCommit)
-	fmt.Printf("Built:       %s\n", BuildTime)
+	fmt.Printf("Git Commit:  %s\n", meta.Commit)
+	fmt.Printf("Built:       %s\n", meta.BuildDate)
 	fmt.Printf("Go Version:  %s\n", runtime.Version())
 	fmt.Printf("OS/Arch:     %s/%s\n", runtime.GOOS, runtime.GOARCH)
 
@@ -102,7 +109,7 @@ func showVersionJSON() {
   "arch": "%s",
   "compiler": "%s"
 }
-`, getVersionString(), GitCommit, BuildTime, runtime.Version(), runtime.GOOS, runtime.GOARCH, runtime.Compiler)
+`, getVersionString(), meta.Commit, meta.BuildDate, runtime.Version(), runtime.GOOS, runtime.GOARCH, runtime.Compiler)
 }
 
 func showVersionYAML() {
@@ -113,14 +120,14 @@ go_version: %s
 os: %s
 arch: %s
 compiler: %s
-`, getVersionString(), GitCommit, BuildTime, runtime.Version(), runtime.GOOS, runtime.GOARCH, runtime.Compiler)
+`, getVersionString(), meta.Commit, meta.BuildDate, runtime.Version(), runtime.GOOS, runtime.GOARCH, runtime.Compiler)
 }
 
 func getVersionString() string {
-	if Version == "" || Version == "dev" {
+	if meta.Version == "" || meta.Version == "dev" {
 		return "dev (built from source)"
 	}
-	return Version
+	return meta.Version
 }
 
 func getShortName(path string) string {
@@ -141,5 +148,6 @@ func init() {
 
 	// Command-specific flags
 	versionCmd.Flags().BoolVarP(&versionShort, "short", "s", false, "Show version number only")
+	versionCmd.Flags().BoolVar(&versionSimple, "simple", false, "Show simple version format: version (commit hash, date)")
 	versionCmd.Flags().StringVarP(&versionOutput, "output", "o", "", "Output format: json, yaml (default: human-readable)")
 }
