@@ -1,0 +1,322 @@
+[
+  {
+    "path": "system/README.md",
+    "size": 1155,
+    "sha256": "41f8055814b162c9f49927520b0e183f98377dff9b06348d7e4e24bfad4b75fc"
+  },
+  {
+    "path": "system/commands/1-project/2-update/1-Import-feedback.md",
+    "size": 469,
+    "sha256": "565ca42ecf2469f8fdeb102967ba88bc28c3efe3b7055592fa071a6e60c2cf4d"
+  },
+  {
+    "path": "system/commands/1-project/2-update/2-Challenge.md",
+    "size": 2309,
+    "sha256": "af95836924d391951b6e53377a51099c73a745ff5de7f6aa689d94e9227550ac"
+  },
+  {
+    "path": "system/commands/1-project/2-update/3-Enrich.md",
+    "size": 569,
+    "sha256": "7fd154f70487b25a455ebee22a024802fd2194a000e917f9b135568c6b8de0aa"
+  },
+  {
+    "path": "system/commands/1-project/2-update/4-Status.md",
+    "size": 530,
+    "sha256": "394671393313add1d1b93fc2e1af8d86d3540efb1abe18e81eba62b70f361b7f"
+  },
+  {
+    "path": "system/commands/1-project/2-update/5-Implementation-Status.md",
+    "size": 298,
+    "sha256": "2a632a91369ff44cd6df85e4777854d1367155cec3a9909ae2b5a7a31039f7e0"
+  },
+  {
+    "path": "system/commands/1-project/2-update/6-Improve.md",
+    "size": 3043,
+    "sha256": "594e54eed8fe542e78e7a66a479919fca313c986121b9b5573d03eb31c2400fb"
+  },
+  {
+    "path": "system/commands/1-project/3-epics/1-Plan-Epics.md",
+    "size": 2886,
+    "sha256": "ec21b32bbc8a9ca88a6add567deac48fe291fa551d34847761d0e1875742e9b7"
+  },
+  {
+    "path": "system/commands/1-project/3-epics/2-Update-Implementation.md",
+    "size": 759,
+    "sha256": "c40c0c6736d77ec8a871f06deb4a7a4579d0f734ed8df4dc440e383512cdb2f3"
+  },
+  {
+    "path": "system/commands/2-epic/1-start/1-Select-Stories.md",
+    "size": 511,
+    "sha256": "df88cc7ee851e8328589cae35678462f866e86294625ce86fe7f6d1fd9964cb7"
+  },
+  {
+    "path": "system/commands/2-epic/1-start/2-Plan-stories.md",
+    "size": 4848,
+    "sha256": "bf58cf008d714b10d57a6c0756056b4470d07a45e59e713b20c7c4a3097a5793"
+  },
+  {
+    "path": "system/commands/2-epic/2-manage/1-Complete-Epic.md",
+    "size": 1990,
+    "sha256": "d5259e531f6545aeb2c07f2d31143ef322f5d75c53609dee501f5483e443c3e7"
+  },
+  {
+    "path": "system/commands/2-epic/2-manage/2-Status-Epic.md",
+    "size": 2086,
+    "sha256": "ca98a13c75cf4dae331b62e96a26602686335615d1b21673b6bbf95b9c8be4b3"
+  },
+  {
+    "path": "system/commands/3-story/1-manage/1-Start-Story.md",
+    "size": 2308,
+    "sha256": "8c509faeedfb425540459bc3273f8925d81bea7b48e00aa0f01d2857062f4724"
+  },
+  {
+    "path": "system/commands/3-story/1-manage/2-Complete-Story.md",
+    "size": 2254,
+    "sha256": "7a627a21529c60846015c70e841acdc94b6f95b4f36fb223ba2b247b61f7f017"
+  },
+  {
+    "path": "system/commands/4-task/1-start/1-From-story.md",
+    "size": 2230,
+    "sha256": "72678c4bd43588f80eb174f5655e60f19c879f2e4e74c8dc2fb2c0178183f4d7"
+  },
+  {
+    "path": "system/commands/4-task/1-start/2-From-issue.md",
+    "size": 2184,
+    "sha256": "fe44426755ec1bf4f73a31c33a536592b6869fca26dd464e324a2bc4ea5d0e08"
+  },
+  {
+    "path": "system/commands/4-task/1-start/3-From-input.md",
+    "size": 2268,
+    "sha256": "1f0ce1196b3d2f3646d3e773dc67ee19ec2b59b24de77bc2aca1a2cf99c4deb4"
+  },
+  {
+    "path": "system/commands/4-task/2-execute/1-Plan-Task.md",
+    "size": 3433,
+    "sha256": "c1bb67e5dd9e2f6deba894493f79f360783662c5e8aa012aed79e05546e07ba9"
+  },
+  {
+    "path": "system/commands/4-task/2-execute/2-Test-design.md",
+    "size": 2142,
+    "sha256": "e3d42e5e722b98e84580218fa662ff9305fa877c4b3494271fed3df04f8359f7"
+  },
+  {
+    "path": "system/commands/4-task/2-execute/3-Implement.md",
+    "size": 1563,
+    "sha256": "0e745230dcf294ed8d96e6fc518944945b306a31da2254d5225b52bf7d75406e"
+  },
+  {
+    "path": "system/commands/4-task/2-execute/4-Validate-Task.md",
+    "size": 5229,
+    "sha256": "bf01d0c1daa3a4713ecd8493a235cf290e72b45c061979f16636052e7f3dfb92"
+  },
+  {
+    "path": "system/commands/4-task/2-execute/5-Review-Task.md",
+    "size": 5592,
+    "sha256": "dc25a5e287f9832b739e96b4b5001a1bf6344fe17ea2256cc5b38274a4f77033"
+  },
+  {
+    "path": "system/commands/4-task/3-complete/1-Archive-Task.md",
+    "size": 1942,
+    "sha256": "f439debd1c623e0e062d50eb507fffe0e7e96c1b04dacaedf7432d487a7250a4"
+  },
+  {
+    "path": "system/commands/4-task/3-complete/2-Status-Task.md",
+    "size": 2070,
+    "sha256": "20ebf4a2a64baa1cf176365487dcc7f0ed8e30d16069555af4cc85f2159e3385"
+  },
+  {
+    "path": "system/commands/README.md",
+    "size": 476,
+    "sha256": "7cb9f2ab8120b60e93a8170fb33ad55ce5ec7af1fbde65a6320e8907de7fe6d0"
+  },
+  {
+    "path": "system/commands/debug/1-Check-state.md",
+    "size": 591,
+    "sha256": "8b790cc19fc3dd57b31f2380e121188174074a18085f8e630de08f4a2d3dff28"
+  },
+  {
+    "path": "system/commands/debug/2-Fix-structure.md",
+    "size": 622,
+    "sha256": "81a647af6bed2b5ce2a2053ca13f67cb395bff7d19626157d80b711b24e04c07"
+  },
+  {
+    "path": "system/commands/enrich/1-claude/1-Global.md",
+    "size": 610,
+    "sha256": "29ea96fb5ee5d50836ee2d294b5b80982e50a6bdba939322a8571bc6afc014c6"
+  },
+  {
+    "path": "system/commands/enrich/1-claude/2-Epic.md",
+    "size": 613,
+    "sha256": "e79e46c360af14c260ef5f651e44377c506904bbd344c8afec80b1cb86f02ea6"
+  },
+  {
+    "path": "system/commands/enrich/1-claude/3-Post-ticket.md",
+    "size": 613,
+    "sha256": "879d8542402b85ea1a99eb2bb03830e4fe8a61babf6b64925c2aa519f0d31c57"
+  },
+  {
+    "path": "system/commands/learning/dashboard.md",
+    "size": 11749,
+    "sha256": "bfe2f5952d1558f8c944a25efab51faffda3dd5f193791e2962fde8479410693"
+  },
+  {
+    "path": "system/commands/metrics/1-manage/1-Update.md",
+    "size": 556,
+    "sha256": "8b2a6f2b40aeb02bd56276931c679a77122c57c2ad918b376179dc8e6317648c"
+  },
+  {
+    "path": "system/commands/metrics/1-manage/2-Dashboard.md",
+    "size": 576,
+    "sha256": "6528693674fc93c00f22d06eb74f32b957ad62fa4c8609d987511d102841bd50"
+  },
+  {
+    "path": "system/commands/subagents/status-dashboard.md",
+    "size": 4590,
+    "sha256": "80c27ac99d8de1813c05aaaa4a3c7261ff99ea1b192bf3c0de3136069046cb3b"
+  },
+  {
+    "path": "system/commands/subagents/template-generate.md",
+    "size": 3387,
+    "sha256": "d987fbadea077b06daffee4d58397e6670111b8b0a49e9028e88c90d35a44bcf"
+  },
+  {
+    "path": "system/commands/templates/.gitignore",
+    "size": 286,
+    "sha256": "7aec4e16e6d7e8365c82ddb3035a6068b50753500f5d53aa3b45d618bc360d29"
+  },
+  {
+    "path": "system/commands/templates/ARCHITECTURE.md",
+    "size": 1450,
+    "sha256": "e7e07be186e45e36de0d8dc944b106217d770ea031322a88291878bb779f0864"
+  },
+  {
+    "path": "system/commands/templates/CLAUDE.md",
+    "size": 1007,
+    "sha256": "978fefce7f2a1ac6a81041fbd737f04e37e9c1a9c3d40a92f8ec8781144de657"
+  },
+  {
+    "path": "system/commands/templates/FEEDBACK.md",
+    "size": 483,
+    "sha256": "00019c66779c6b2565c677b91d190acbac8c11e50e3533fbbc71a52c5a46b419"
+  },
+  {
+    "path": "system/commands/templates/IMPLEMENTATION.md",
+    "size": 112,
+    "sha256": "218d8452bcdbb3af9012c07ac61339c3c8adda60029e86caec133063c6abb0db"
+  },
+  {
+    "path": "system/commands/templates/PRD.md",
+    "size": 1591,
+    "sha256": "09e16245017d91c86c2f4847c167a052f00e92407902d05a960ceddeba5665d6"
+  },
+  {
+    "path": "system/commands/templates/README.md",
+    "size": 1557,
+    "sha256": "a2b6d6b73467ad7ada15a73f2078c25731c46c386634e6e342554226fbf5643b"
+  },
+  {
+    "path": "system/commands/templates/TASK.md",
+    "size": 226,
+    "sha256": "e2ae1dc39c21bd929d59ad1cbde1cdae7369b4a3a11c21775829f77b30f29048"
+  },
+  {
+    "path": "system/commands/templates/TECHNICAL.md",
+    "size": 1242,
+    "sha256": "7a3a653ec6e727b2048c781bb1c46b0ee3de554022a3ca003a3613f76838b4a7"
+  },
+  {
+    "path": "system/commands/templates/TEST.md",
+    "size": 140,
+    "sha256": "b80dcb5318fa12ef5db95a055248af4dd6dbdb18c0c5b55c37cc8f4fab1d2c25"
+  },
+  {
+    "path": "system/commands/templates/current-epic.json",
+    "size": 509,
+    "sha256": "e2ee338426dd6187c33732866318aea439eb964f94fe2f6f68740972f4bfd910"
+  },
+  {
+    "path": "system/commands/templates/current-story.json",
+    "size": 312,
+    "sha256": "18dda5d249716e53fa10e13b55e318eeca75bab84fc9bedc5aa74589547f8348"
+  },
+  {
+    "path": "system/commands/templates/current-task.json",
+    "size": 2275,
+    "sha256": "98d070e8b741fa4ff5a6424db090473ed18a9a6c4c49de392f3a8c3ac9e7c0e3"
+  },
+  {
+    "path": "system/commands/templates/epics.json",
+    "size": 2781,
+    "sha256": "da83fb14d34b61f84f26d5d2c96fe70e6f932502022bd1e2337d5d29b324f128"
+  },
+  {
+    "path": "system/commands/templates/iterations.json",
+    "size": 2662,
+    "sha256": "c302687a47f0bf684284de74b53b1974d6512143c9fef3c7e8ebff447a2801da"
+  },
+  {
+    "path": "system/commands/templates/metrics.json",
+    "size": 1572,
+    "sha256": "68188a6204c2a6f784940fa5e897fe0bc668694a6cfc7f82b841dd20f3128fd3"
+  },
+  {
+    "path": "system/commands/templates/schemas/README.md",
+    "size": 5303,
+    "sha256": "718d447e968fdc9222311838787e8e76c29056db91375b4badc06e854e540a0d"
+  },
+  {
+    "path": "system/commands/templates/schemas/current-epic.schema.json",
+    "size": 2407,
+    "sha256": "8f727d9d3211a80987afc3afc7a0f8532a74470a55d156ebc662b65e4aa9e99c"
+  },
+  {
+    "path": "system/commands/templates/schemas/current-story.schema.json",
+    "size": 1718,
+    "sha256": "f74d6065f303f6758dbae9fb38cc081a9c718858324d0fd2fc1e366aa1034ebe"
+  },
+  {
+    "path": "system/commands/templates/schemas/current-task.schema.json",
+    "size": 5393,
+    "sha256": "63970f5d5b19b26f2be41f87bbfe516a9a54f67065c1205029284ae46ed99436"
+  },
+  {
+    "path": "system/commands/templates/schemas/epics.schema.json",
+    "size": 3984,
+    "sha256": "11f349e4b9b5bff235eb0f3baa4eea29a6ceb17efdaa7d2de678ca187e816f56"
+  },
+  {
+    "path": "system/commands/templates/schemas/iterations.schema.json",
+    "size": 5577,
+    "sha256": "bfa81f77bf49d57485f21f3a3c5935e1ec58128eba2a7e38a940b9af80b016c4"
+  },
+  {
+    "path": "system/commands/templates/schemas/metrics.schema.json",
+    "size": 8426,
+    "sha256": "70a7bf19a7f0831e904ddd0d092baf87b613c03f865de5f26560330e8a39c806"
+  },
+  {
+    "path": "system/commands/templates/schemas/stories.schema.json",
+    "size": 5059,
+    "sha256": "8cb540bd16d57afe94dd3ba714e660882d40398f7968025909ab3581f417284b"
+  },
+  {
+    "path": "system/commands/templates/stories.json",
+    "size": 3864,
+    "sha256": "b8e69bc3734e00ecda6bb544e0c4d14fa0a20f8957005d046632bf84eef57420"
+  },
+  {
+    "path": "system/commands/tools/README.md",
+    "size": 8952,
+    "sha256": "cde26c8fb34e27341057e3eeaebf05ba72b6234e88ef459146a0f1acc1735e4b"
+  },
+  {
+    "path": "system/commands/validation/1-Architecture-Review.md",
+    "size": 5317,
+    "sha256": "48668e5958746a0e617fa737a7aad924b6a585e891a4acbf8465896e951464ce"
+  },
+  {
+    "path": "system/settings.json.template",
+    "size": 3662,
+    "sha256": "679efbd4310f6261e802105e5a95eae69de114d28518a208c9175ea5895912a9"
+  }
+]

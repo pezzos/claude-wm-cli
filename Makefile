@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install dev help
+.PHONY: build test lint clean install dev help manifest
 
 # Build variables
 BINARY_NAME=claude-wm-cli
@@ -13,8 +13,13 @@ BUILD_TIME ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 # Build flags
 LDFLAGS=-ldflags "-X claude-wm-cli/cmd.Version=$(VERSION) -X claude-wm-cli/cmd.GitCommit=$(GIT_COMMIT) -X claude-wm-cli/cmd.BuildTime=$(BUILD_TIME)"
 
+# Generate system manifest
+manifest:
+	@echo "Generating system manifest..."
+	@go run internal/config/gen/manifest.go
+
 # Build the binary
-build:
+build: manifest
 	@echo "Building $(BINARY_NAME) $(VERSION) ($(GIT_COMMIT))..."
 	@mkdir -p $(BUILD_DIR)
 	@go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/claude-wm
@@ -120,6 +125,7 @@ help:
 	@echo "  dev           - Setup development environment"
 	@echo "  run           - Run the application (use ARGS for arguments)"
 	@echo "  fmt           - Format code"
+	@echo "  manifest      - Generate system configuration manifest"
 	@echo "  help          - Show this help"
 
 # Default target
