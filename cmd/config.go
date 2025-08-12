@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"claude-wm-cli/internal/diff"
 	"claude-wm-cli/internal/fsutil"
 	"claude-wm-cli/internal/meta"
+	"claude-wm-cli/internal/update"
 	wmmeta "claude-wm-cli/internal/wm/meta"
 )
 
@@ -22,6 +24,7 @@ Available subcommands:
   install  Install initial system configuration to .claude/ and .wm/baseline/
   init     Initialize new configuration workspace
   status   Show configuration differences between upstream, baseline, and local
+  update   Update configuration with 3-way merge (use --dry-run to preview)
   sync     Regenerate runtime configuration from templates and overrides
   upgrade  Update system templates (preserves user customizations)
   edit     Edit user configuration files
@@ -51,6 +54,20 @@ var configStatusCmd = &cobra.Command{
 	RunE:  runConfigStatus,
 }
 
+var (
+	updateDryRun bool
+)
+
+var configUpdateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update configuration with 3-way merge",
+	Long: `Update configuration using 3-way merge logic:
+- Compares Upstream (embedded) vs Baseline (.wm/baseline) vs Local (.claude)
+- Calculates merge actions: keep, apply, preserve_local, conflict, delete
+- Use --dry-run to preview changes without applying them`,
+	RunE: runConfigUpdate,
+}
+
 var configSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Regenerate runtime configuration",
@@ -77,9 +94,13 @@ func init() {
 	configCmd.AddCommand(configInstallCmd)
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configStatusCmd)
+	configCmd.AddCommand(configUpdateCmd)
 	configCmd.AddCommand(configSyncCmd)
 	configCmd.AddCommand(configUpgradeCmd)
 	configCmd.AddCommand(configShowCmd)
+
+	// Add flags for update command
+	configUpdateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show planned changes without applying them")
 }
 
 func runConfigInstall(cmd *cobra.Command, args []string) error {
@@ -200,6 +221,64 @@ func getChangeSymbol(changeType diff.ChangeType) string {
 	default:
 		return "?"
 	}
+}
+
+func runConfigUpdate(cmd *cobra.Command, args []string) error {
+	projectPath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current directory: %w", err)
+	}
+
+	// Check if baseline exists
+	baselinePath := filepath.Join(projectPath, ".wm", "baseline")
+	if _, err := os.Stat(baselinePath); os.IsNotExist(err) {
+		return fmt.Errorf("baseline not found at %s - run 'claude-wm-cli config install' first", baselinePath)
+	}
+
+	// Check if local configuration exists
+	localPath := filepath.Join(projectPath, ".claude")
+	if _, err := os.Stat(localPath); os.IsNotExist(err) {
+		return fmt.Errorf("local configuration not found at %s", localPath)
+	}
+
+	fmt.Println("🔄 Calculating 3-way merge plan...")
+
+	// Load the three filesystems
+	upstream := config.EmbeddedFS
+	baseline := os.DirFS(baselinePath)
+	local := os.DirFS(localPath)
+
+	// Build the update plan
+	plan, err := update.BuildPlan(upstream, "system", baseline, ".", local, ".")
+	if err != nil {
+		return fmt.Errorf("failed to build update plan: %w", err)
+	}
+
+	if updateDryRun {
+		// Show the plan without applying
+		fmt.Println("📋 Update Plan (dry-run)")
+		fmt.Println("========================")
+
+		if len(plan.Merge) == 0 {
+			fmt.Println("✅ No changes needed")
+			return nil
+		}
+
+		// Display as JSON for now (can be enhanced with table format later)
+		jsonData, err := json.MarshalIndent(plan, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to format plan as JSON: %w", err)
+		}
+
+		fmt.Println(string(jsonData))
+		fmt.Printf("\n💡 Run without --dry-run to apply %d changes\n", len(plan.Merge))
+	} else {
+		// TODO: Implement actual update logic (not in this task)
+		fmt.Println("❌ Actual update not implemented yet - use --dry-run to preview changes")
+		return fmt.Errorf("actual update implementation is not yet available")
+	}
+
+	return nil
 }
 
 func runConfigInit(cmd *cobra.Command, args []string) error {
