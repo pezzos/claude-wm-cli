@@ -330,7 +330,51 @@ func (m *Manager) syncToClaudeDir() error {
 		return fmt.Errorf("failed to copy runtime to .claude: %w", err)
 	}
 
+	// Copy subagents to .claude/agents/ directory
+	if err := m.syncSubagentsToClaudeDir(claudeDir); err != nil {
+		return fmt.Errorf("failed to sync subagents to .claude: %w", err)
+	}
+
 	return nil
+}
+
+// syncSubagentsToClaudeDir copies subagents from .claude-wm/subagents to .claude/agents
+func (m *Manager) syncSubagentsToClaudeDir(claudeDir string) error {
+	subagentsDir := filepath.Join(m.WorkspaceRoot, "subagents")
+	claudeAgentsDir := filepath.Join(claudeDir, "agents")
+
+	// Check if subagents directory exists
+	if _, err := os.Stat(subagentsDir); os.IsNotExist(err) {
+		return nil // No subagents to sync
+	}
+
+	// Create .claude/agents directory
+	if err := os.MkdirAll(claudeAgentsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create .claude/agents directory: %w", err)
+	}
+
+	// Copy all .md files from subagents to agents directory
+	return filepath.WalkDir(subagentsDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Only process .md files (Claude agents)
+		if d.IsDir() || !strings.HasSuffix(strings.ToLower(d.Name()), ".md") {
+			return nil
+		}
+
+		// Calculate relative path and destination
+		relPath, err := filepath.Rel(subagentsDir, path)
+		if err != nil {
+			return err
+		}
+
+		dstPath := filepath.Join(claudeAgentsDir, relPath)
+
+		// Copy the file
+		return copyFile(path, dstPath)
+	})
 }
 
 // copyEmbeddedSystem copies the embedded system files to the target directory
