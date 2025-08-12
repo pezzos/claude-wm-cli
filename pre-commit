@@ -1,0 +1,38 @@
+#!/bin/sh
+# Claude WM CLI Pre-commit Hook
+# 
+# This hook runs 'claude-wm-cli guard check' before each commit.
+# It will block commits that violate SELF mode restrictions.
+#
+# Installation: claude-wm-cli guard install-hook
+# Manual installation: copy this file to .git/hooks/pre-commit and chmod +x
+
+set -e
+
+# Try to find claude-wm-cli in PATH
+if ! command -v claude-wm-cli >/dev/null 2>&1; then
+    echo "Error: claude-wm-cli not found in PATH" >&2
+    echo "Please ensure claude-wm-cli is installed and in your PATH." >&2
+    echo "You can build it with: go build -o \$GOPATH/bin/claude-wm-cli ./cmd/claude-wm" >&2
+    exit 1
+fi
+
+# Run guard check
+echo "Running pre-commit guard check..."
+
+# Execute guard check and capture result
+if claude-wm-cli guard check; then
+    echo "✅ Guard check passed - commit allowed"
+    exit 0
+else
+    echo "" >&2
+    echo "❌ Commit blocked by guard check" >&2
+    echo "" >&2
+    echo "The guard check detected violations that prevent this commit." >&2
+    echo "Please fix the issues above and try committing again." >&2
+    echo "" >&2
+    echo "To bypass this check temporarily, use:" >&2
+    echo "  git commit --no-verify" >&2
+    echo "" >&2
+    exit 1
+fi
