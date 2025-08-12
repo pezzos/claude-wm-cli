@@ -7,6 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"claude-wm-cli/internal/config"
+	"claude-wm-cli/internal/fsutil"
+	"claude-wm-cli/internal/meta"
+	wmmeta "claude-wm-cli/internal/wm/meta"
 )
 
 var configCmd = &cobra.Command{
@@ -15,11 +18,19 @@ var configCmd = &cobra.Command{
 	Long: `Configuration management for claude-wm using package manager approach.
 
 Available subcommands:
+  install  Install initial system configuration to .claude/ and .wm/baseline/
   init     Initialize new configuration workspace
   sync     Regenerate runtime configuration from templates and overrides
   upgrade  Update system templates (preserves user customizations)
   edit     Edit user configuration files
   show     Show effective runtime configuration`,
+}
+
+var configInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install initial system configuration",
+	Long:  `Install initial system configuration to .claude/ and .wm/baseline/ directories from embedded templates`,
+	RunE:  runConfigInstall,
 }
 
 var configInitCmd = &cobra.Command{
@@ -52,10 +63,58 @@ var configShowCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
+	configCmd.AddCommand(configInstallCmd)
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configSyncCmd)
 	configCmd.AddCommand(configUpgradeCmd)
 	configCmd.AddCommand(configShowCmd)
+}
+
+func runConfigInstall(cmd *cobra.Command, args []string) error {
+	projectPath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current directory: %w", err)
+	}
+
+	// Check if already installed
+	metaPath := filepath.Join(projectPath, ".wm", "meta.json")
+	if _, err := os.Stat(metaPath); err == nil {
+		return fmt.Errorf("configuration already installed (found %s)", metaPath)
+	}
+
+	fmt.Println("📦 Installing system configuration...")
+
+	// Copy system configuration to .claude/
+	claudePath := filepath.Join(projectPath, ".claude")
+	fmt.Printf("   → Copying to %s\n", claudePath)
+	if err := fsutil.CopyTreeFS(config.EmbeddedFS, "system", claudePath); err != nil {
+		return fmt.Errorf("failed to copy configuration to .claude: %w", err)
+	}
+
+	// Copy system configuration to .wm/baseline/
+	baselinePath := filepath.Join(projectPath, ".wm", "baseline")
+	fmt.Printf("   → Copying to %s\n", baselinePath)
+	if err := fsutil.CopyTreeFS(config.EmbeddedFS, "system", baselinePath); err != nil {
+		return fmt.Errorf("failed to copy configuration to .wm/baseline: %w", err)
+	}
+
+	// Create .wm/meta.json
+	fmt.Printf("   → Creating %s\n", metaPath)
+	metaData := wmmeta.Default("claude-wm-cli", meta.Version)
+	if err := wmmeta.Save(metaPath, metaData); err != nil {
+		return fmt.Errorf("failed to create meta.json: %w", err)
+	}
+
+	fmt.Println("✅ System configuration installed successfully!")
+	fmt.Println("")
+	fmt.Printf("📁 Configuration installed to:\n")
+	fmt.Printf("   %s        - System configuration\n", claudePath)
+	fmt.Printf("   %s   - Baseline backup\n", baselinePath)
+	fmt.Printf("   %s      - Installation metadata\n", metaPath)
+	fmt.Println("")
+	fmt.Println("💡 Next step: Run 'claude-wm-cli config init' to set up workspace")
+
+	return nil
 }
 
 func runConfigInit(cmd *cobra.Command, args []string) error {
