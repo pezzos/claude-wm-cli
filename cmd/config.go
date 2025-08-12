@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"claude-wm-cli/internal/config"
+	"claude-wm-cli/internal/diff"
 	"claude-wm-cli/internal/fsutil"
 	"claude-wm-cli/internal/meta"
 	wmmeta "claude-wm-cli/internal/wm/meta"
@@ -20,6 +21,7 @@ var configCmd = &cobra.Command{
 Available subcommands:
   install  Install initial system configuration to .claude/ and .wm/baseline/
   init     Initialize new configuration workspace
+  status   Show configuration differences between upstream, baseline, and local
   sync     Regenerate runtime configuration from templates and overrides
   upgrade  Update system templates (preserves user customizations)
   edit     Edit user configuration files
@@ -38,6 +40,15 @@ var configInitCmd = &cobra.Command{
 	Short: "Initialize configuration workspace",
 	Long:  `Initialize the .claude-wm workspace with package manager structure`,
 	RunE:  runConfigInit,
+}
+
+var configStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show configuration differences",
+	Long: `Show differences between:
+- Upstream (embedded) vs Baseline (.wm/baseline) - changes since installation
+- Baseline vs Local (.claude) - your local modifications`,
+	RunE:  runConfigStatus,
 }
 
 var configSyncCmd = &cobra.Command{
@@ -65,6 +76,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	configCmd.AddCommand(configInstallCmd)
 	configCmd.AddCommand(configInitCmd)
+	configCmd.AddCommand(configStatusCmd)
 	configCmd.AddCommand(configSyncCmd)
 	configCmd.AddCommand(configUpgradeCmd)
 	configCmd.AddCommand(configShowCmd)
@@ -115,6 +127,79 @@ func runConfigInstall(cmd *cobra.Command, args []string) error {
 	fmt.Println("💡 Next step: Run 'claude-wm-cli config init' to set up workspace")
 
 	return nil
+}
+
+func runConfigStatus(cmd *cobra.Command, args []string) error {
+	projectPath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current directory: %w", err)
+	}
+
+	fmt.Println("📊 Configuration Status")
+	fmt.Println("======================")
+
+	// Load the three filesystems
+	upstream := config.EmbeddedFS
+	
+	baselinePath := filepath.Join(projectPath, ".wm", "baseline")
+	if _, err := os.Stat(baselinePath); os.IsNotExist(err) {
+		fmt.Println("❌ Baseline not found - run 'claude-wm-cli config install' first")
+		return nil
+	}
+	baseline := os.DirFS(baselinePath)
+
+	localPath := filepath.Join(projectPath, ".claude")  
+	if _, err := os.Stat(localPath); os.IsNotExist(err) {
+		fmt.Println("❌ Local configuration not found at .claude/")
+		return nil
+	}
+	local := os.DirFS(localPath)
+
+	// Compare Upstream vs Baseline
+	fmt.Println("\n🔄 Upstream vs Baseline (changes since installation):")
+	upstreamChanges, err := diff.DiffTrees(upstream, "system", baseline, ".")
+	if err != nil {
+		return fmt.Errorf("failed to diff upstream vs baseline: %w", err)
+	}
+
+	if len(upstreamChanges) == 0 {
+		fmt.Println("   ✅ No changes")
+	} else {
+		for _, change := range upstreamChanges {
+			fmt.Printf("   %s %s\n", getChangeSymbol(change.Type), change.Path)
+		}
+	}
+
+	// Compare Baseline vs Local
+	fmt.Println("\n📝 Baseline vs Local (your modifications):")
+	localChanges, err := diff.DiffTrees(baseline, ".", local, ".")
+	if err != nil {
+		return fmt.Errorf("failed to diff baseline vs local: %w", err)
+	}
+
+	if len(localChanges) == 0 {
+		fmt.Println("   ✅ No modifications")
+	} else {
+		for _, change := range localChanges {
+			fmt.Printf("   %s %s\n", getChangeSymbol(change.Type), change.Path)
+		}
+	}
+
+	return nil
+}
+
+// getChangeSymbol returns a visual symbol for each change type
+func getChangeSymbol(changeType diff.ChangeType) string {
+	switch changeType {
+	case diff.ChangeNew:
+		return "+"
+	case diff.ChangeDel:
+		return "-"
+	case diff.ChangeMod:
+		return "M"
+	default:
+		return "?"
+	}
 }
 
 func runConfigInit(cmd *cobra.Command, args []string) error {
