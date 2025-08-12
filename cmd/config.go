@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 	"claude-wm-cli/internal/config"
@@ -12,6 +13,7 @@ import (
 	"claude-wm-cli/internal/fsutil"
 	"claude-wm-cli/internal/meta"
 	"claude-wm-cli/internal/update"
+	"claude-wm-cli/internal/ziputil"
 	wmmeta "claude-wm-cli/internal/wm/meta"
 )
 
@@ -55,7 +57,8 @@ var configStatusCmd = &cobra.Command{
 }
 
 var (
-	updateDryRun bool
+	updateDryRun   bool
+	updateNoBackup bool
 )
 
 var configUpdateCmd = &cobra.Command{
@@ -101,6 +104,7 @@ func init() {
 
 	// Add flags for update command
 	configUpdateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show planned changes without applying them")
+	configUpdateCmd.Flags().BoolVar(&updateNoBackup, "no-backup", false, "Skip creating backup before applying changes")
 }
 
 func runConfigInstall(cmd *cobra.Command, args []string) error {
@@ -272,11 +276,37 @@ func runConfigUpdate(cmd *cobra.Command, args []string) error {
 
 		fmt.Println(string(jsonData))
 		fmt.Printf("\n💡 Run without --dry-run to apply %d changes\n", len(plan.Merge))
-	} else {
-		// TODO: Implement actual update logic (not in this task)
-		fmt.Println("❌ Actual update not implemented yet - use --dry-run to preview changes")
-		return fmt.Errorf("actual update implementation is not yet available")
+		return nil
 	}
+
+	// Apply the plan (not dry-run)
+	if len(plan.Merge) == 0 {
+		fmt.Println("✅ No changes to apply")
+		return nil
+	}
+
+	fmt.Printf("🔄 Applying %d changes...\n", len(plan.Merge))
+
+	// Create backup if not disabled
+	if !updateNoBackup {
+		fmt.Println("📦 Creating backup...")
+		backupDir := filepath.Join(projectPath, ".wm", "backups")
+		timestamp := time.Now().Format("2006-01-02_15-04-05")
+		
+		backupPath, err := ziputil.CreateTimestampedBackup(localPath, backupDir, timestamp)
+		if err != nil {
+			return fmt.Errorf("failed to create backup: %w", err)
+		}
+		
+		fmt.Printf("   ✓ Backup created: %s\n", backupPath)
+	}
+
+	// Apply the plan
+	if err := update.ApplyPlan(plan, upstream, "system", baselinePath, localPath); err != nil {
+		return fmt.Errorf("failed to apply update plan: %w", err)
+	}
+
+	fmt.Println("🎉 Update completed successfully!")
 
 	return nil
 }
