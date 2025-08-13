@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"claude-wm-cli/internal/fsutil"
 	"claude-wm-cli/internal/model"
 )
 
@@ -580,7 +581,7 @@ func (ao *AtomicOperation) Execute() error {
 	for _, op := range ao.operations {
 		if op.opType == "write" && fileExists(op.filePath) {
 			backupPath := op.filePath + fmt.Sprintf(".tx_backup.%d", time.Now().UnixNano())
-			if err := copyFile(op.filePath, backupPath); err != nil {
+			if err := fsutil.CopyFile(op.filePath, backupPath); err != nil {
 				// Clean up any backups created so far
 				for _, backup := range backupPaths {
 					os.Remove(backup)
@@ -635,7 +636,7 @@ func (ao *AtomicOperation) rollback(executedOps []string, backupPaths map[string
 	for _, filePath := range executedOps {
 		if backupPath, exists := backupPaths[filePath]; exists {
 			// Restore from backup
-			copyFile(backupPath, filePath)
+			fsutil.CopyFile(backupPath, filePath)
 		} else {
 			// This was a new file, remove it
 			os.Remove(filePath)
@@ -648,23 +649,6 @@ func (ao *AtomicOperation) rollback(executedOps []string, backupPaths map[string
 	}
 }
 
-// copyFile copies a file from src to dst
-func copyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sourceFile.Close()
-
-	destFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, sourceFile)
-	return err
-}
 
 // Git integration methods
 

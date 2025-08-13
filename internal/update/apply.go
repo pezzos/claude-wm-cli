@@ -36,7 +36,7 @@ func ApplyPlan(plan *Plan, upstream fs.FS, upstreamRoot string, baselineDir, loc
 	}()
 
 	// Copy current local directory to temp directory as starting point
-	if err := copyDirectory(localDir, tempDir); err != nil {
+	if err := fsutil.CopyDirectory(localDir, tempDir); err != nil {
 		return fmt.Errorf("failed to create temporary working directory: %w", err)
 	}
 
@@ -251,57 +251,3 @@ func updateBaseline(upstream fs.FS, upstreamRoot, baselineDir string) error {
 	return nil
 }
 
-// copyDirectory copies a directory tree from src to dst
-func copyDirectory(src, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Calculate relative path
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-
-		// Calculate destination path
-		dstPath := filepath.Join(dst, relPath)
-
-		if info.IsDir() {
-			// Create directory
-			return fsutil.EnsureDir(dstPath)
-		}
-
-		// Copy file
-		return copyFile(path, dstPath)
-	})
-}
-
-// copyFile copies a single file from src to dst
-func copyFile(src, dst string) error {
-	// Ensure destination directory exists
-	if err := fsutil.EnsureDir(filepath.Dir(dst)); err != nil {
-		return err
-	}
-
-	// Open source file
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer srcFile.Close()
-
-	// Create destination file
-	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	defer dstFile.Close()
-
-	// Copy content
-	if _, err := io.Copy(dstFile, srcFile); err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
-	}
-
-	return nil
-}

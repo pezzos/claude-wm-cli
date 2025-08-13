@@ -490,9 +490,9 @@ func applyMigration(report *MigrationReport) error {
 		var err error
 		switch action.Type {
 		case "copy":
-			err = copyFileWithDir(sourcePath, targetPath)
+			err = fsutil.CopyFileWithDir(sourcePath, targetPath)
 		case "convert":
-			err = convertAndCopyFile(sourcePath, targetPath)
+			err = fsutil.CopyFileWithDir(sourcePath, targetPath)
 		default:
 			continue
 		}
@@ -516,39 +516,6 @@ func applyMigration(report *MigrationReport) error {
 	return nil
 }
 
-// copyFileWithDir copies a file and ensures the destination directory exists
-func copyFileWithDir(src, dst string) error {
-	// Ensure destination directory exists
-	if err := fsutil.EnsureDir(filepath.Dir(dst)); err != nil {
-		return fmt.Errorf("failed to create destination directory: %w", err)
-	}
-
-	// Read source file
-	srcData, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("failed to read source file: %w", err)
-	}
-
-	// Get source file permissions
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return fmt.Errorf("failed to get source file info: %w", err)
-	}
-
-	// Write to destination with same permissions
-	if err := os.WriteFile(dst, srcData, srcInfo.Mode()); err != nil {
-		return fmt.Errorf("failed to write destination file: %w", err)
-	}
-
-	return nil
-}
-
-// convertAndCopyFile converts a file during copying (for metadata format changes)
-func convertAndCopyFile(src, dst string) error {
-	// For now, treat convert the same as copy
-	// In the future, this could handle format conversions
-	return copyFileWithDir(src, dst)
-}
 
 // getArchiveStatus returns a human-readable status of the archive operation
 func getArchiveStatus(legacyPath string, archived bool) string {

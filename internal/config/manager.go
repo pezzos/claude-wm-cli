@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"claude-wm-cli/internal/fsutil"
 )
 
 //go:embed system
@@ -146,7 +148,7 @@ func (m *Manager) MigrateFromLegacy(legacyPath string) error {
 	legacySettings := filepath.Join(legacyPath, "settings.json")
 	if _, err := os.Stat(legacySettings); err == nil {
 		userSettings := filepath.Join(m.UserPath, "settings.json")
-		if err := copyFile(legacySettings, userSettings); err != nil {
+		if err := fsutil.CopyFileWithDir(legacySettings, userSettings); err != nil {
 			return fmt.Errorf("failed to migrate settings.json: %w", err)
 		}
 	}
@@ -155,7 +157,7 @@ func (m *Manager) MigrateFromLegacy(legacyPath string) error {
 	legacyCommands := filepath.Join(legacyPath, "commands")
 	if _, err := os.Stat(legacyCommands); err == nil {
 		systemCommands := filepath.Join(m.SystemPath, "commands")
-		if err := copyDir(legacyCommands, systemCommands); err != nil {
+		if err := fsutil.CopyDirectory(legacyCommands, systemCommands); err != nil {
 			return fmt.Errorf("failed to migrate commands: %w", err)
 		}
 	}
@@ -164,7 +166,7 @@ func (m *Manager) MigrateFromLegacy(legacyPath string) error {
 	legacyHooks := filepath.Join(legacyPath, "hooks")
 	if _, err := os.Stat(legacyHooks); err == nil {
 		systemHooks := filepath.Join(m.SystemPath, "hooks")
-		if err := copyDir(legacyHooks, systemHooks); err != nil {
+		if err := fsutil.CopyDirectory(legacyHooks, systemHooks); err != nil {
 			return fmt.Errorf("failed to migrate hooks: %w", err)
 		}
 	}
@@ -248,14 +250,14 @@ func (m *Manager) mergeDirectory(dirName string) error {
 
 	// Copy system files first
 	if _, err := os.Stat(systemDir); err == nil {
-		if err := copyDir(systemDir, runtimeDir); err != nil {
+		if err := fsutil.CopyDirectory(systemDir, runtimeDir); err != nil {
 			return fmt.Errorf("failed to copy system directory: %w", err)
 		}
 	}
 
 	// Overlay user files (they override system files with same names)
 	if _, err := os.Stat(userDir); err == nil {
-		if err := copyDir(userDir, runtimeDir); err != nil {
+		if err := fsutil.CopyDirectory(userDir, runtimeDir); err != nil {
 			return fmt.Errorf("failed to overlay user directory: %w", err)
 		}
 	}
@@ -275,41 +277,6 @@ func (m *Manager) GetUserPath(relativePath string) string {
 
 // Utility functions
 
-func copyFile(src, dst string) error {
-	data, err := os.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	
-	// Create destination directory if needed
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
-		return err
-	}
-	
-	return os.WriteFile(dst, data, 0644)
-}
-
-func copyDir(src, dst string) error {
-	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Calculate relative path
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-
-		dstPath := filepath.Join(dst, relPath)
-
-		if d.IsDir() {
-			return os.MkdirAll(dstPath, 0755)
-		}
-
-		return copyFile(path, dstPath)
-	})
-}
 
 // syncToClaudeDir copies the runtime configuration to .claude/ directory
 func (m *Manager) syncToClaudeDir() error {
@@ -373,7 +340,7 @@ func (m *Manager) syncSubagentsToClaudeDir(claudeDir string) error {
 		dstPath := filepath.Join(claudeAgentsDir, relPath)
 
 		// Copy the file
-		return copyFile(path, dstPath)
+		return fsutil.CopyFileWithDir(path, dstPath)
 	})
 }
 
@@ -443,7 +410,7 @@ func (m *Manager) copyDirWithPathCorrection(src, dst string) error {
 		}
 
 		// For other files, copy directly
-		return copyFile(path, dstPath)
+		return fsutil.CopyFileWithDir(path, dstPath)
 	})
 }
 
