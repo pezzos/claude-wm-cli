@@ -1,0 +1,40 @@
+# System Tests Directory
+
+This directory will contain end-to-end system tests for the Claude WM CLI.
+
+## Structure
+
+- `config_workflow_test.go` - Complete configuration workflow tests
+- `sandbox_development_test.go` - Sandbox development and upstreaming tests
+- `migration_scenarios_test.go` - Legacy migration testing
+- `integration_scenarios_test.go` - Cross-component integration scenarios
+
+## Test Characteristics
+
+- **Duration**: Up to 10 minutes per test suite
+- **Scope**: Full user workflows and realistic scenarios
+- **Environment**: Isolated temporary directories
+- **Dependencies**: Real file system operations, no mocks
+
+## Running System Tests
+
+```bash
+# Run all system tests
+make test-system
+
+# Run specific test file
+go test ./test/system/ -run TestConfigWorkflow -v
+
+# Run with timeout
+go test ./test/system/ -timeout 10m -v
+```
+
+## Test Data
+
+System tests use realistic test data and scenarios:
+
+- Fresh project initialization
+- Existing project migration
+- Complex configuration updates
+- Multi-step development workflows
+- Error recovery scenarios
