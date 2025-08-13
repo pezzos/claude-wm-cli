@@ -73,82 +73,8 @@ func runGuardCheck(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Determine if we're in SELF mode
-	env := mode.Env{Root: cwd}
-	isSelfMode := mode.Self(env)
-
-	// In non-SELF mode, no restrictions apply
-	if !isSelfMode {
-		// Silent success - no restrictions in user projects
-		return nil
-	}
-
-	// We're in SELF mode - check for violations
-	return checkSelfModeViolations(cwd)
-}
-
-// checkSelfModeViolations checks for writing violations in SELF mode
-func checkSelfModeViolations(workingDir string) error {
-	// Create Git repository wrapper
-	repo := git.NewRepository(workingDir, nil)
-
-	// Check if this is a Git repository
-	if !repo.IsRepository() {
-		fmt.Printf("Warning: Not a Git repository - guard check skipped\n")
-		return nil // Non-fatal - return exit code 0
-	}
-
-	// Get current Git status
-	status, err := repo.GetStatus()
-	if err != nil {
-		// Handle Git command failures gracefully
-		fmt.Printf("Warning: Failed to get Git status: %v\n", err)
-		return nil // Non-fatal - return exit code 0
-	}
-
-	// Check each changed file for violations
-	var violations []string
-	for _, fileStatus := range status.Files {
-		// Check if file path violates SELF mode restrictions
-		if isSelfModeViolation(fileStatus.Path) {
-			violations = append(violations, fileStatus.Path)
-		}
-	}
-
-	// Report violations if found
-	if len(violations) > 0 {
-		fmt.Printf("❌ SELF mode violation: modifications to .claude/ detected:\n\n")
-		for _, path := range violations {
-			fmt.Printf("   %s\n", path)
-		}
-		fmt.Printf("\nIn SELF mode, .claude/ modifications are restricted to prevent\n")
-		fmt.Printf("accidental changes to the project's configuration structure.\n\n")
-		fmt.Printf("💡 To make configuration changes:\n")
-		fmt.Printf("   • Use 'claude-wm-cli config install' for initial setup\n")
-		fmt.Printf("   • Use 'claude-wm-cli config update' for configuration updates\n\n")
-		fmt.Printf("Reason for SELF mode: %s\n", mode.Reason(mode.Env{Root: workingDir}))
-		
-		return fmt.Errorf("guard check failed: %d violation(s) found", len(violations))
-	}
-
-	// Silent success - no violations found
-	return nil
-}
-
-// isSelfModeViolation checks if a file path violates SELF mode restrictions
-func isSelfModeViolation(path string) bool {
-	// Normalize path separators to forward slashes for consistent checking
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	
-	// SELF mode restriction: no modifications to .claude/
-	if strings.HasPrefix(normalizedPath, ".claude/") {
-		return true
-	}
-
-	// Future: Add more SELF mode restrictions here if needed
-	// For now, only .claude/ is restricted
-
-	return false
+	// Use the implementation from internal/cmd package
+	return guardcmd.RunGuardCheck(cwd)
 }
 
 // runGuardInstallHook installs the pre-commit hook

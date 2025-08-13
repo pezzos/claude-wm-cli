@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-//go:embed system/commands system/settings.json.template system/README.md
+//go:embed system
 var EmbeddedFS embed.FS
 
 func Open(path string) (io.ReadCloser, error) {
