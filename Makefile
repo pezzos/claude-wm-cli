@@ -1,4 +1,4 @@
-.PHONY: build test test-all test-smoke test-unit test-integration test-system test-guard lint clean install dev help manifest coverage coverage-html serena-index
+.PHONY: build test test-all test-smoke test-unit test-integration test-system test-guard lint clean install dev help manifest coverage coverage-html serena-index validate-output
 
 # Build variables
 BINARY_NAME=claude-wm-cli
@@ -176,6 +176,21 @@ serena-index:
 	@echo "📚 Updating Serena documentation index..."
 	@./scripts/serena-index.sh
 
+# Validate Claude Code Output
+validate-output:
+	@echo "🔍 Validating Claude Code output schema..."
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make validate-output FILE=path/to/output.json"; \
+		echo "   or: echo '{...json...}' | make validate-output-stdin"; \
+		exit 1; \
+	fi
+	@node ./scripts/validate-output.js "$(FILE)" --verbose
+
+# Validate output from stdin
+validate-output-stdin:
+	@echo "🔍 Validating Claude Code output from stdin..."
+	@node ./scripts/validate-output.js --stdin --verbose
+
 # Show help
 help:
 	@echo "Available targets:"
@@ -211,6 +226,7 @@ help:
 	@echo "  fmt           - Format code"
 	@echo "  manifest      - Generate system configuration manifest"
 	@echo "  serena-index  - Update Serena documentation index (incremental)"
+	@echo "  validate-output - Validate Claude Code JSON output (use FILE=path)"
 	@echo "  help          - Show this help"
 
 # Default target

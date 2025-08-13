@@ -1,5 +1,24 @@
 # MCP Tools Playbook
 
+## MCP Pipeline Protocol Integration
+
+**Always follow the MCP Pipeline Protocol for consistent tool usage:**
+
+1. **Context7**: Load KB/ADR + authorized paths  
+2. **Sequential Thinking**: Detail plan before implementation
+3. **Serena**: Reuse existing patterns and documentation
+4. **Zen**: Clean, noise-free outputs
+5. **Chain of Verification**: Quality gate before delivery
+
+> 📖 **Full Protocol**: See `docs/KB/mcp-pipeline-protocol.md` for complete decision trees and patterns
+
+### Quick Reference
+- **Context7** when integrating libraries (30-60s overhead)
+- **Sequential Thinking** for complex tasks >3 steps (2-5min)
+- **Serena** before creating new code/docs (10-30s)
+- **Consult7** for architecture decisions only (60-120s)
+- **Chain of Verification** always before delivery (30s)
+
 ## Serena Documentation Indexing
 
 ### Incremental Indexing Protocol
