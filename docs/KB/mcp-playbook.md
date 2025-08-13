@@ -1,5 +1,71 @@
 # MCP Tools Playbook
 
+## Serena Documentation Indexing
+
+### Incremental Indexing Protocol
+**When**: Before any task involving documentation or knowledge base queries  
+**Frequency**: Automatic (GitHub Actions) + manual (`make serena-index`)  
+**Purpose**: Keep Serena index synchronized with latest documentation changes
+
+#### Automatic Triggers
+- **GitHub Actions**: On push to `docs/**` paths
+- **Pre-task**: Before using Serena for documentation queries
+- **Development**: After creating/editing documentation files
+
+#### Index Structure
+```json
+{
+  "version": "1.0.0",
+  "timestamp": "2024-01-15T14:30:25Z",
+  "docs": [
+    {
+      "path": "docs/KB/glossary.md",
+      "title": "Glossary",
+      "category": "KB",
+      "tags": ["terminology", "reference"],
+      "sha": "abc123...",
+      "indexed_at": "2024-01-15T14:30:25Z"
+    }
+  ]
+}
+```
+
+#### Usage Commands
+```bash
+# Manual incremental indexing
+make serena-index
+
+# Check current index status
+jq '.docs | length' .serena/manifest.json
+
+# View categories breakdown
+jq -r '.docs | group_by(.category) | .[] | "\(.length) \(.[0].category) documents"' .serena/manifest.json
+```
+
+### Serena Query Patterns
+
+#### Documentation Queries (Always Index First)
+```bash
+# 1. Update index before querying
+make serena-index
+
+# 2. Query with specific globs for documentation
+mcp__serena__search_for_pattern --relative_path "docs/KB" --substring_pattern "mcp tools"
+mcp__serena__search_for_pattern --relative_path "docs/ADR" --substring_pattern "architecture decision"
+```
+
+#### Recommended Glob Patterns
+- **Knowledge Base**: `docs/KB/**` (glossary, commands, file-ownership, mcp-playbook)
+- **Architecture Decisions**: `docs/ADR/**` (decision records)
+- **Guides**: `docs/*.md` (top-level guides like ARCHITECTURE, CONFIG_GUIDE, TESTING)
+- **All Documentation**: `docs/**` (comprehensive search)
+
+#### Pre-Task Serena Checklist
+1. ✅ Run `make serena-index` (incremental, only changed files)
+2. ✅ Use appropriate glob patterns for search scope
+3. ✅ Query KB before ADR before guides (specificity order)
+4. ✅ Combine results with code analysis via `mcp__serena__find_symbol`
+
 ## Tool Selection Matrix
 
 ### Code Analysis & Understanding

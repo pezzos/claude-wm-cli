@@ -73,3 +73,5 @@ coverage/
 # DynamoDB Local files
 .dynamodb/
 .serena/cache/go/*
+# Serena indexing runtime data
+.serena/

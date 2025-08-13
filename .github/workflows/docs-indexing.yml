@@ -1,0 +1,153 @@
+name: Documentation Indexing
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'scripts/serena-index.sh'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/serena-index.sh'
+
+jobs:
+  index-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Need full history for proper file change detection
+          fetch-depth: 0
+      
+      - name: Setup dependencies
+        run: |
+          # Install jq for JSON processing
+          sudo apt-get update
+          sudo apt-get install -y jq
+          
+      - name: Make serena-index.sh executable
+        run: chmod +x ./scripts/serena-index.sh
+        
+      - name: Run Serena incremental indexing
+        run: |
+          echo "🚀 Starting Serena documentation indexing..."
+          make serena-index
+          
+      - name: Validate manifest structure
+        run: |
+          echo "🔍 Validating manifest structure..."
+          if [[ ! -f ".serena/manifest.json" ]]; then
+            echo "❌ Manifest file not found"
+            exit 1
+          fi
+          
+          # Validate JSON structure
+          if ! jq empty .serena/manifest.json; then
+            echo "❌ Invalid JSON in manifest"
+            exit 1
+          fi
+          
+          # Check required fields
+          if ! jq -e '.version and .timestamp and .docs' .serena/manifest.json > /dev/null; then
+            echo "❌ Missing required fields in manifest"
+            exit 1
+          fi
+          
+          echo "✅ Manifest validation passed"
+          
+      - name: Display indexing summary
+        run: |
+          echo "📊 Indexing Summary:"
+          echo "=================="
+          
+          # Show manifest stats
+          total_docs=$(jq '.docs | length' .serena/manifest.json)
+          echo "📁 Total documents indexed: $total_docs"
+          
+          # Show last update time
+          last_update=$(jq -r '.timestamp' .serena/manifest.json)
+          echo "⏰ Last updated: $last_update"
+          
+          # Show categories breakdown
+          echo ""
+          echo "📋 Documents by category:"
+          jq -r '.docs | group_by(.category) | .[] | "\(.length) \(.[0].category) documents"' .serena/manifest.json | sort -nr
+          
+          # Show recent changes if this is a push event
+          if [[ "${{ github.event_name }}" == "push" ]] && [[ -n "${{ github.event.before }}" ]]; then
+            echo ""
+            echo "📝 Changed files in this push:"
+            git diff --name-only ${{ github.event.before }}..${{ github.sha }} -- docs/ || echo "Unable to determine changed files"
+          fi
+          
+      - name: Comment on PR with indexing results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read manifest data
+            const manifest = JSON.parse(fs.readFileSync('.serena/manifest.json', 'utf8'));
+            
+            // Create summary comment
+            const totalDocs = manifest.docs.length;
+            const lastUpdate = manifest.timestamp;
+            
+            // Group by category
+            const categories = manifest.docs.reduce((acc, doc) => {
+              acc[doc.category] = (acc[doc.category] || 0) + 1;
+              return acc;
+            }, {});
+            
+            const categoryBreakdown = Object.entries(categories)
+              .sort(([,a], [,b]) => b - a)
+              .map(([cat, count]) => `- **${cat}**: ${count} documents`)
+              .join('\n');
+            
+            const comment = `## 📚 Documentation Indexing Results
+            
+            Serena incremental indexing completed successfully!
+            
+            ### Summary
+            - **Total documents**: ${totalDocs}
+            - **Last updated**: ${lastUpdate}
+            
+            ### Documents by Category
+            ${categoryBreakdown}
+            
+            The documentation index has been updated and is ready for Serena semantic search.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+      
+      # Optional: Push updated index to external Serena service
+      # Uncomment if using remote Serena indexing service
+      # - name: Push to Serena service
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   run: |
+      #     echo "🔄 Pushing index to Serena service..."
+      #     # curl -X POST "$SERENA_ENDPOINT/index" \
+      #     #   -H "Authorization: Bearer $SERENA_TOKEN" \
+      #     #   -H "Content-Type: application/json" \
+      #     #   -d @.serena/manifest.json
+      #     echo "✅ Index pushed successfully"
+      #   env:
+      #     SERENA_ENDPOINT: ${{ secrets.SERENA_ENDPOINT }}
+      #     SERENA_TOKEN: ${{ secrets.SERENA_TOKEN }}
+      
+      - name: Archive indexing artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serena-index-${{ github.sha }}
+          path: |
+            .serena/manifest.json
+            scripts/serena-index.sh
+          retention-days: 30

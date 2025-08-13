@@ -1,4 +1,4 @@
-.PHONY: build test test-all test-smoke test-unit test-integration test-system test-guard lint clean install dev help manifest coverage coverage-html
+.PHONY: build test test-all test-smoke test-unit test-integration test-system test-guard lint clean install dev help manifest coverage coverage-html serena-index
 
 # Build variables
 BINARY_NAME=claude-wm-cli
@@ -171,6 +171,11 @@ fmt:
 	@gofmt -s -w $(GO_FILES)
 	@$(shell go env GOPATH)/bin/goimports -w $(GO_FILES)
 
+# Serena Documentation Indexing
+serena-index:
+	@echo "📚 Updating Serena documentation index..."
+	@./scripts/serena-index.sh
+
 # Show help
 help:
 	@echo "Available targets:"
@@ -205,6 +210,7 @@ help:
 	@echo "  run           - Run the application (use ARGS for arguments)"
 	@echo "  fmt           - Format code"
 	@echo "  manifest      - Generate system configuration manifest"
+	@echo "  serena-index  - Update Serena documentation index (incremental)"
 	@echo "  help          - Show this help"
 
 # Default target
