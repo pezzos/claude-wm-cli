@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"claude-wm-cli/internal/diff"
 	"claude-wm-cli/internal/fsutil"
 	wmmeta "claude-wm-cli/internal/wm/meta"
 	"github.com/spf13/cobra"

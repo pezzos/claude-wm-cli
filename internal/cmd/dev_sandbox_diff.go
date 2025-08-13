@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -329,7 +328,7 @@ func applyDiffChanges(result DiffResult, sandboxPath, systemPath string) error {
 		switch action.Action {
 		case "new", "mod":
 			fmt.Printf("📄 Copying %s\n", action.Path)
-			err = copyFileWithDir(sandboxFile, systemFile)
+			err = fsutil.CopyFileWithDir(sandboxFile, systemFile)
 			if err == nil {
 				result.Plan[i].Status = "applied"
 				applied++
@@ -372,29 +371,3 @@ func applyDiffChanges(result DiffResult, sandboxPath, systemPath string) error {
 	return nil
 }
 
-// copyFileWithDir copies a file and ensures the destination directory exists
-func copyFileWithDir(src, dst string) error {
-	// Ensure destination directory exists
-	if err := fsutil.EnsureDir(filepath.Dir(dst)); err != nil {
-		return fmt.Errorf("failed to create destination directory: %w", err)
-	}
-
-	// Read source file
-	srcData, err := os.ReadFile(src)
-	if err != nil {
-		return fmt.Errorf("failed to read source file: %w", err)
-	}
-
-	// Get source file permissions
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return fmt.Errorf("failed to get source file info: %w", err)
-	}
-
-	// Write to destination with same permissions
-	if err := os.WriteFile(dst, srcData, srcInfo.Mode()); err != nil {
-		return fmt.Errorf("failed to write destination file: %w", err)
-	}
-
-	return nil
-}

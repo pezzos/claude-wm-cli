@@ -62,9 +62,8 @@ func CopyFile(src, dst string) error {
 
 // CopyDirectory recursively copies a directory from src to dst
 func CopyDirectory(src, dst string) error {
-	// Get source directory info
-	srcInfo, err := os.Stat(src)
-	if err != nil {
+	// Verify source exists
+	if _, err := os.Stat(src); err != nil {
 		return fmt.Errorf("failed to stat source directory %s: %w", src, err)
 	}
 
@@ -101,6 +100,4 @@ func CopyDirectory(src, dst string) error {
 		// Copy file
 		return CopyFile(path, dstPath)
 	})
-
-	_ = srcInfo // Suppress unused variable warning
 }

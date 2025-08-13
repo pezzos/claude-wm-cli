@@ -313,7 +313,7 @@ func TestCopyFileWithDir(t *testing.T) {
 
 	// Copy to destination (which doesn't exist yet)
 	dstFile := filepath.Join(tempDir, "target", "subdir", "test.txt")
-	err := copyFileWithDir(srcFile, dstFile)
+	err := fsutil.CopyFileWithDir(srcFile, dstFile)
 	if err != nil {
 		t.Fatalf("copyFileWithDir failed: %v", err)
 	}
