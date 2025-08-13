@@ -18,23 +18,29 @@ var (
 // DevSandboxCmd creates a testing sandbox from Upstream system files
 var DevSandboxCmd = &cobra.Command{
 	Use:   "sandbox",
-	Short: "Create a testing sandbox from Upstream system files",
-	Long: `Create a testing sandbox in .wm/sandbox/claude/ from Upstream system files.
+	Short: "Create and manage testing sandbox from Upstream system files",
+	Long: `Create and manage a testing sandbox in .wm/sandbox/claude/ from Upstream system files.
 
-This command materializes an isolated testing environment that copies the current
-Upstream system configuration (internal/config/system/) to a sandbox location,
-allowing you to experiment with changes without affecting the main .claude/ structure.
+This command group provides sandbox management functionality including creation,
+diff analysis, and selective upstreaming of changes.
 
 The sandbox is particularly useful in SELF mode where .claude/ modifications
 are restricted. All experimentation should be done within the sandbox.
 
 Sandbox location: .wm/sandbox/claude/
-Source: internal/config/system/`,
+Source: internal/config/system/
+
+Subcommands:
+  (none)    Create or reset the sandbox
+  diff      Compare sandbox with source and selectively upstream changes`,
 	RunE: runDevSandbox,
 }
 
 func init() {
 	DevSandboxCmd.Flags().BoolVar(&resetSandbox, "reset", false, "Reset existing sandbox (removes existing directory)")
+	
+	// Add subcommands
+	DevSandboxCmd.AddCommand(DevSandboxDiffCmd)
 }
 
 // runDevSandbox implements the dev sandbox logic
@@ -70,6 +76,7 @@ func runDevSandbox(cmd *cobra.Command, args []string) error {
 			response = strings.TrimSpace(strings.ToLower(response))
 			if response != "y" && response != "yes" {
 				fmt.Println("Operation cancelled. Use --reset flag to skip confirmation.")
+				fmt.Println("\n💡 Try 'claude-wm dev sandbox diff' to see what has changed in your sandbox.")
 				return nil
 			}
 		}
@@ -110,6 +117,8 @@ func runDevSandbox(cmd *cobra.Command, args []string) error {
 	fmt.Printf("   • Navigate to the sandbox: cd %s\n", sandboxPath)
 	fmt.Printf("   • Make your experimental changes there\n")
 	fmt.Printf("   • Test your modifications in isolation\n")
+	fmt.Printf("   • Use 'claude-wm dev sandbox diff' to compare with source\n")
+	fmt.Printf("   • Use 'claude-wm dev sandbox diff --apply' to upstream changes\n")
 
 	return nil
 }
