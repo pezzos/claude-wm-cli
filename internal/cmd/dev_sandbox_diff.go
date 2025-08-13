@@ -47,36 +47,36 @@ var DevSandboxDiffCmd = &cobra.Command{
 	Use:   "diff",
 	Short: "Compare sandbox with source and selectively upstream changes",
 	Long: `Compare the sandbox directory (.wm/sandbox/claude/) with the source
-directory (internal/config/system/) and show or apply changes.
+directory (internal/config/system/) and apply changes by default.
 
 This command helps you selectively upstream changes from your experimental
 sandbox environment back to the main source tree.
 
-By default, shows a plan of what would be changed without applying anything.
-Use --apply to actually perform the changes.
+By default, applies all changes automatically. Use --dry-run to see what would
+be changed without applying anything.
 
 Examples:
-  # Show diff plan
+  # Apply all changes (default behavior)
   claude-wm dev sandbox diff
 
-  # Apply all new and modified files
-  claude-wm dev sandbox diff --apply
+  # Show what would be applied without doing it
+  claude-wm dev sandbox diff --dry-run
 
   # Apply only agent-related changes
-  claude-wm dev sandbox diff --apply --only "agents/**"
+  claude-wm dev sandbox diff --only "agents/**"
 
-  # Show plan including potential deletions
+  # Apply changes including deletions
   claude-wm dev sandbox diff --allow-delete
 
-  # Dry run with apply (shows what would be done)
-  claude-wm dev sandbox diff --apply --dry-run`,
+  # Dry run with specific patterns
+  claude-wm dev sandbox diff --dry-run --only "agents/**"`,
 	RunE: runDevSandboxDiff,
 }
 
 func init() {
-	DevSandboxDiffCmd.Flags().BoolVar(&diffApply, "apply", false, "Apply the changes (default: show plan only)")
+	DevSandboxDiffCmd.Flags().BoolVar(&diffApply, "apply", false, "Explicitly apply changes (default behavior, this flag is optional)")
 	DevSandboxDiffCmd.Flags().BoolVar(&diffDryRun, "dry-run", false, "Show what would be done without actually doing it")
-	DevSandboxDiffCmd.Flags().BoolVar(&diffAllowDelete, "allow-delete", false, "Include file deletions in the plan")
+	DevSandboxDiffCmd.Flags().BoolVar(&diffAllowDelete, "allow-delete", false, "Include file deletions in the changes")
 	DevSandboxDiffCmd.Flags().StringArrayVar(&diffOnlyPattern, "only", []string{}, "Include only files matching these glob patterns (can be specified multiple times)")
 }
 
@@ -119,17 +119,16 @@ func runDevSandboxDiff(cmd *cobra.Command, args []string) error {
 	// Create diff result
 	result := createDiffResult(changes, diffAllowDelete)
 
-	// If no apply flag, just show the plan
-	if !diffApply {
-		return showDiffPlan(result)
-	}
-
-	// If dry-run, show what would be applied
+	// Apply by default behavior:
+	// - If --dry-run is specified: show what would be applied (don't actually apply)
+	// - Otherwise: apply the changes (default behavior)
+	
 	if diffDryRun {
+		// Dry-run mode: show what would be applied without actually doing it
 		return showDryRunPlan(result)
 	}
-
-	// Apply the changes
+	
+	// Default behavior: apply the changes
 	return applyDiffChanges(result, sandboxPath, systemPath)
 }
 
@@ -164,16 +163,37 @@ func filterChangesByPattern(changes []diff.Change, patterns []string) []diff.Cha
 	return filtered
 }
 
-// matchesGlobPattern provides basic ** glob matching
+// matchesGlobPattern provides enhanced ** glob matching
 func matchesGlobPattern(path, pattern string) bool {
-	// Convert ** patterns to simple prefix matching for now
-	if strings.HasSuffix(pattern, "/**") {
-		prefix := strings.TrimSuffix(pattern, "/**")
-		return strings.HasPrefix(path, prefix+"/") || path == prefix
-	}
-	if strings.HasPrefix(pattern, "**/") {
-		suffix := strings.TrimPrefix(pattern, "**/")
-		return strings.HasSuffix(path, "/"+suffix) || path == suffix
+	// Handle ** patterns more comprehensively
+	if strings.Contains(pattern, "**") {
+		// Pattern like "prefix/**" - matches anything under prefix/
+		if strings.HasSuffix(pattern, "/**") {
+			prefix := strings.TrimSuffix(pattern, "/**")
+			return strings.HasPrefix(path, prefix+"/") || path == prefix
+		}
+		
+		// Pattern like "**/suffix" - matches suffix anywhere in tree
+		if strings.HasPrefix(pattern, "**/") {
+			suffix := strings.TrimPrefix(pattern, "**/")
+			return strings.HasSuffix(path, "/"+suffix) || path == suffix
+		}
+		
+		// Pattern like "prefix/**/suffix" - matches prefix...suffix with anything in between
+		if strings.Contains(pattern, "/**/") {
+			parts := strings.SplitN(pattern, "/**/", 2)
+			if len(parts) == 2 {
+				prefix := parts[0]
+				suffix := parts[1]
+				return (strings.HasPrefix(path, prefix+"/") || path == prefix) && 
+					   (strings.HasSuffix(path, "/"+suffix) || strings.HasSuffix(path, suffix))
+			}
+		}
+		
+		// Pattern with just ** (matches everything)
+		if pattern == "**" {
+			return true
+		}
 	}
 	return false
 }

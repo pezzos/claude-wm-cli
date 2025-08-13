@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-wm-cli/internal/config"
 	"claude-wm-cli/internal/fsutil"
 	"github.com/spf13/cobra"
 )
@@ -95,11 +96,11 @@ func runDevSandbox(cmd *cobra.Command, args []string) error {
 
 	// Copy Upstream system files to sandbox
 	fmt.Printf("📁 Creating sandbox from Upstream system files...\n")
-	fmt.Printf("   Source: %s\n", systemPath)
+	fmt.Printf("   Source: embedded system/ (complete tree)\n")
 	fmt.Printf("   Target: %s\n", sandboxPath)
 
-	// Use OS filesystem for copying (not embedded FS)
-	if err := fsutil.CopyDirectory(systemPath, sandboxPath); err != nil {
+	// Use embedded FS for complete tree copying to ensure all directories (including agents/) are copied
+	if err := fsutil.CopyTreeFS(config.EmbeddedFS, "system", sandboxPath); err != nil {
 		return fmt.Errorf("failed to copy system files to sandbox: %w", err)
 	}
 

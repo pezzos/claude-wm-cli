@@ -3,11 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"claude-wm-cli/internal/git"
-	"claude-wm-cli/internal/mode"
 	guardcmd "claude-wm-cli/internal/cmd"
 )
 
