@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"claude-wm-cli/internal/cmd"
 	"claude-wm-cli/internal/config"
 	"claude-wm-cli/internal/diff"
 	"claude-wm-cli/internal/fsutil"
@@ -23,14 +24,15 @@ var configCmd = &cobra.Command{
 	Long: `Configuration management for claude-wm using package manager approach.
 
 Available subcommands:
-  install  Install initial system configuration to .claude/ and .wm/baseline/
-  init     Initialize new configuration workspace
-  status   Show configuration differences between upstream, baseline, and local
-  update   Update configuration with 3-way merge (use --dry-run to preview)
-  sync     Regenerate runtime configuration from templates and overrides
-  upgrade  Update system templates (preserves user customizations)
-  edit     Edit user configuration files
-  show     Show effective runtime configuration`,
+  install         Install initial system configuration to .claude/ and .wm/baseline/
+  init            Initialize new configuration workspace
+  status          Show configuration differences between upstream, baseline, and local
+  update          Update configuration with 3-way merge (use --dry-run to preview)
+  sync            Regenerate runtime configuration from templates and overrides
+  upgrade         Update system templates (preserves user customizations)
+  edit            Edit user configuration files
+  show            Show effective runtime configuration
+  migrate-legacy  Migrate from legacy .claude-wm to new .wm structure`,
 }
 
 var configInstallCmd = &cobra.Command{
@@ -101,6 +103,7 @@ func init() {
 	configCmd.AddCommand(configSyncCmd)
 	configCmd.AddCommand(configUpgradeCmd)
 	configCmd.AddCommand(configShowCmd)
+	configCmd.AddCommand(cmd.ConfigMigrateLegacyCmd)
 
 	// Add flags for update command
 	configUpdateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show planned changes without applying them")
