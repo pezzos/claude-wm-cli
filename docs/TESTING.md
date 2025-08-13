@@ -1,560 +1,409 @@
 # Testing Guide
 
-This document describes the comprehensive testing strategy and procedures for Claude WM CLI.
+Testing protocols for claude-wm-cli with L0-L3 classification and comprehensive test execution.
 
-## Testing Philosophy
+## Testing Levels
 
-Claude WM CLI uses a **4-level testing pyramid** (L0-L3) that ensures reliability through progressive validation layers:
+### L0: Unit Tests
+**Scope:** Individual functions and methods  
+**Duration:** <100ms per test  
+**Environment:** In-memory, no I/O  
+**Coverage:** Business logic, validation, algorithms  
 
-```
-    ┌─────┐
-    │ L3  │  System Tests (End-to-End)
-    ├─────┤
-    │ L2  │  Integration Tests  
-    ├─────┤
-    │ L1  │  Unit Tests
-    ├─────┤
-    │ L0  │  Smoke Tests
-    └─────┘
-```
-
-## Testing Protocol
-
-### L0: Smoke Tests (Basic Functionality)
-
-**Purpose**: Quick validation that core functionality works
-**Duration**: < 30 seconds
-**Frequency**: Every build, before commits
-
-**Coverage:**
-- Binary compilation
-- Basic command execution
-- Help system functionality
-- Version information
-
-**Commands:**
 ```bash
-# Manual smoke tests
-make smoke-test
+# Run unit tests
+go test -short ./...
 
-# Or individual commands
-claude-wm-cli --version
-claude-wm-cli --help
-claude-wm-cli config --help
+# With coverage
+go test -short -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Specific package
+go test -short ./internal/config
+go test -short ./internal/diff
+go test -short ./internal/validation
 ```
 
-**Expected Results:**
-- All commands exit with status 0
-- Help text displays correctly
-- Version information is accurate
+### L1: Integration Tests
+**Scope:** Component interactions  
+**Duration:** <5s per test  
+**Environment:** TempDir, filesystem I/O  
+**Coverage:** Command flows, file operations, 3-way merge  
 
----
-
-### L1: Unit Tests (Component Testing)
-
-**Purpose**: Validate individual components in isolation
-**Duration**: < 2 minutes
-**Frequency**: Every commit, during development
-
-**Coverage:**
-- Domain logic validation
-- Utility function correctness
-- Error handling scenarios
-- Data structure operations
-
-**Commands:**
 ```bash
-# Run all unit tests
-make test-unit
+# Run integration tests
+go test -run Integration ./...
 
-# Or using Go directly
-go test ./internal/... -short
-
-# Specific packages
-go test ./internal/diff/
-go test ./internal/config/
-go test ./internal/cmd/
+# Specific integration suites
+go test -run Integration ./cmd
+go test -run Integration ./internal/config
+go test -run Integration ./internal/update
 ```
 
-**Key Test Areas:**
+### L2: System Tests
+**Scope:** End-to-end command execution  
+**Duration:** <30s per test  
+**Environment:** Real CLI execution, isolated directories  
+**Coverage:** Full command workflows, error scenarios  
 
-**Configuration Management:**
 ```bash
-go test ./internal/config/ -v
-go test ./internal/cmd/ -run TestConfig -v
+# Run system tests
+go test -tags=system ./test/system
+
+# Specific system scenarios
+go test -tags=system -run TestConfigInstallWorkflow ./test/system
+go test -tags=system -run TestSandboxWorkflow ./test/system
+go test -tags=system -run TestMigrationWorkflow ./test/system
 ```
 
-**Diff Engine:**
+### L3: Acceptance Tests
+**Scope:** User scenarios and workflows  
+**Duration:** <2min per test  
+**Environment:** Real projects, Git repositories  
+**Coverage:** Complete user journeys, multi-command flows  
+
 ```bash
-go test ./internal/diff/ -v
+# Run acceptance tests
+go test -tags=acceptance ./test/acceptance
+
+# Long-running tests
+go test -tags=acceptance -timeout=10m ./test/acceptance
 ```
 
-**Validation Systems:**
-```bash
-go test ./internal/validation/ -v
-go test ./internal/model/ -v
-```
+## Comprehensive Test Execution
 
-**File Operations:**
-```bash
-go test ./internal/fsutil/ -v
-go test ./internal/ziputil/ -v
-```
-
----
-
-### L2: Integration Tests (Component Interaction)
-
-**Purpose**: Test interactions between components
-**Duration**: < 5 minutes
-**Frequency**: Before major commits, in CI
-
-**Coverage:**
-- Configuration workflow end-to-end
-- Sandbox operations
-- Migration procedures
-- Hook integration
-
-**Commands:**
-```bash
-# Run all integration tests
-make test-integ
-
-# Or using Go directly
-go test ./internal/integration/ -v
-go test ./cmd/ -run Integration -v
-
-# Specific integration areas
-go test ./internal/integration/ -run TestConfigWorkflow -v
-go test ./internal/integration/ -run TestSandboxIntegration -v
-```
-
-**Test Scenarios:**
-
-**Configuration Lifecycle:**
-```bash
-# Test full config workflow
-go test ./internal/integration/ -run TestConfigInstallUpdateCycle -v
-```
-
-**Sandbox Development:**
-```bash
-# Test sandbox creation and diff
-go test ./internal/integration/ -run TestSandboxWorkflow -v
-```
-
-**Legacy Migration:**
-```bash
-# Test migration from .claude-wm to .wm
-go test ./internal/cmd/ -run TestMigrateLegacy -v
-```
-
-**Guard System:**
-```bash
-# Test hook installation and execution
-go test ./internal/integration/ -run TestGuardIntegration -v
-```
-
----
-
-### L3: System Tests (End-to-End)
-
-**Purpose**: Full system validation in realistic scenarios
-**Duration**: < 10 minutes
-**Frequency**: Before releases, weekly
-
-**Coverage:**
-- Complete user workflows
-- Cross-platform compatibility
-- Performance validation
-- Error recovery scenarios
-
-**Commands:**
-```bash
-# Run all system tests
-make test-system
-
-# Or using Go directly
-go test ./test/system/ -v -timeout 10m
-```
-
-**Test Scenarios:**
-
-**New Project Setup:**
-```bash
-# Test complete project initialization
-go test ./test/system/ -run TestNewProjectWorkflow -v
-```
-
-**Configuration Update Cycle:**
-```bash
-# Test full update workflow with conflicts
-go test ./test/system/ -run TestConfigUpdateWithConflicts -v
-```
-
-**Development Workflow:**
-```bash
-# Test sandbox development and upstreaming
-go test ./test/system/ -run TestDevelopmentWorkflow -v
-```
-
-**Migration Scenarios:**
-```bash
-# Test legacy migration scenarios
-go test ./test/system/ -run TestLegacyMigration -v
-```
-
----
-
-## Complete Test Suite
-
-### `make test-all`
-
-Runs the complete testing protocol in sequence:
+### make test-all
+Executes all test levels in sequence with proper setup/teardown:
 
 ```bash
 make test-all
 ```
 
-**Process:**
-1. **Build Verification**: Ensures clean build
-2. **L0 Smoke Tests**: Basic functionality validation
-3. **L1 Unit Tests**: Component testing
-4. **L2 Integration Tests**: Component interaction testing
-5. **L3 System Tests**: End-to-end validation
-6. **Coverage Report**: Test coverage analysis
-7. **Performance Benchmarks**: Performance regression checks
-
-**Target Execution Time**: < 15 minutes
-**Success Criteria**: All test levels pass with >80% coverage
-
----
-
-## Specialized Testing
-
-### Guard and Hook Testing
-
-**Pre-commit Hook Validation:**
+**Equivalent to:**
 ```bash
-# Test hook installation
-go test ./internal/cmd/ -run TestGuardInstallHook -v
+# L0: Unit tests
+go test -short ./...
 
-# Test hook execution
-go test ./internal/integration/ -run TestGuardExecution -v
+# L1: Integration tests  
+go test -run Integration ./...
 
-# Manual hook testing
-claude-wm-cli guard install-hook
-echo '{"invalid": json}' > test.json
-git add test.json
-git commit -m "Test commit"  # Should fail
+# L2: System tests
+go test -tags=system ./test/system
+
+# L3: Acceptance tests
+go test -tags=acceptance ./test/acceptance
+
+# Generate combined coverage report
+go tool cover -html=coverage-combined.out
 ```
 
-**JSON Validation:**
+### Parallel Execution
 ```bash
-# Test JSON validator hooks
-go test ./internal/validation/ -run TestJSONValidator -v
+# Run tests in parallel (faster)
+make test-parallel
 
-# Manual validation
-claude-wm-cli guard check
+# Equivalent to:
+go test -short -p 4 ./...         # L0 with 4 cores
+go test -run Integration -p 2 ./...  # L1 with 2 cores
+go test -tags=system ./test/system   # L2 sequential
+go test -tags=acceptance ./test/acceptance  # L3 sequential
 ```
 
-### Configuration Testing
+## Test Scenarios by Component
 
-**3-Way Merge Testing:**
+### Configuration Management Tests
+
+#### config install
 ```bash
-# Test merge scenarios
-go test ./internal/update/ -run TestMergePlanning -v
+# L1: Integration
+go test -run TestConfigInstall ./internal/config
 
-# Test conflict detection
-go test ./internal/update/ -run TestConflictDetection -v
+# L2: System
+go test -tags=system -run TestConfigInstallWorkflow ./test/system
 ```
 
-**Atomic Operations:**
+**Test scenarios:**
+- Fresh install to empty directory
+- Install with existing .claude/ (conflict handling)
+- Install with --force flag
+- Install with --dry-run preview
+- Atomic failure recovery
+
+#### config status
 ```bash
-# Test atomic file operations
-go test ./internal/fsutil/ -run TestAtomicOperations -v
+# L0: Unit
+go test -run TestDiffEngine ./internal/diff
 
-# Test backup and restore
-go test ./internal/ziputil/ -run TestBackupRestore -v
+# L1: Integration  
+go test -run TestConfigStatus ./internal/config
 ```
 
-### Performance Testing
+**Test scenarios:**
+- No differences (clean state)
+- Files added in upstream
+- Files modified in local
+- Files deleted in upstream
+- Complex 3-way merge scenarios
 
-**Benchmarks:**
+#### config update
 ```bash
-# Run performance benchmarks
-go test ./internal/diff/ -bench=. -benchmem
-go test ./internal/config/ -bench=. -benchmem
+# L1: Integration
+go test -run TestConfigUpdate ./internal/config
+go test -run TestThreeWayMerge ./internal/update
 
-# Specific benchmarks
-go test ./internal/diff/ -bench=BenchmarkDiffTrees -v
+# L2: System
+go test -tags=system -run TestUpdateWorkflow ./test/system
 ```
 
-**Load Testing:**
+**Test scenarios:**
+- Simple apply (no conflicts)
+- Merge conflicts requiring resolution
+- Partial updates with --only flag
+- Updates with --allow-delete
+- Backup creation and restoration
+
+### Development Tests
+
+#### dev sandbox
 ```bash
-# Test with large file sets
-go test ./test/performance/ -run TestLargeFileSet -v
+# L1: Integration
+go test -run TestDevSandbox ./internal/cmd
 
-# Memory usage testing
-go test ./internal/diff/ -run TestMemoryUsage -v
+# L2: System
+go test -tags=system -run TestSandboxWorkflow ./test/system
 ```
 
----
+**Test scenarios:**
+- Create sandbox from upstream
+- Sandbox isolation verification
+- Partial sandbox with --only
+- Sandbox overwrite with --force
 
-## Manual Testing Scenarios
-
-### Quick Validation (5 minutes)
-
-For rapid validation during development:
-
+#### dev sandbox diff
 ```bash
-# 1. Basic functionality
-claude-wm-cli --version
-claude-wm-cli --help
-
-# 2. Configuration workflow
-cd /tmp/test-project
-claude-wm-cli config install
-claude-wm-cli config status
-claude-wm-cli config update --dry-run
-
-# 3. Sandbox workflow
-claude-wm-cli dev sandbox
-echo "test change" >> .wm/sandbox/claude/test.md
-claude-wm-cli dev sandbox diff
-
-# 4. Guard system
-claude-wm-cli guard check
+# L1: Integration
+go test -run TestSandboxDiff ./internal/cmd
 ```
 
-### Comprehensive Validation (15 minutes)
+**Test scenarios:**
+- Diff display formatting
+- Apply changes to baseline
+- Selective apply with --only
+- File deletion with --allow-delete
 
-For thorough manual validation:
+### Guard System Tests
 
+#### guard check
 ```bash
-# Setup test environment
-TEST_DIR=$(mktemp -d)
-cd "$TEST_DIR"
+# L0: Unit
+go test -run TestGuardRules ./internal/guard
 
-# 1. Fresh installation
-claude-wm-cli config install
-ls -la .claude/ .wm/
-
-# 2. Status and updates
-claude-wm-cli config status
-claude-wm-cli config update --dry-run
-claude-wm-cli config update
-
-# 3. Sandbox development
-claude-wm-cli dev sandbox
-cd .wm/sandbox/claude/
-echo "# Test modification" >> agents/test-agent.md
-cd - 
-claude-wm-cli dev sandbox diff
-claude-wm-cli dev sandbox diff --apply --dry-run
-
-# 4. Migration testing (if legacy exists)
-# mkdir .claude-wm/system -p
-# echo "legacy content" > .claude-wm/system/legacy.json
-# claude-wm-cli config migrate-legacy --dry-run
-
-# 5. Guard installation
-claude-wm-cli guard install-hook
-claude-wm-cli guard check
-
-# Cleanup
-rm -rf "$TEST_DIR"
+# L1: Integration
+go test -run TestGuardCheck ./internal/integration
 ```
 
----
+**Test scenarios:**
+- Valid changes (no violations)
+- Unauthorized writes to upstream space
+- Boundary enforcement validation
+- Git working tree scanning
 
-## Test Data and Fixtures
-
-### Test Directory Structure
-
-Tests use standardized fixtures in `testdata/`:
-
-```
-testdata/
-├── configs/
-│   ├── minimal/          # Minimal valid configuration
-│   ├── complex/          # Complex multi-file configuration
-│   └── invalid/          # Invalid configurations for error testing
-├── legacy/
-│   ├── claude-wm-v1/     # Legacy .claude-wm structure
-│   └── claude-wm-v2/     # Updated legacy structure
-└── scenarios/
-    ├── fresh-install/    # Clean installation scenario
-    ├── existing-config/  # Existing configuration scenario
-    └── migration/        # Migration scenarios
+#### guard install-hook
+```bash
+# L2: System
+go test -tags=system -run TestGuardHook ./test/system
 ```
 
-### Test Utilities
+**Test scenarios:**
+- Hook installation to .git/hooks/
+- Hook execution during git commit
+- Hook bypass with --no-verify
+- Hook updates and versioning
 
-**Temporary Environment Creation:**
+## Test Environment Setup
+
+### TempDir Pattern (L1/L2)
 ```go
-func setupTestEnv(t *testing.T) string {
-    dir := t.TempDir()
-    // Setup test environment
-    return dir
+// Standard test directory setup
+func setupTestEnvironment(t *testing.T) string {
+    tempDir := t.TempDir() // Automatically cleaned up
+    
+    // Create test structure
+    testDirs := []string{
+        ".claude",
+        ".wm/baseline", 
+        ".wm/sandbox/claude",
+    }
+    
+    for _, dir := range testDirs {
+        err := os.MkdirAll(filepath.Join(tempDir, dir), 0755)
+        require.NoError(t, err)
+    }
+    
+    return tempDir
 }
 ```
 
-**Configuration Fixtures:**
+### Git Repository Setup (L2/L3)
 ```go
-func loadTestConfig(name string) (*Config, error) {
-    path := filepath.Join("testdata", "configs", name)
-    return LoadConfig(path)
+// Git repository for integration tests
+func setupGitRepository(t *testing.T, dir string) {
+    cmd := exec.Command("git", "init")
+    cmd.Dir = dir
+    err := cmd.Run()
+    require.NoError(t, err)
+    
+    // Configure git for testing
+    configCmds := [][]string{
+        {"git", "config", "user.name", "Test User"},
+        {"git", "config", "user.email", "test@example.com"},
+        {"git", "config", "init.defaultBranch", "main"},
+    }
+    
+    for _, cmdArgs := range configCmds {
+        cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+        cmd.Dir = dir
+        err := cmd.Run()
+        require.NoError(t, err)
+    }
 }
 ```
 
----
+## Performance Testing
+
+### Benchmark Tests
+```bash
+# Run benchmarks
+go test -bench=. ./internal/diff
+go test -bench=. ./internal/config
+go test -bench=BenchmarkThreeWayMerge ./internal/update
+```
+
+**Performance targets:**
+- Config status: <200ms for 100 files
+- 3-way merge: <500ms for 100 files
+- Sandbox creation: <1s for full upstream
+- Backup creation: <2s for 10MB content
+
+### Load Testing
+```bash
+# Stress test with large configurations
+go test -tags=stress -run TestLargeConfiguration ./test/stress
+
+# Concurrent operations
+go test -tags=stress -run TestConcurrentOperations ./test/stress
+```
+
+## Error Scenario Testing
+
+### Network Isolation
+```bash
+# Test without network access
+GO_TEST_OFFLINE=true go test ./...
+```
+
+### Filesystem Errors
+```bash
+# Test with readonly filesystem
+GO_TEST_READONLY=true go test ./test/system
+
+# Test with disk full conditions
+GO_TEST_DISKFULL=true go test ./test/system
+```
+
+### Interrupted Operations
+```bash
+# Test atomic operation recovery
+go test -run TestAtomicRecovery ./internal/update
+go test -run TestInterruptedBackup ./internal/backup
+```
 
 ## Continuous Integration
 
-### GitHub Actions Workflow
-
-The CI pipeline runs all test levels:
-
+### GitHub Actions Integration
 ```yaml
-name: Test Suite
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.21'
-      - run: make test-all
-      - run: make coverage-report
+# .github/workflows/test.yml
+- name: Run L0-L2 Tests
+  run: make test-ci
+  
+- name: Run L3 Acceptance Tests  
+  run: make test-acceptance
+  if: github.event_name == 'pull_request'
 ```
 
-### Coverage Requirements
-
-**Minimum Coverage Targets:**
-- **Overall**: 80%
-- **Domain Layer**: 90%
-- **Critical Paths**: 95%
-- **Error Handling**: 85%
-
-**Coverage Commands:**
+### Test Matrix
 ```bash
-# Generate coverage report
-make coverage
+# Cross-platform testing
+make test-all GOOS=linux
+make test-all GOOS=darwin 
+make test-all GOOS=windows
 
-# View HTML coverage report
-make coverage-html
-open coverage.html
+# Go version matrix
+make test-all GO_VERSION=1.19
+make test-all GO_VERSION=1.20
+make test-all GO_VERSION=1.21
 ```
 
----
+## Test Data Management
 
-## Debugging and Troubleshooting
+### Fixtures
+```
+test/fixtures/
+├── configs/
+│   ├── minimal/
+│   ├── complete/
+│   └── conflicted/
+├── repositories/
+│   ├── clean/
+│   ├── dirty/
+│   └── legacy/
+└── scenarios/
+    ├── install/
+    ├── update/
+    └── migrate/
+```
 
-### Test Debugging
-
-**Verbose Test Output:**
+### Test Utilities
 ```bash
-go test ./internal/config/ -v -run TestSpecificFunction
+# Generate test fixtures
+go run ./test/tools/generate-fixtures
+
+# Validate test data
+go run ./test/tools/validate-fixtures
+
+# Clean test artifacts
+make clean-test
 ```
 
-**Test with Debug Logging:**
+## Debugging Failed Tests
+
+### Verbose Test Output
 ```bash
-go test ./internal/config/ -v -args -debug
+# Debug specific test
+go test -v -run TestConfigUpdate ./internal/config
+
+# Debug with race detection
+go test -race -run TestConcurrentOperations ./test/system
+
+# Debug with CPU profiling
+go test -cpuprofile cpu.prof -run TestLargeConfig ./test/stress
 ```
 
-**Race Condition Detection:**
+### Test Artifacts
 ```bash
-go test ./internal/... -race
+# Preserve test directories for inspection
+GO_TEST_PRESERVE=true go test -run TestFailingScenario ./test/system
+
+# Enable debug logging during tests
+GO_TEST_DEBUG=true go test -v ./...
 ```
 
-### Common Issues
-
-**Temporary Directory Cleanup:**
+### Common Debugging
 ```bash
-# Find leftover test directories
-find /tmp -name "claude-wm-test-*" -type d
+# Check test coverage gaps
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out | grep -E '(0.0%|[1-7][0-9]\.[0-9]%)'
 
-# Clean up
-rm -rf /tmp/claude-wm-test-*
+# Find flaky tests
+for i in {1..10}; do go test -run TestSuspiciousTest ./... || echo "Failed on run $i"; done
 ```
-
-**Port Conflicts (Integration Tests):**
-```bash
-# Check for port usage
-lsof -i :8080
-
-# Kill conflicting processes
-pkill -f "claude-wm-test"
-```
-
-**File Permission Issues:**
-```bash
-# Reset permissions in test directory
-chmod -R 755 testdata/
-```
-
----
-
-## Performance Monitoring
-
-### Benchmark Tracking
-
-Regular benchmarking ensures performance stability:
-
-```bash
-# Run benchmarks with memory profiling
-go test ./internal/diff/ -bench=. -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof
-
-# Analyze profiles
-go tool pprof cpu.prof
-go tool pprof mem.prof
-```
-
-### Performance Regression Detection
-
-**Automated Performance Testing:**
-```bash
-# Compare benchmark results
-go test ./internal/... -bench=. -count=5 > new.bench
-benchcmp old.bench new.bench
-```
-
-**Memory Usage Monitoring:**
-```bash
-# Monitor memory usage during tests
-go test ./internal/config/ -memprofile=mem.prof
-go tool pprof -web mem.prof
-```
-
----
-
-## Test Maintenance
-
-### Regular Maintenance Tasks
-
-**Weekly:**
-- Review test coverage reports
-- Update test data fixtures
-- Performance regression analysis
-
-**Monthly:**
-- Audit test execution times
-- Update integration test scenarios
-- Review and update test documentation
-
-**Per Release:**
-- Full system test validation
-- Cross-platform testing
-- Performance benchmark validation
-- Test data cleanup and updates
-
-### Test Quality Metrics
-
-**Target Metrics:**
-- **Test Execution Time**: L0 <30s, L1 <2m, L2 <5m, L3 <10m
-- **Test Reliability**: >99% pass rate
-- **Coverage**: >80% overall, >90% critical paths
-- **Maintainability**: Tests updated with code changes

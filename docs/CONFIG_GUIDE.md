@@ -1,480 +1,301 @@
-# Configuration Management Guide
+# Configuration Guide
 
-This guide provides comprehensive documentation for the configuration management system in Claude WM CLI.
+Complete reference for claude-wm-cli configuration management commands and flags.
 
-## Overview
+## Command Reference
 
-The configuration system uses a **package manager approach** with three-way merge capabilities, baseline tracking, and atomic operations. It manages configuration across multiple spaces with strong consistency guarantees.
+### config install
+Install initial system configuration to .claude/ and .wm/baseline/
 
-## Configuration Spaces
-
-### Upstream (Embedded)
-- **Source**: `internal/config/system/` (embedded in binary)
-- **Purpose**: System defaults and templates
-- **Access**: Read-only
-- **Updates**: Only through binary updates
-
-### Baseline (`.wm/baseline/`)
-- **Purpose**: Installation snapshot for diff calculations
-- **Immutability**: Never modified after `config install`
-- **Use**: Reference point for 3-way merges
-
-### Local (`.claude/`)
-- **Purpose**: Runtime configuration for Claude Code
-- **Management**: Auto-generated from templates and user overrides
-- **Updates**: Via `config update` and `config sync`
-
-### Sandbox (`.wm/sandbox/claude/`)
-- **Purpose**: Isolated development environment
-- **Use**: Safe experimentation without affecting production
-
-## Commands Reference
-
-### `config install`
-
-Installs initial system configuration from embedded templates.
-
-**Syntax:**
 ```bash
-claude-wm-cli config install
-```
+claudewm config install [flags]
 
-**Behavior:**
-- Copies embedded system templates to `.claude/` and `.wm/baseline/`
-- Creates `.wm/meta.json` with installation metadata
-- Fails if configuration already exists
-
-**Side Effects:**
-| Directory | Action |
-|-----------|---------|
-| `.claude/` | ✅ Create from templates |
-| `.wm/baseline/` | ✅ Create from templates |
-| `.wm/meta.json` | ✅ Create metadata |
-
-**Example:**
-```bash
-$ claude-wm-cli config install
-📦 Installing system configuration...
-   → Copying to /project/.claude
-   → Copying to /project/.wm/baseline
-   → Creating /project/.wm/meta.json
-✅ System configuration installed successfully!
-```
-
----
-
-### `config status`
-
-Shows differences between upstream, baseline, and local configurations.
-
-**Syntax:**
-```bash
-claude-wm-cli config status
-```
-
-**Output Format:**
-```
-📊 Configuration Status
-======================
-
-🔄 Upstream vs Baseline (changes since installation):
-   + new-file.json
-   M modified-file.json
-   - deleted-file.json
-
-📝 Baseline vs Local (your modifications):
-   M settings.json
-   + custom-config.json
-```
-
-**Change Symbols:**
-- `+` : New file
-- `M` : Modified file
-- `-` : Deleted file
-
-**Side Effects:**
-- Read-only operation
-- No file system changes
-
----
-
-### `config update`
-
-Performs 3-way merge update with conflict detection.
-
-**Syntax:**
-```bash
-claude-wm-cli config update [flags]
+# Examples:
+claudewm config install                    # Standard install
+claudewm config install --force            # Overwrite existing
+claudewm config install --dry-run          # Preview install
 ```
 
 **Flags:**
-- `--dry-run` : Show planned changes without applying
-- `--no-backup` : Skip backup creation (not recommended)
+- `--force` - Overwrite existing configuration
+- `--dry-run` - Preview changes without applying
+- `--no-backup` - Skip backup creation
 
-**3-Way Merge Logic:**
+### config status
+Show configuration differences between upstream, baseline, and local
 
-| Upstream | Baseline | Local | Action |
-|----------|----------|--------|---------|
-| Changed | Unchanged | Unchanged | Apply upstream change |
-| Unchanged | Unchanged | Changed | Preserve local change |
-| Changed | Unchanged | Changed | **CONFLICT** - Manual resolution required |
-| Unchanged | Unchanged | Unchanged | No action |
-
-**Examples:**
-
-**Dry Run:**
 ```bash
-$ claude-wm-cli config update --dry-run
-📋 Update Plan (dry-run)
-========================
-{
-  "merge": [
-    {
-      "path": "settings.json",
-      "action": "apply",
-      "reason": "upstream_change_no_local_conflict"
-    }
-  ]
-}
-💡 Run without --dry-run to apply 1 changes
-```
+claudewm config status [flags]
 
-**Apply Changes:**
-```bash
-$ claude-wm-cli config update
-🔄 Calculating 3-way merge plan...
-📦 Creating backup...
-   ✓ Backup created: .wm/backups/2024-01-15_14-30-25.zip
-🔄 Applying 3 changes...
-🎉 Update completed successfully!
-```
-
-**Side Effects:**
-| Directory | Action |
-|-----------|---------|
-| `.claude/` | ✅ Update with merged changes |
-| `.wm/backups/` | ✅ Create backup (unless `--no-backup`) |
-
----
-
-### `config sync`
-
-Regenerates runtime configuration from templates and user overrides.
-
-**Syntax:**
-```bash
-claude-wm-cli config sync
-```
-
-**Process:**
-1. Merge system templates with user overrides
-2. Generate runtime configuration in `.claude/`
-3. Apply path corrections and validations
-
-**Use Cases:**
-- After manual template modifications
-- Resolving configuration inconsistencies
-- Regenerating after corruption
-
-**Side Effects:**
-| Directory | Action |
-|-----------|---------|
-| `.claude/` | ✅ Regenerate all configuration |
-
----
-
-### `config upgrade`
-
-Updates system templates while preserving user customizations.
-
-**Syntax:**
-```bash
-claude-wm-cli config upgrade
-```
-
-**Process:**
-1. Reinstall system templates
-2. Regenerate runtime configuration
-3. Preserve user customizations in overlay
-
-**Side Effects:**
-| Directory | Action |
-|-----------|---------|
-| `.claude/` | ✅ Update system parts, preserve user parts |
-
----
-
-### `config show`
-
-Displays effective runtime configuration.
-
-**Syntax:**
-```bash
-claude-wm-cli config show [file]
-```
-
-**Arguments:**
-- `file` (optional): Specific configuration file to display
-
-**Examples:**
-
-**Show Overview:**
-```bash
-$ claude-wm-cli config show
-📋 Configuration Overview:
-
-   System: ✅ 45 items
-   User: ✅ 12 items  
-   Runtime: ✅ 57 items
-```
-
-**Show Specific File:**
-```bash
-$ claude-wm-cli config show settings.json
-📄 settings.json (runtime):
-{
-  "version": "1.0.0",
-  "hooks": {
-    "PreToolUse": [],
-    "PostToolUse": ["post-write-json-validator-simple.sh"]
-  }
-}
-```
-
----
-
-### `config migrate-legacy`
-
-Migrates from legacy `.claude-wm/` structure to new `.wm/` structure.
-
-**Syntax:**
-```bash
-claude-wm-cli config migrate-legacy [flags]
+# Examples:
+claudewm config status                     # Show all differences
+claudewm config status --verbose           # Detailed diff output
+claudewm config status --only commands/    # Filter by path pattern
 ```
 
 **Flags:**
-- `--dry-run` : Show migration plan without applying
-- `--archive` : Rename `.claude-wm` to `.claude-wm.bak` after migration
+- `--only <pattern>` - Show only matching files/directories
+- `--verbose` - Show detailed diff content
 
-**Migration Strategy:**
+### config update
+Update configuration with 3-way merge
 
-| Legacy Path | Category | New Path | Action |
-|-------------|----------|----------|--------|
-| `system/` | System | `baseline/` | Migrate |
-| `user/` | User | `user/` | Migrate |
-| `runtime/` | Runtime | — | Ignore (regenerated) |
-| `meta.json` | Meta | `meta.json` | Convert |
-| `cache/` | Cache | — | Ignore |
-| `backup/` | Backup | — | Ignore |
-
-**Examples:**
-
-**Analysis:**
 ```bash
-$ claude-wm-cli config migrate-legacy
-🔍 Legacy Configuration Migration Analysis
-═══════════════════════════════════════════
+claudewm config update [flags]
 
-📁 Legacy directory detected: .claude-wm
-
-📊 Migration Analysis Report
-═══════════════════════════
-
-📋 Summary:
-   • Files analyzed: 25
-   • Files to migrate: 15
-   • Files to ignore: 10
-   • Estimated size: 2.3 MB
-
-💡 Use --dry-run to preview without applying
+# Examples:
+claudewm config update --dry-run           # Preview all changes
+claudewm config update                      # Apply all changes
+claudewm config update --only agents/      # Update only agents/
+claudewm config update --no-backup         # Skip backup creation
+claudewm config update --allow-delete      # Allow file deletion
 ```
 
-**Dry Run:**
+**Flags:**
+- `--dry-run` - Preview changes without applying
+- `--no-backup` - Skip automatic backup creation
+- `--only <pattern>` - Update only matching files/patterns
+- `--allow-delete` - Allow deletion of files during update
+
+### config migrate-legacy
+Migrate from legacy .claude-wm to new .wm structure
+
 ```bash
-$ claude-wm-cli config migrate-legacy --dry-run
-🔍 Dry Run: What Would Be Applied
-═══════════════════════════════════
+claudewm config migrate-legacy [flags]
 
-   📄 CREATE system/settings.json.template → baseline/settings.json.template
-   📄 CREATE user/custom.json → user/custom.json
-   🔄 CONVERT meta.json → meta.json
-   ⏭️ IGNORE runtime/settings.json (runtime files regenerated)
-
-📊 Summary: 12 actions would be applied
-💡 Remove --dry-run to actually apply these changes.
+# Examples:
+claudewm config migrate-legacy             # Standard migration
+claudewm config migrate-legacy --dry-run   # Preview migration
+claudewm config migrate-legacy --backup-dir ./old-config
 ```
 
-**Apply Migration:**
+**Flags:**
+- `--dry-run` - Preview migration without applying
+- `--backup-dir <path>` - Custom backup location for old config
+
+## Development Commands
+
+### dev sandbox
+Create testing sandbox from upstream system files
+
 ```bash
-$ claude-wm-cli config migrate-legacy --archive
-🚀 Applying Changes: .claude-wm → .wm
-═══════════════════════════════════════
+claudewm dev sandbox [flags]
 
-📄 Copying system/settings.json.template
-📄 Copying user/custom.json
-🔄 Converting meta.json
-
-📦 Archiving legacy directory...
-   ✓ Archived to: .claude-wm.bak
-
-🎉 Migration Completed Successfully!
-
-📋 Migration Summary:
-   • 12 files migrated
-   • 8 files ignored
-   • Legacy structure: archived to .claude-wm.bak
-   • New structure: .wm
+# Examples:
+claudewm dev sandbox                       # Create full sandbox
+claudewm dev sandbox --only commands/     # Sandbox specific path
+claudewm dev sandbox --force              # Overwrite existing
 ```
 
-**Side Effects:**
-| Directory | Action |
-|-----------|---------|
-| `.wm/` | ✅ Create with migrated content |
-| `.wm/meta.json` | ✅ Create migration metadata |
-| `.claude-wm` | ⚠️ Rename to `.claude-wm.bak` (if `--archive`) |
+**Flags:**
+- `--force` - Overwrite existing sandbox
+- `--only <pattern>` - Sandbox only matching files
 
-## Advanced Usage
+### dev sandbox diff
+Compare sandbox with baseline and optionally apply changes
 
-### Pattern Filtering
-
-Several commands support pattern-based filtering:
-
-**Glob Patterns:**
 ```bash
-# Apply only agent-related changes
-claude-wm-cli dev sandbox diff --apply --only "agents/**"
+claudewm dev sandbox diff [flags]
 
-# Multiple patterns
-claude-wm-cli dev sandbox diff --apply --only "agents/**" --only "commands/**"
+# Examples:
+claudewm dev sandbox diff                  # Show differences
+claudewm dev sandbox diff --apply          # Apply all changes
+claudewm dev sandbox diff --apply --only cmd/
+claudewm dev sandbox diff --allow-delete   # Allow deletions
 ```
 
-**Pattern Syntax:**
-- `*` : Matches any characters within a single directory level
-- `**` : Matches any characters across multiple directory levels
-- `?` : Matches any single character
-- `[abc]` : Matches any character in brackets
+**Flags:**
+- `--apply` - Apply changes to baseline after showing diff
+- `--only <pattern>` - Apply only matching files/patterns
+- `--allow-delete` - Allow file deletion during sync
+
+## Guard Commands
+
+### guard check
+Validate current changes against writing restrictions
+
+```bash
+claudewm guard check [flags]
+
+# Examples:
+claudewm guard check                       # Check all changes
+claudewm guard check --fix                # Auto-fix violations
+claudewm guard check --strict              # Strict mode
+```
+
+**Flags:**
+- `--fix` - Automatically fix detected violations
+- `--strict` - Enable strict validation mode
+
+### guard install-hook
+Install git pre-commit validation hook
+
+```bash
+claudewm guard install-hook [flags]
+
+# Examples:
+claudewm guard install-hook                # Install hook
+claudewm guard install-hook --force        # Overwrite existing
+```
+
+**Flags:**
+- `--force` - Overwrite existing pre-commit hook
+
+## File Ownership Matrix
+
+| Command | Reads From | Writes To | Backup Created |
+|---------|------------|-----------|----------------|
+| `config install` | A (internal/config/system) | B (.wm/baseline), L (.claude) | Yes |
+| `config status` | A, B, L | - | No |
+| `config update` | A, B | B, L | Yes (unless --no-backup) |
+| `config migrate-legacy` | .claude-wm/ | B, L | Yes |
+| `dev sandbox` | A | S (.wm/sandbox/claude) | No |
+| `dev sandbox diff` | S, B | B (if --apply) | Yes (if --apply) |
+| `guard check` | Git working tree | - | No |
+| `guard install-hook` | - | .git/hooks/ | Yes |
+
+**Legend:**
+- **A**: Upstream (internal/config/system)
+- **B**: Baseline (.wm/baseline)
+- **L**: Local (.claude)
+- **S**: Sandbox (.wm/sandbox/claude)
+
+## Flag Usage Patterns
+
+### Safe Preview Workflow
+```bash
+# Always preview first
+claudewm config update --dry-run
+
+# Review output, then apply
+claudewm config update
+```
+
+### Selective Updates
+```bash
+# Update only commands
+claudewm config update --only commands/
+
+# Update multiple patterns
+claudewm config update --only "commands/,agents/"
+```
+
+### Development Workflow
+```bash
+# Create sandbox for experimentation
+claudewm dev sandbox
+
+# Make changes in .wm/sandbox/claude/...
+# Test changes
+
+# Preview integration
+claudewm dev sandbox diff
+
+# Apply to baseline
+claudewm dev sandbox diff --apply
+```
 
 ### Backup Management
-
-**Automatic Backups:**
-- Created before destructive operations
-- Stored in `.wm/backups/` as timestamped ZIP files
-- Include full `.claude/` directory state
-
-**Manual Backup Management:**
 ```bash
-# List backups
-ls -la .wm/backups/
+# Standard operation (creates backup)
+claudewm config update
 
-# Restore from backup (manual process)
-cd .wm/backups/
-unzip 2024-01-15_14-30-25.zip -d /tmp/restore
-# Manually copy desired files back
+# Skip backup for minor changes
+claudewm config update --no-backup
+
+# Backups stored in:
+# .wm/backups/YYYY-MM-DD_HH-MM-SS/
 ```
 
-### Conflict Resolution
+## Configuration Files
 
-When `config update` encounters conflicts:
+### Global Config
+```yaml
+# ~/.claude-wm-cli.yaml
+verbose: false
+debug: false
 
-1. **Identify Conflicts:**
-   ```bash
-   $ claude-wm-cli config update
-   ❌ Update failed: conflicts detected
-   
-   Conflicts:
-   - settings.json: both upstream and local modified
-   ```
+defaults:
+  timeout: 30
+  retries: 2
+  backup: true
 
-2. **Manual Resolution:**
-   - Edit conflicted files in `.claude/`
-   - Resolve conflicts by choosing desired state
-   - Run `config update` again
-
-3. **Force Strategies:**
-   ```bash
-   # Keep local changes (lose upstream updates)
-   git checkout HEAD -- .claude/settings.json
-   claude-wm-cli config sync
-   
-   # Accept upstream changes (lose local changes)
-   claude-wm-cli config update --force-upstream
-   ```
-
-### Integration with Development Workflow
-
-**Pre-commit Integration:**
-```bash
-# Install validation hook
-claude-wm-cli guard install-hook
-
-# Manual validation
-claude-wm-cli guard check
+spaces:
+  upstream: internal/config/system
+  baseline: .wm/baseline
+  local: .claude
+  sandbox: .wm/sandbox/claude
 ```
 
-**CI/CD Integration:**
-```bash
-# Validate configuration in CI
-claude-wm-cli config status
-claude-wm-cli config update --dry-run
-
-# Automated updates in CD
-claude-wm-cli config update --no-backup
+### Project Config
+```yaml
+# ./.claude-wm-cli.yaml
+project:
+  name: my-project
+  initialized: true
+  
+overrides:
+  backup: false  # Skip backups for this project
+  timeout: 60    # Longer timeout for heavy operations
 ```
 
-### Troubleshooting
+## Environment Variables
 
-**Common Issues:**
+- `CLAUDE_WM_VERBOSE=true` - Enable verbose output
+- `CLAUDE_WM_DEBUG=true` - Enable debug mode
+- `CLAUDE_WM_NO_BACKUP=true` - Skip backup creation globally
+- `CLAUDE_WM_TIMEOUT=60` - Default timeout in seconds
+- `CLAUDE_WM_CONFIG=/path/to/config` - Custom config file location
 
-1. **"Configuration already installed" Error:**
-   ```bash
-   # Remove existing installation
-   rm -rf .wm/ .claude/
-   claude-wm-cli config install
-   ```
+## Error Handling
 
-2. **"Baseline not found" Error:**
-   ```bash
-   # Reinstall baseline
-   claude-wm-cli config install
-   ```
+### Common Error Scenarios
 
-3. **Merge Conflicts:**
-   ```bash
-   # Check status first
-   claude-wm-cli config status
-   
-   # Resolve manually then retry
-   claude-wm-cli config update
-   ```
+**Conflict during update:**
+```bash
+$ claudewm config update
+❌ Merge conflict in .claude/agents/planner.md
+💡 Resolve manually and retry:
+   vim .claude/agents/planner.md
+   claudewm config update
+```
 
-4. **Corrupted Configuration:**
-   ```bash
-   # Regenerate from templates
-   claude-wm-cli config sync
-   
-   # Or restore from backup
-   # (manual restoration process)
-   ```
+**Invalid file ownership:**
+```bash
+$ claudewm guard check
+❌ Attempt to write outside permitted boundaries:
+   - internal/config/system/commands/test.md (Upstream space)
+💡 Use dev sandbox for system file modifications
+```
 
-### Best Practices
+**Missing baseline:**
+```bash
+$ claudewm config status
+❌ Baseline not found at .wm/baseline/
+💡 Run: claudewm config install
+```
 
-**For Users (Projects):**
-1. Always run `config status` before `config update`
-2. Use `--dry-run` to preview changes
-3. Never modify `.wm/baseline/` manually
-4. Keep backups of important customizations
-5. Use sandbox for experimental changes
+### Recovery Procedures
 
-**For Self-Mode (Repository Development):**
-1. Use `dev sandbox` for experimentation
-2. Apply changes selectively with `--only` patterns
-3. Test changes thoroughly before upstreaming
-4. Use `config migrate-legacy` when upgrading structure
-5. Validate with `guard check` before commits
+**Restore from backup:**
+```bash
+# List available backups
+ls .wm/backups/
 
-**For CI/CD:**
-1. Always use `--dry-run` in validation phases
-2. Use `--no-backup` in automated environments
-3. Implement proper error handling
-4. Log all configuration changes
-5. Validate before and after updates
+# Restore from specific backup
+cp -r .wm/backups/2025-08-13_10-30-15/.claude .claude
+```
+
+**Clean corrupted state:**
+```bash
+# Remove and reinstall
+rm -rf .claude .wm/baseline
+claudewm config install
+```
+
+**Reset sandbox:**
+```bash
+# Clean sandbox
+rm -rf .wm/sandbox/claude
+claudewm dev sandbox
+```
