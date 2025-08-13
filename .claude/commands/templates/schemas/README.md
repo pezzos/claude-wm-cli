@@ -1,3 +1,29 @@
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
+
+# /templates:schemas:README
+
+**Rôle**
+Gestionnaire schémas validation JSON avec documentation structures données et intégration workflow système.
+
+**Contexte**
+Schémas JSON Schema pour validation structure fichiers données générés par commandes workflow Claude WM CLI. Documentation schémas disponibles avec patterns validation et intégration workflow.
+
+**MCP à utiliser**
+- **serena** : analyser schémas existants et structure validation
+- **mem0** : mémoriser patterns validation efficaces
+
+**Objectif**
+Documenter système schémas validation JSON et guider intégration workflow pour validation données complète.
+
+**Spécification détaillée**
+
 # Schémas de Validation JSON
 
 Ce dossier contient les schémas JSON Schema pour valider la structure des fichiers de données générés par les commandes du workflow Claude WM CLI.
@@ -165,3 +191,97 @@ Lors de modifications des structures de données:
 4. **Versionner les changements breaking**
 
 Les schémas suivent le versioning sémantique et doivent maintenir la rétro-compatibilité autant que possible.
+
+**Bornes d'écriture**
+* Autorisé : documentation schémas, mise à jour patterns validation
+* Interdit : modification schémas sans tests compatibilité
+
+**Étapes**
+1. [serena] Analyser schémas existants et structure validation
+2. Documenter schémas disponibles et patterns
+3. Valider intégration workflow appropriée
+4. [mem0] Mémoriser patterns validation efficaces
+
+**Points de vigilance**
+- Documentation schémas complète et à jour
+- Patterns validation appropriés pour structures données
+- Intégration workflow systématique
+- Versioning sémantique et rétro-compatibilité
+
+**Tests/Validation**
+- Vérification complétude documentation schémas
+- Test patterns validation avec données existantes
+- Validation intégration workflow
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
+- 0: Success
+- 1: Needs iteration
+- 2: Blocked
+- 3: User input needed

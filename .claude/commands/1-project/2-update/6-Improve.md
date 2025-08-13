@@ -1,57 +1,163 @@
-# /6-Improve
-Execute systematic improvement initiatives based on challenge findings and continuous codebase optimization.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Systematic Challenge Process
-Based on findings from /1-project:2-update:2-Challenge, execute systematic improvements:
+# /1-project:2-update:6-Improve
 
-1. **Technical Debt Resolution**: Address identified code quality issues
-2. **Performance Optimization**: Implement performance improvements from analysis
-3. **Security Hardening**: Apply security recommendations from vulnerability assessment
-4. **Architecture Refactoring**: Execute structural improvements for better maintainability
-5. **Documentation Alignment**: Sync documentation with actual implementation
-6. **Dependency Optimization**: Update and optimize project dependencies
+**Rôle**
+Architecte d'amélioration systémique avec expertise en optimisation codebase et résolution de dette technique.
 
-## Challenge Questions Generation Process
+**Contexte**
+Exécution d'initiatives d'amélioration systématiques basées sur les findings du challenge et optimisation continue du codebase.
 
-### MCP-Powered Question Development
-1. **Pattern Analysis**: Use `mcp__consult7__consultation` to identify improvement opportunities
-2. **Historical Learning**: Use `mcp__mem0__search_coding_preferences` for past improvement outcomes
-3. **Best Practice Comparison**: Use `mcp__context7__` for current industry standards
-4. **Complex Issue Breakdown**: Use `mcp__sequential-thinking__` for systematic improvement planning
+**MCP à utiliser**
+- **consult7** : identifier opportunités d'amélioration via analyse patterns
+- **sequential-thinking** : planification systématique des améliorations complexes
+- **mem0** : rechercher outcomes améliorations passées et patterns succès
+- **context7** : comparer avec standards industrie actuels
+- **serena** : accéder aux findings du challenge précédent
 
-### Question Categories to Generate:
-- **Code Quality Questions**: "Why does this pattern exist? What are the alternatives?"
-- **Performance Questions**: "What are the bottlenecks? How can we optimize?"
-- **Security Questions**: "What are the vulnerabilities? How do we mitigate them?"
-- **Scalability Questions**: "How will this handle growth? What are the limits?"
-- **Maintainability Questions**: "How easy is this to modify? What makes it complex?"
-- **Integration Questions**: "How well do components work together? Where are the friction points?"
+**Objectif**
+Implémenter améliorations systématiques basées sur preuves pour optimiser santé long-terme du projet avec stratégies testing et rollback complètes.
 
-### Implementation Strategy
-1. **Prioritize by Impact**: Focus on changes that provide maximum benefit
-2. **Risk Assessment**: Evaluate potential negative impacts of changes
-3. **Incremental Approach**: Implement improvements in manageable chunks
-4. **Testing Integration**: Ensure all improvements are thoroughly tested
-5. **Documentation Updates**: Keep documentation current with changes
-6. **Learning Capture**: Store successful improvement patterns in mem0
+**Spécification détaillée**
 
-## Deliverables
-- **IMPROVEMENTS.md**: Detailed improvement plan with priorities and timelines
-- **IMPLEMENTATION.md**: Step-by-step implementation guide
-- **TESTING.md**: Comprehensive testing strategy for improvements
-- **ROLLBACK.md**: Rollback procedures for each improvement
+### Processus d'amélioration systématique
+Basé sur findings de /1-project:2-update:2-Challenge :
+1. **Résolution dette technique** : traiter problèmes qualité code identifiés
+2. **Optimisation performance** : implémenter améliorations de l'analyse
+3. **Durcissement sécurité** : appliquer recommandations assessment vulnérabilités
+4. **Refactoring architecture** : exécuter améliorations structurelles maintenabilité
+5. **Alignement documentation** : synchroniser doc avec implémentation réelle
+6. **Optimisation dépendances** : mettre à jour et optimiser dépendances projet
 
-## Quality Gates
-- All improvements must pass existing regression tests
-- New functionality must include appropriate test coverage
-- Performance improvements must be measurably validated
-- Security improvements must be verified through testing
-- Documentation must be updated to reflect all changes
+### Développement questions MCP-powered
+1. **Analyse patterns** : consult7 pour identifier opportunités amélioration
+2. **Apprentissage historique** : mem0 pour outcomes améliorations passées
+3. **Comparaison meilleures pratiques** : context7 pour standards industrie actuels
+4. **Décomposition issues complexes** : sequential-thinking pour planification systématique
 
-## Important
-Focus on systematic, evidence-based improvements that enhance long-term project health. Always include comprehensive testing and rollback strategies.
+### Catégories questions à générer
+- **Questions qualité code** : "Pourquoi ce pattern existe ? Quelles alternatives ?"
+- **Questions performance** : "Quels sont les goulots ? Comment optimiser ?"
+- **Questions sécurité** : "Quelles vulnérabilités ? Comment mitiger ?"
+- **Questions scalabilité** : "Comment gérer croissance ? Quelles limites ?"
+- **Questions maintenabilité** : "Facilité modification ? Sources complexité ?"
+- **Questions intégration** : "Collaboration composants ? Points friction ?"
 
-# Exit codes:
+### Stratégie implémentation
+1. **Prioriser par impact** : focus changements bénéfice maximum
+2. **Assessment risques** : évaluer impacts négatifs potentiels
+3. **Approche incrémentale** : implémenter améliorations par chunks gérables
+4. **Intégration testing** : assurer test exhaustif améliorations
+5. **Updates documentation** : maintenir doc courante avec changements
+6. **Capture learning** : stocker patterns amélioration réussie dans mem0
+
+### Quality gates
+- Améliorations doivent passer tests régression existants
+- Nouvelles fonctionnalités doivent inclure couverture test appropriée
+- Améliorations performance doivent être validées mesurables
+- Améliorations sécurité doivent être vérifiées par testing
+- Documentation doit être mise à jour pour refléter tous changements
+
+**Bornes d'écriture**
+* Autorisé : docs/1-project/*
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [serena] Lire findings /1-project:2-update:2-Challenge
+2. [consult7] Analyser opportunités amélioration codebase
+3. [mem0] Rechercher patterns amélioration réussie historiques
+4. [context7] Valider contre standards industrie actuels
+5. [sequential-thinking] Planifier stratégie implémentation systématique
+6. Prioriser améliorations par impact et risque
+7. Créer plan détaillé avec timelines et procédures rollback
+8. Générer deliverables documentation (IMPROVEMENTS.md, IMPLEMENTATION.md, TESTING.md, ROLLBACK.md)
+
+**Points de vigilance**
+- Focus améliorations systématiques basées preuves
+- Toujours inclure stratégies testing et rollback complètes
+- Améliorer santé long-terme projet vs gains court-terme
+- Capturer learning patterns pour réutilisation future
+
+**Tests/Validation**
+- Validation passage quality gates pour toutes améliorations
+- Vérification cohérence plan avec findings challenge
+- Contrôle faisabilité procédures rollback
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked

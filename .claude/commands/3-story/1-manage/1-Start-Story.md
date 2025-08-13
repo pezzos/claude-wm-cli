@@ -1,17 +1,137 @@
-# /1-Start-Story
-Choose next priority story and create docs/2-current-epic/current-story.json.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Steps
-1. Read docs/2-current-epic/stories.json and identify highest priority unstarted story (P0 > P1 > P2 > P3)
-2. Verify all story dependencies are marked complete
-3. Create docs/2-current-epic/current-story.json with selected story details
-4. Update docs/2-current-epic/stories.json: mark story as "🚧 In Progress - {date}"
-5. Extract technical tasks from story and update the tasks field in docs/2-current-epic/stories.json
+# /3-story:1-manage:1-Start-Story
 
-## Important
-Validate story dependencies are complete. Tasks are stored within the story in docs/2-current-epic/stories.json, not in a separate todo.json file.
+**Rôle**
+Gestionnaire de démarrage story avec expertise en sélection priorité et validation dépendances.
 
-# Exit codes:
+**Contexte**
+Sélection story priorité suivante et création docs/2-current-epic/current-story.json avec extraction tâches techniques.
+
+**MCP à utiliser**
+- **serena** : accéder aux fichiers stories.json pour sélection et mise à jour
+- **time** : horodater démarrage story pour tracking progression
+- **sequential-thinking** : décomposer story en tâches techniques structurées
+
+**Objectif**
+Initialiser story priorité avec validation dépendances, création current-story.json et extraction tâches techniques dans stories.json.
+
+**Spécification détaillée**
+
+### Processus sélection story
+1. **Sélection priorité** : lire docs/2-current-epic/stories.json et identifier story priorité plus haute non démarrée (P0 > P1 > P2 > P3)
+2. **Validation dépendances** : vérifier toutes dépendances story marquées complètes
+3. **Création contexte** : créer docs/2-current-epic/current-story.json avec détails story sélectionnée
+4. **Mise à jour statut** : mettre à jour docs/2-current-epic/stories.json : marquer story "🚧 In Progress - {date}"
+5. **Extraction tâches** : extraire tâches techniques depuis story et mettre à jour champ tasks dans stories.json
+
+### Gestion tâches
+- Tâches stockées dans story au sein de docs/2-current-epic/stories.json
+- PAS de fichier séparé todo.json
+- Décomposition technique basée story requirements
+- Tracking progression à l'intérieur structure story
+
+**Bornes d'écriture**
+* Autorisé : docs/2-current-epic/*
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [serena] Lire docs/2-current-epic/stories.json pour identifier stories disponibles
+2. Identifier story priorité plus haute non démarrée (P0 > P1 > P2 > P3)
+3. [serena] Vérifier toutes dépendances story marquées complètes
+4. [time] Générer timestamp pour marquage démarrage
+5. Créer docs/2-current-epic/current-story.json avec détails story
+6. [serena] Mettre à jour stories.json : marquer story "🚧 In Progress - {date}"
+7. [sequential-thinking] Extraire tâches techniques depuis story
+8. Mettre à jour champ tasks dans docs/2-current-epic/stories.json
+9. Valider conformité schema JSON
+
+**Points de vigilance**
+- Valider dépendances story complètes avant démarrage
+- Tâches stockées dans story au sein stories.json (pas todo.json séparé)
+- Respecter hiérarchie priorités P0 > P1 > P2 > P3
+- Horodater précisément démarrage pour tracking
+
+**Tests/Validation**
+- Vérification conformité schema current-story.json
+- Validation complétion dépendances story
+- Contrôle cohérence mise à jour stories.json
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked

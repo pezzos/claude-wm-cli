@@ -1,16 +1,145 @@
-# /2-Complete-Story
-Mark story complete and update docs/2-current-epic/stories.json status.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Steps
-1. Verify all tasks in the current story (within docs/2-current-epic/stories.json) are ✅ completed and acceptance criteria met
-2. Mark story as "✅ Completed" in docs/2-current-epic/stories.json with completion metrics
-3. Remove docs/2-current-epic/current-story.json to clear current selection
-4. Update IMPLEMENTATION.md with the story's implementation details
+# /3-story:1-manage:2-Complete-Story
 
-## Important
-Run tests and validate acceptance criteria before marking complete. Store lessons learned **with mem0**. Tasks are stored within docs/2-current-epic/stories.json, not in separate todo.json files.
+**Rôle**
+Gestionnaire de complétion story avec expertise en validation critères acceptation et capture learning.
 
-# Exit codes:
+**Contexte**
+Finalisation story avec validation complétion tâches, mise à jour statut et documentation implémentation.
+
+**MCP à utiliser**
+- **serena** : accéder aux fichiers story et mettre à jour statuts
+- **mem0** : stocker lessons learned pour réutilisation future
+- **time** : horodater complétion pour métriques tracking
+
+**Objectif**
+Valider complétion story avec critères acceptation, mettre à jour documentation implémentation et capturer learnings.
+
+**Spécification détaillée**
+
+### Processus complétion story
+1. **Validation tâches** : vérifier toutes tâches story actuelle (dans docs/2-current-epic/stories.json) sont ✅ complétées
+2. **Validation acceptation** : vérifier critères acceptation rencontrés
+3. **Exécution tests** : lancer tests et valider qualité avant marquage complet
+4. **Mise à jour statut** : marquer story "✅ Completed" dans stories.json avec métriques complétion
+5. **Nettoyage contexte** : supprimer docs/2-current-epic/current-story.json pour effacer sélection actuelle
+6. **Documentation implémentation** : mettre à jour IMPLEMENTATION.md avec détails implémentation story
+7. **Capture learning** : stocker lessons learned avec mem0
+
+### Quality gates
+- Toutes tâches story marquées ✅ completed
+- Critères acceptation validés
+- Tests exécutés avec succès
+- Documentation implémentation mise à jour
+- Lessons learned capturés pour apprentissage
+
+### Gestion tâches
+- Tâches stockées dans docs/2-current-epic/stories.json (pas todo.json séparés)
+- Validation complétion à l'intérieur structure story
+- Métriques complétion incluses dans mise à jour statut
+
+**Bornes d'écriture**
+* Autorisé : docs/2-current-epic/*, docs/1-project/IMPLEMENTATION.md
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [serena] Vérifier toutes tâches story actuelle dans docs/2-current-epic/stories.json sont ✅
+2. Valider critères acceptation story rencontrés
+3. Exécuter tests et valider qualité implémentation
+4. [time] Générer timestamp et métriques complétion
+5. [serena] Marquer story "✅ Completed" dans stories.json avec métriques
+6. [serena] Supprimer docs/2-current-epic/current-story.json
+7. [serena] Mettre à jour IMPLEMENTATION.md avec détails implémentation
+8. [mem0] Stocker lessons learned pour réutilisation future
+9. Valider conformité schema stories.json
+
+**Points de vigilance**
+- Lancer tests et valider critères acceptation avant marquage complet
+- Stocker lessons learned avec mem0 pour apprentissage continu
+- Tâches dans docs/2-current-epic/stories.json (pas todo.json séparés)
+- Capturer métriques complétion précises
+
+**Tests/Validation**
+- Vérification complétion toutes tâches story
+- Validation critères acceptation rencontrés
+- Contrôle conformité schema stories.json
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked

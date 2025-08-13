@@ -1,3 +1,29 @@
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
+
+# /tools:README
+
+**Rôle**
+Gestionnaire système validation JSON avec approches réactive et proactive pour conformité schémas données workflow.
+
+**Contexte**
+Système validation complète Claude WM CLI avec validation post-génération et enforcement pré-génération. Documentation outils validation, composants schémas et intégration workflow.
+
+**MCP à utiliser**
+- **serena** : analyser outils validation et intégration workflow
+- **mem0** : mémoriser patterns validation système efficaces
+
+**Objectif**
+Documenter système validation JSON complet et guider intégration workflow pour conformité schémas données.
+
+**Spécification détaillée**
+
 # JSON Schema Validation System
 
 A comprehensive validation system for Claude WM CLI that ensures all generated JSON files comply with their corresponding schemas.
@@ -290,3 +316,97 @@ When validation fails:
 ---
 
 This system ensures reliable, schema-compliant JSON generation throughout the Claude WM CLI workflow, preventing data integrity issues and reducing manual correction overhead.
+
+**Bornes d'écriture**
+* Autorisé : documentation outils validation, configuration intégration workflow
+* Interdit : modification outils validation sans tests complets
+
+**Étapes**
+1. [serena] Analyser outils validation existants et intégration workflow
+2. Documenter composants système et utilisation
+3. Valider intégration commandes workflow
+4. [mem0] Mémoriser patterns validation système efficaces
+
+**Points de vigilance**
+- Documentation complète outils validation disponibles
+- Intégration workflow systématique et transparente
+- Performance validation optimisée pour usage fréquent
+- Sécurité validation données sans faille
+
+**Tests/Validation**
+- Vérification fonctionnement outils validation
+- Test intégration workflow complète
+- Validation performance système validation
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
+- 0: Success
+- 1: Needs iteration
+- 2: Blocked
+- 3: User input needed

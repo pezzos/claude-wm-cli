@@ -1,16 +1,143 @@
-# /2-Status-Epic
-Analyze current epic progress and provide detailed status with next actions.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Steps
-1. Parse docs/2-current-epic/stories.json for story completion metrics
-2. Calculate velocity, complexity progress, and timeline estimates
-3. Identify blockers and risks from recent activity
-4. Display formatted progress with specific next command recommendations
+# /2-epic:2-manage:2-Status-Epic
 
-## Important
-Show visual progress bars. Highlight blockers requiring immediate attention. Suggest story prioritization adjustments if needed.
+**Rôle**
+Analyseur de progression épic avec expertise en calcul vélocité et identification blockers.
 
-# Exit codes:
+**Contexte**
+Analyse progression épic actuel avec statut détaillé, métriques vélocité et recommandations actions suivantes.
+
+**MCP à utiliser**
+- **serena** : parser docs/2-current-epic/stories.json pour métriques completion
+- **time** : calculer estimations timeline et progressions temporelles
+- **mem0** : comparer vélocité avec épics précédents pour benchmarking
+
+**Objectif**
+Fournir dashboard visuel progression épic avec barres progrès, identification blockers et suggestions priorisations ajustées.
+
+**Spécification détaillée**
+
+### Analyse progression épic
+1. **Métriques completion** : parser docs/2-current-epic/stories.json pour stats completion stories
+2. **Calculs vélocité** : calculer vélocité, progression complexité, estimations timeline
+3. **Identification risques** : identifier blockers et risques depuis activité récente
+4. **Recommandations** : afficher progression formatée avec recommandations commandes spécifiques
+
+### Indicateurs visuels requis
+- Barres progression visuelles pour stories et épic global
+- Highlight blockers nécessitant attention immédiate
+- Suggestions ajustements priorisation stories si nécessaire
+- Métriques vélocité avec comparaisons historiques
+
+### Dashboard elements
+- **Status overview** : progression globale épic (%)
+- **Story metrics** : completed/in-progress/pending counts
+- **Velocity tracking** : stories/semaine avec trend
+- **Complexity progress** : story points completed vs total
+- **Timeline estimates** : estimation completion basée vélocité
+- **Blocker alerts** : identification et priorité resolution
+
+**Bornes d'écriture**
+* Autorisé : docs/2-current-epic/*
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [serena] Parser docs/2-current-epic/stories.json pour métriques completion
+2. [time] Calculer vélocité, progression complexité, estimations timeline
+3. [mem0] Comparer métriques avec épics précédents pour context
+4. Identifier blockers et risques depuis activité récente
+5. Générer barres progression visuelles
+6. Highlighter blockers nécessitant attention immédiate
+7. Formuler recommandations commandes spécifiques
+8. Suggérer ajustements priorisation si approprié
+
+**Points de vigilance**
+- Afficher barres progression visuelles claires
+- Highlighter blockers nécessitant attention immédiate
+- Suggérer ajustements priorisation stories si nécessaire
+- Fournir recommandations commandes actionable
+
+**Tests/Validation**
+- Vérification exactitude calculs métriques
+- Validation cohérence estimations timeline
+- Contrôle conformité schema stories.json
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked

@@ -1,87 +1,152 @@
-# /4-Validate-Task
-Execute comprehensive testing with intelligent user journey analysis.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Pre-Validation Intelligence (MANDATORY)
-1. **Load Test Patterns**: Use `mcp__mem0__search_coding_preferences` to find validation approaches
-2. **Analyze Complex Journeys**: Use `mcp__sequential-thinking__` for complex user journeys decomposition
-3. **Get Testing Documentation**: Use `mcp__context7__` for current testing best practices
+# /4-task:2-execute:4-Validate-Task
 
-## Validation Steps
-1. **Review Test Results**: Analyze automated test results (pre-executed by preprocessing)
-2. **MCP UI Testing**: Execute Playwright/Puppeteer automated UI tests when applicable
-3. **Complex Journey Testing**: Use `mcp__sequential-thinking__` to break down and validate multi-step user workflows
-4. **Manual Test Scenarios**: Execute remaining manual test scenarios from docs/3-current-task/TEST.md
-5. **Performance & Security**: Review performance baselines and security requirements (pre-checked by preprocessing)
-6. **Visual Regression**: Compare UI screenshots for consistency (when UI tests exist)
+**Rôle**
+Assistant de validation complète avec analyse intelligente des parcours utilisateur complexes.
 
-## Complex User Journey Analysis
-For user journeys involving multiple steps or complex interactions:
-- **Use `mcp__sequential-thinking__`** to decompose into testable steps
-- **Map Dependencies**: Identify step-by-step dependencies and validation points  
-- **Error Path Testing**: Test failure scenarios at each step
-- **Recovery Testing**: Validate system recovery from failures
-- **End-to-End Validation**: Ensure complete journey integrity
+**Contexte**
+Exécution de tests compréhensifs avec intelligence pré-validation, analyse de parcours utilisateur complexes et gestion d'itération basée sur les résultats.
 
-## Iteration Management
-Review iteration status from preprocessing:
-- If tests fail and iterations < 3: update docs/3-current-task/iterations.json and provide guidance for next iteration
-- If failure AND iterations = 3: document the blockage in docs/3-current-task/iterations.json, stop and ask for help
-- If success: validate completion status (pre-updated by preprocessing) and provide final validation report
+**MCP à utiliser**
+- **mem0** : charger patterns de validation et capturer approches efficaces
+- **sequential-thinking** : décomposer parcours utilisateur complexes en étapes testables
+- **context7** : obtenir meilleures pratiques de test actuelles
+- **playwright/puppeteer** : tests UI automatisés (si applicable)
 
-## Learning Capture
-- **Store Successful Patterns**: Use `mcp__mem0__add_coding_preference` to capture effective validation approaches
-- **Document Journey Insights**: Save complex user journey testing strategies
-- **Performance Baselines**: Record performance metrics for future regression testing
+**Objectif**
+Exécuter validation complète incluant tests automatisés, parcours utilisateur complexes, scénarios manuels avec gestion d'itération et capture d'apprentissage.
 
-## Important
-All tests must pass before proceeding. Use sequential-thinking for complex validation scenarios. Document any iteration lessons learned and successful patterns.
+**Spécification détaillée**
 
-## EXIT CODE REQUIREMENTS
-**CRITICAL**: You MUST exit with the appropriate code based on validation results:
+### Intelligence pré-validation (MANDATORY)
+1. **Patterns de test** : Charger approches de validation depuis mem0
+2. **Analyse parcours complexes** : Décomposer workflows multi-étapes via sequential-thinking
+3. **Documentation test** : Obtenir meilleures pratiques via context7
 
-### Exit Code 0 (Success)
-Use when ALL conditions are met:
-- All automated tests pass successfully
-- Manual test scenarios validate correctly
-- Performance baselines are maintained
-- Security requirements are satisfied
-- No blockers or critical issues found
+### Étapes de validation
+1. **Révision résultats tests** : Analyser résultats tests automatisés
+2. **Tests UI MCP** : Exécuter tests Playwright/Puppeteer automatisés
+3. **Tests parcours complexes** : Valider workflows multi-étapes avec sequential-thinking
+4. **Scénarios tests manuels** : Exécuter scénarios depuis docs/3-current-task/TEST.md
+5. **Performance & sécurité** : Réviser baselines performance et exigences sécurité
+6. **Régression visuelle** : Comparer screenshots UI pour cohérence
 
-**Action**: Add this to your final response:
+### Analyse parcours utilisateur complexes
+- Décomposer en étapes testables via sequential-thinking
+- Mapper dépendances étape par étape et points validation
+- Tester scénarios échec à chaque étape
+- Valider récupération système après échecs
+- Assurer intégrité parcours end-to-end
+
+**Bornes d'écriture**
+* Autorisé : docs/3-current-task/iterations.json, docs/3-current-task/TEST.md
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [mem0] Charger patterns validation et approches efficaces
+2. [sequential-thinking] Décomposer parcours utilisateur complexes
+3. [context7] Obtenir meilleures pratiques test actuelles
+4. Réviser résultats tests automatisés
+5. Exécuter tests UI MCP si applicable
+6. Valider parcours complexes décomposés
+7. Exécuter scénarios tests manuels
+8. [mem0] Capturer patterns validation réussis
+9. Gérer itération selon résultats
+
+**Points de vigilance**
+- Tous tests doivent passer avant de continuer
+- Utiliser sequential-thinking pour scénarios validation complexes
+- Si échec et iterations < 3 : mettre à jour iterations.json et guider prochaine itération
+- Si échec ET iterations = 3 : documenter blocage et demander aide
+- Si succès : valider statut complétion et fournir rapport validation final
+
+**Tests/Validation**
+- Tests automatisés, manuels, performance et sécurité
+- Validation parcours utilisateur complexes via sequential-thinking
+- Capture patterns validation réussis dans mem0
+- Métriques performance pour tests régression futurs
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+CRITICAL: Sortir avec code approprié selon résultats validation :
+- EXIT_CODE=0 si tous tests passent (succès)
+- EXIT_CODE=1 si échec mais retry possible (needs iteration)
+- EXIT_CODE=2 si blocage fondamental (blocked)
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
 ```
-VALIDATION_RESULT=SUCCESS
-EXIT_CODE=0
-```
 
-### Exit Code 1 (Needs Iteration)
-Use when validation fails but can be retried:
-- Some tests fail but issues are addressable
-- Performance issues that can be optimized
-- Implementation doesn't fully meet requirements
-- Current iteration < 3 and problems are solvable
-
-**Action**: Add this to your final response:
-```
-VALIDATION_RESULT=NEEDS_ITERATION
-EXIT_CODE=1
-RETRY_REASON=[specific reason for retry]
-```
-
-### Exit Code 2 (Blocked)
-Use when validation fails due to fundamental issues:
-- Requirements are unclear or conflicting
-- Technical blockers that require external help
-- Maximum iterations (3) reached without success
-- Issues that cannot be resolved in current context
-
-**Action**: Add this to your final response:
-```
-VALIDATION_RESULT=BLOCKED
-EXIT_CODE=2
-BLOCK_REASON=[specific reason for blocking]
-```
-
-# Exit codes:
+## Exit Codes
 - 0: Success - validation passed completely
 - 1: Needs iteration - validation failed but retryable
 - 2: Blocked - validation failed due to fundamental issues

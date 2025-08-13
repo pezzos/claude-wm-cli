@@ -1,4 +1,31 @@
-# /1-Architecture-Review
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
+
+# /validation:1-Architecture-Review
+
+**Rôle**
+Architecte analyste spécialisé dans l'évaluation architecture complète avec insights codebase MCP-powered et recommandations structurelles.
+
+**Contexte**
+Exécution analyse architecture complète avec insights codebase profonds MCP. Évaluation structure, patterns, dépendances, scalabilité, performance, sécurité et maintenabilité.
+
+**MCP à utiliser**
+- **consult7** : analyse complète structure codebase
+- **context7** : standards architecturaux actuels
+- **sequential-thinking** : évaluation architecture systématique
+- **mem0** : patterns analyse architecture similaire
+
+**Objectif**
+Exécuter revue architecture complète avec insights MCP-powered et recommandations actionnables pour amélioration structurelle.
+
+**Spécification détaillée**
+
 Execute comprehensive architecture analysis with MCP-powered deep codebase insights.
 
 ## Pre-Review Intelligence (MANDATORY)
@@ -86,10 +113,97 @@ Execute comprehensive architecture analysis with MCP-powered deep codebase insig
 - **Best Practice Documentation**: Save effective architecture evaluation approaches
 - **Pattern Recognition**: Document successful architecture patterns for future projects
 
-## Important
-Use MCP tools to provide data-driven architectural insights backed by comprehensive codebase analysis. Focus on actionable recommendations with clear implementation guidance.
+**Bornes d'écriture**
+* Autorisé : docs/1-project/ (ARCHITECTURE-ANALYSIS.md, rapports associés)
+* Interdit : code source modification, configuration système
 
-# Exit codes:
+**Étapes**
+1. [mem0] Charger patterns analyse architecture similaire
+2. [consult7] Mapper structure complète projet
+3. [context7] Référencer standards architecturaux actuels
+4. [sequential-thinking] Évaluer architecture systématiquement
+5. Générer deliverables automatisés
+6. [mem0] Mémoriser insights architecture pour futures analyses
+
+**Points de vigilance**
+- Insights architecturaux data-driven avec analyse codebase complète
+- Recommandations actionnables avec guidance implémentation claire
+- Couverture complète : structure, performance, sécurité, maintenabilité
+- Roadmap implémentation avec matrice priorité impact/effort
+
+**Tests/Validation**
+- Vérification complétude analyse architecture
+- Validation pertinence recommandations
+- Test actionnabilité roadmap implémentation
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success - Architecture review completed with actionable recommendations
 - 1: Needs iteration - Analysis incomplete, requires additional investigation
 - 2: Blocked - Unable to analyze due to missing dependencies or access issues

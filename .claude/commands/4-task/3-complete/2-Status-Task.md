@@ -1,16 +1,130 @@
-# /2-Status
-Analyze task progress and provide comprehensive status report.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Steps
-1. Review task documentation (docs/3-current-task/current-task.json, docs/3-current-task/TEST.md, docs/3-current-task/iterations.json) for progress metrics (pre-analyzed by preprocessing)
-2. Assess completion readiness against success criteria using preprocessing analysis
-3. Calculate effort vs estimates and quality metrics from JSON data
-4. Enhance status report with intelligent analysis and specific next action recommendations
+# /4-task:3-complete:2-Status-Task
 
-## Important
-Show iteration history and lessons learned. Provide clear completion percentage and blockers.
+**Rôle**
+Assistant d'analyse de progrès de tâche avec génération de rapport de statut complet et recommandations.
 
-# Exit codes:
+**Contexte**
+Analyse complète du progrès de tâche incluant révision documentation, évaluation critères succès, calcul métriques et génération rapport intelligent avec recommandations actions.
+
+**MCP à utiliser**
+- **serena** : accéder documentation task pour analyse progrès
+- **mem0** : capturer insights sur patterns de progrès et blockers
+
+**Objectif**
+Générer rapport de statut complet analysant progrès task vs critères succès, effort vs estimations, qualité métriques avec historique itérations et recommandations actions spécifiques.
+
+**Spécification détaillée**
+
+### Processus d'analyse statut
+1. **Révision documentation task** : Analyser current-task.json, TEST.md, iterations.json pour métriques progrès
+2. **Évaluation préparation complétion** : Évaluer préparation vs critères succès via analyse preprocessing
+3. **Calcul métriques** : Calculer effort vs estimations et métriques qualité depuis données JSON
+4. **Rapport intelligent** : Enrichir rapport avec analyse intelligente et recommandations actions spécifiques
+
+**Bornes d'écriture**
+* Autorisé : Aucune écriture - mode lecture seule pour analyse
+* Interdit : Tous fichiers (analyse seulement)
+
+**Étapes**
+1. [serena] Réviser docs/3-current-task/current-task.json pour métriques progrès
+2. [serena] Analyser docs/3-current-task/TEST.md pour statut validation
+3. [serena] Examiner docs/3-current-task/iterations.json pour historique itérations
+4. Évaluer préparation complétion vs critères succès
+5. Calculer effort vs estimations et métriques qualité
+6. Générer rapport avec analyse intelligente
+7. [mem0] Capturer insights patterns progrès et blockers
+8. Fournir recommandations actions spécifiques next steps
+
+**Points de vigilance**
+- Montrer historique itérations et leçons apprises
+- Fournir pourcentage complétion clair et blockers
+- Analyser écarts effort vs estimations
+- Identifier patterns blocage récurrents
+
+**Tests/Validation**
+- Analyse complète documentation task (JSON, TEST.md, iterations.json)
+- Évaluation préparation complétion vs critères succès
+- Métriques effort/qualité calculées précisément
+- Rapport enrichi avec recommandations actions intelligentes
+- Insights patterns progrès capturés dans mem0
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked

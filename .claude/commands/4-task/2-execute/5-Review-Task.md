@@ -1,95 +1,156 @@
-# /5-Review-Task
-Execute comprehensive review with quality gates validation and plan consistency checks.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Pre-Review Intelligence (MANDATORY)
-1. **Load Review Patterns**: Use `mcp__mem0__search_coding_preferences` to find effective review approaches
-2. **Analyze Complex Requirements**: Use `mcp__sequential-thinking__` for complex requirement decomposition
-3. **Get Quality Documentation**: Use `mcp__context7__` for current quality standards and best practices
+# /4-task:2-execute:5-Review-Task
 
-## Review Steps
-1. **Plan-Implementation Consistency**: Compare implementation against original plan and requirements
-2. **Code Quality Assessment**: Review code standards, maintainability, and architectural consistency
-3. **Security & Performance Review**: Validate security requirements and performance benchmarks (pre-checked by preprocessing)
-4. **Integration & Compatibility**: Check integration points and backward compatibility
-5. **Documentation Completeness**: Ensure all documentation is complete and accurate
-6. **Quality Gates Validation**: Verify all quality gates are satisfied before approval
+**Rôle**
+Assistant de revue complète avec validation des quality gates et vérification de cohérence du plan.
 
-## Complex Requirements Analysis
-For requirements involving multiple validation points or complex interactions:
-- **Use `mcp__sequential-thinking__`** to decompose requirements into checkable criteria
-- **Map Quality Gates**: Identify all quality gates and validation checkpoints
-- **Regression Testing**: Verify no regressions in existing functionality
-- **Acceptance Criteria**: Validate all acceptance criteria are met
-- **End-to-End Review**: Ensure complete solution integrity
+**Contexte**
+Exécution de revue complète avec intelligence pré-revue, validation quality gates, vérification cohérence plan-implémentation et gestion d'itération basée sur résultats qualité.
 
-## Iteration Management
-Review iteration status from preprocessing:
-- Review preprocessing results for quality checks and task status updates
-- If review fails: update docs/3-current-task/iterations.json with specific guidance for re-planning
-- If review passes: approve for archiving and task completion
-- No iteration limit for review - continue until quality standards are met
+**MCP à utiliser**
+- **mem0** : charger patterns de revue efficaces et capturer approches réussies
+- **sequential-thinking** : décomposer exigences complexes en critères vérifiables
+- **context7** : obtenir standards qualité actuels et meilleures pratiques
 
-## Learning Capture
-- **Store Successful Patterns**: Use `mcp__mem0__add_coding_preference` to capture effective review approaches
-- **Document Quality Insights**: Save quality gate validation strategies
-- **Performance Metrics**: Record quality metrics for future reference
+**Objectif**
+Effectuer revue complète validant cohérence plan-implémentation, qualité code, sécurité/performance, intégration et documentation avant approbation archivage.
 
-## Important
-All quality gates must pass before approval. Use sequential-thinking for complex validation scenarios. Document any iteration lessons learned and successful review patterns.
+**Spécification détaillée**
 
-## EXIT CODE REQUIREMENTS
-**CRITICAL**: You MUST exit with the appropriate code based on review results:
+### Intelligence pré-revue (MANDATORY)
+1. **Patterns revue** : Charger approches revue efficaces depuis mem0
+2. **Analyse exigences complexes** : Décomposer exigences via sequential-thinking
+3. **Documentation qualité** : Obtenir standards qualité actuels via context7
 
-### Exit Code 0 (Success)
-Use when ALL conditions are met:
-- Implementation matches plan and requirements completely
-- All code quality standards are satisfied
-- Security and performance requirements are met
-- Integration and backward compatibility verified
-- Documentation is complete and accurate
-- All acceptance criteria are validated
-- No regressions or quality issues found
+### Étapes de revue
+1. **Cohérence plan-implémentation** : Comparer implémentation vs plan et exigences originales
+2. **Assessment qualité code** : Réviser standards, maintenabilité, cohérence architecturale
+3. **Revue sécurité & performance** : Valider exigences sécurité et benchmarks performance
+4. **Intégration & compatibilité** : Vérifier points intégration et compatibilité backward
+5. **Complétude documentation** : Assurer documentation complète et précise
+6. **Validation quality gates** : Vérifier tous quality gates satisfaits avant approbation
 
-**Action**: Add this to your final response:
+### Analyse exigences complexes
+- Décomposer exigences en critères vérifiables via sequential-thinking
+- Mapper quality gates et checkpoints validation
+- Vérifier aucune régression fonctionnalité existante
+- Valider tous critères acceptation remplis
+- Assurer intégrité solution end-to-end
+
+**Bornes d'écriture**
+* Autorisé : docs/3-current-task/iterations.json
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [mem0] Charger patterns revue efficaces
+2. [sequential-thinking] Décomposer exigences complexes en critères vérifiables
+3. [context7] Obtenir standards qualité actuels et meilleures pratiques
+4. Comparer implémentation vs plan/exigences originales
+5. Assessment qualité code (standards, maintenabilité, architecture)
+6. Revue sécurité/performance et validation benchmarks
+7. Vérifier intégration et compatibilité backward
+8. Valider complétude/précision documentation
+9. [mem0] Capturer patterns revue réussis
+10. Gérer itération selon résultats
+
+**Points de vigilance**
+- Tous quality gates doivent passer avant approbation
+- Utiliser sequential-thinking pour scénarios validation complexes
+- Si échec revue : mettre à jour iterations.json avec guidance re-planning
+- Si succès revue : approuver pour archivage et complétion task
+- Aucune limite itération pour revue - continuer jusqu'à standards qualité atteints
+
+**Tests/Validation**
+- Cohérence complète plan-implémentation-exigences
+- Standards qualité code satisfaits
+- Exigences sécurité/performance validées
+- Intégration et compatibilité backward vérifiées
+- Documentation complète et précise
+- Tous critères acceptation validés
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+CRITICAL: Sortir avec code approprié selon résultats revue :
+- EXIT_CODE=0 si revue passe complètement (ready for archiving)
+- EXIT_CODE=1 si échec revue mais retry possible (triggers re-planning)
+- EXIT_CODE=2 si échec revue pour problèmes fondamentaux (blocked)
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
 ```
-REVIEW_RESULT=SUCCESS
-EXIT_CODE=0
-```
 
-### Exit Code 1 (Needs Iteration)
-Use when review fails but issues can be addressed:
-- Implementation doesn't fully match requirements
-- Code quality standards not met but fixable
-- Performance or security issues that can be resolved
-- Documentation gaps or inconsistencies
-- Integration issues that can be addressed
-- Quality gates not satisfied but achievable
-
-**Action**: Add this to your final response:
-```
-REVIEW_RESULT=NEEDS_ITERATION
-EXIT_CODE=1
-RETRY_REASON=[specific reason for retry - will trigger re-planning]
-```
-
-### Exit Code 2 (Blocked)
-Use when review fails due to fundamental issues:
-- Requirements are fundamentally unclear or conflicting
-- Technical blockers that require external expertise
-- Architectural decisions that need stakeholder input
-- Issues that cannot be resolved within current context
-- Quality standards that are unattainable with current approach
-
-**Action**: Add this to your final response:
-```
-REVIEW_RESULT=BLOCKED
-EXIT_CODE=2
-BLOCK_REASON=[specific reason for blocking]
-```
-
-# Exit codes:
+## Exit Codes
 - 0: Success - review passed completely, ready for archiving
-- 1: Needs iteration - review failed but retryable, triggers re-planning
+- 1: Needs iteration - review failed but retryable, triggers re-planning  
 - 2: Blocked - review failed due to fundamental issues
 - 3: User input needed
 ## JSON Schema Validation

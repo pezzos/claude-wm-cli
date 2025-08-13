@@ -1,38 +1,147 @@
-# /2-Test-design
-Design comprehensive testing strategy with MCP-powered UI testing capabilities.
+# MCP Playbook (à activer quand utile)
+- context7 : charger contexte repo + docs/KB/ADR pertinents
+- sequential-thinking : détailler le plan d'exécution avant d'écrire
+- serena : réutiliser code/doc existants pour éviter doublons
+- mem0 : mémoriser les invariants utiles pendant la tâche
+- time : dater si nécessaire (logs/ADR)
+- github : consultation seulement si besoin de métadonnées Git
+- playwright/puppeteer : à ignorer sauf besoin de rendu UI exceptionnel
 
-## Pre-Design Intelligence (MANDATORY)
-1. **Load Test Patterns**: Use `mcp__mem0__search_coding_preferences` to find similar testing approaches
-2. **Analyze UI Components**: Use `mcp__consult7__consultation` to identify UI elements requiring testing
-3. **Get Testing Documentation**: Use `mcp__context7__` for current testing framework best practices
+# /4-task:2-execute:2-Test-design
 
-## Test Design Steps
-1. **Enhance docs/3-current-task/TEST.md**: Generate comprehensive test scenarios (template pre-populated by preprocessing)
-2. **Unit & Integration Tests**: Define traditional testing approaches
-3. **UI Automation Tests**: Design MCP-powered browser testing when UI components present
-4. **Test Data & Validation**: Plan comprehensive data requirements
-5. **Failure Scenarios**: Design error handling and edge case tests
+**Rôle**
+Assistant de conception de stratégie de test avec capacités MCP pour tests UI automatisés.
 
-## MCP UI Testing Integration (When Applicable)
-- **Playwright Tests**: For React/Vue/Angular applications use `mcp__playwright__browser_*` tools
-- **Puppeteer Tests**: For Node.js applications use `mcp__puppeteer__puppeteer_*` tools  
-- **Visual Regression**: Design screenshot-based tests for UI consistency
-- **Cross-Browser Testing**: Plan automated testing across different browsers
-- **Performance Testing**: Include Core Web Vitals and loading time validation
-- **Accessibility Testing**: Automated a11y validation in test suite
+**Contexte**
+Conception d'une stratégie de test complète incluant tests traditionnels et tests UI automatisés MCP-powered pour assurer la qualité et la régression continue.
 
-## Test Categories to Include
-- **Manual Tests**: Critical user journeys requiring human validation
-- **Automated Unit Tests**: Function-level testing
-- **Automated Integration Tests**: Component interaction testing  
-- **Automated UI Tests**: Browser-based interaction testing (MCP-powered)
-- **Performance Tests**: Load and stress testing scenarios
-- **Security Tests**: Input validation and vulnerability testing
+**MCP à utiliser**
+- **mem0** : rechercher des approches de test similaires dans les préférences
+- **consult7** : identifier les éléments UI nécessitant des tests
+- **context7** : obtenir les meilleures pratiques pour les frameworks de test actuels
+- **playwright/puppeteer** : pour tests UI automatisés (si applicable)
 
-## Important
-Cover happy path, edge cases, and error conditions. Design tests before implementing. Include MCP UI automation for web interfaces to enable continuous regression testing.
+**Objectif**
+Enrichir docs/3-current-task/TEST.md avec une stratégie de test complète couvrant tous les cas (happy path, edge cases, erreurs) avec intégration MCP UI quand applicable.
 
-# Exit codes:
+**Spécification détaillée**
+
+### Processus de conception de test
+1. **Intelligence pré-conception** : Charger patterns de test depuis mem0
+2. **Analyse composants UI** : Identifier éléments UI via consult7
+3. **Documentation framework** : Obtenir meilleures pratiques via context7
+4. **Génération scénarios** : Créer scénarios de test complets dans TEST.md
+
+### Catégories de test à inclure
+- **Tests manuels** : Parcours utilisateur critiques nécessitant validation humaine
+- **Tests unitaires automatisés** : Test niveau fonction
+- **Tests intégration automatisés** : Test interaction composants
+- **Tests UI automatisés** : Tests interaction navigateur (MCP-powered)
+- **Tests performance** : Scénarios charge et stress
+- **Tests sécurité** : Validation entrées et vulnérabilités
+
+### Intégration MCP UI (si applicable)
+- **Tests Playwright** : Pour applications React/Vue/Angular via mcp__playwright__browser_*
+- **Tests Puppeteer** : Pour applications Node.js via mcp__puppeteer__puppeteer_*
+- **Régression visuelle** : Tests basés screenshots pour cohérence UI
+- **Tests cross-browser** : Tests automatisés multi-navigateurs
+- **Tests performance** : Validation Core Web Vitals et temps chargement
+- **Tests accessibilité** : Validation a11y automatisée dans suite
+
+**Bornes d'écriture**
+* Autorisé : docs/3-current-task/TEST.md
+* Interdit : fichiers système, .git/, configuration IDE
+
+**Étapes**
+1. [mem0] Rechercher approches de test similaires dans préférences
+2. [consult7] Analyser composants UI nécessitant tests
+3. [context7] Obtenir meilleures pratiques frameworks test actuels
+4. Enrichir docs/3-current-task/TEST.md avec scénarios complets
+5. Définir approches test traditionnelles (unité, intégration)
+6. Concevoir tests UI automatisés MCP si composants UI présents
+7. Planifier données test et validation complètes
+8. Concevoir scénarios échec et gestion erreur
+
+**Points de vigilance**
+- Couvrir happy path, edge cases et conditions erreur
+- Concevoir tests avant implémentation
+- Inclure automatisation UI MCP pour interfaces web (régression continue)
+- Assurer cohérence avec patterns de test existants
+
+**Tests/Validation**
+- Stratégie de test complète dans docs/3-current-task/TEST.md
+- Intégration MCP UI pour tests automatisés (si applicable)
+- Couverture scénarios : succès, échec, edge cases
+- Plan données test et validation
+
+**Sortie attendue**
+Sauf indication explicite 'dry-run', applique les changements dans les chemins autorisés, puis rends plan + patches + summary au format JSON strict.
+
+## Schéma JSON de sortie
+
+```json
+{
+  "type": "object",
+  "required": ["plan", "changes", "patches", "summary", "notes"],
+  "properties": {
+    "plan": { 
+      "type": "string",
+      "description": "Sequential steps executed in this task"
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of file changes made",
+      "items": {
+        "type": "object",
+        "required": ["path", "action", "content"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "action": { 
+            "type": "string", 
+            "enum": ["create", "update", "delete", "none"],
+            "description": "Action performed on the file"
+          },
+          "content": { 
+            "type": "string",
+            "description": "Brief description of changes made"
+          }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "description": "Unified diff patches for each changed file",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "properties": {
+          "path": { 
+            "type": "string",
+            "description": "Relative file path from project root"
+          },
+          "diff": { 
+            "type": "string",
+            "description": "Unified diff or empty for create/delete"
+          }
+        }
+      }
+    },
+    "summary": { 
+      "type": "string",
+      "description": "5-line max TL;DR with file stats (#files, new/mod/del)"
+    },
+    "notes": { 
+      "type": "string",
+      "description": "Gotchas encountered, TODOs, limitations"
+    }
+  }
+}
+```
+
+## Exit Codes
 - 0: Success
 - 1: Needs iteration
 - 2: Blocked
