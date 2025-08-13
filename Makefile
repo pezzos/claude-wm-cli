@@ -171,10 +171,10 @@ fmt:
 	@gofmt -s -w $(GO_FILES)
 	@$(shell go env GOPATH)/bin/goimports -w $(GO_FILES)
 
-# Serena Documentation Indexing
+# Serena Documentation Indexing (Incremental)
 serena-index:
-	@echo "📚 Updating Serena documentation index..."
-	@./scripts/serena-index.sh
+	@echo "📚 Running Serena incremental documentation indexer..."
+	@go run ./cmd/serena-indexer/main.go -root .
 
 # Validate Claude Code Output
 validate-output:
