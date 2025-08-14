@@ -126,7 +126,7 @@ func (s *EpicApplicationService) CreateEpicWorkflow(ctx context.Context, req Cre
 	epicEntity.Epic.Description = req.Description
 	epicEntity.Epic.Tags = req.Tags
 	epicEntity.Epic.Dependencies = req.Dependencies
-	epicEntity.Epic.Duration = req.Duration
+	epicEntity.Epic.Duration = req.Duration.String()
 	
 	// Parse and validate priority
 	if req.Priority != "" {
@@ -239,7 +239,7 @@ func (s *EpicApplicationService) UpdateEpicWorkflow(ctx context.Context, req Upd
 			e.Epic.Dependencies = *req.Dependencies
 		}
 		if req.Duration != nil {
-			e.Epic.Duration = *req.Duration
+			e.Epic.Duration = req.Duration.String()
 		}
 		return e
 	}
@@ -330,24 +330,26 @@ func (s *EpicApplicationService) ListEpicsWorkflow(ctx context.Context, req List
 	var filters []model.Filter
 	
 	if req.Status != "" {
-		filters = append(filters, &entity.StatusFilter{Status: model.Status(req.Status)})
+		filters = append(filters, newStatusFilterAdapter(model.Status(req.Status)))
 	}
 	
 	if req.Priority != "" {
-		filters = append(filters, &entity.PriorityFilter{Priority: model.Priority(req.Priority)})
+		filters = append(filters, newPriorityFilterAdapter(model.Priority(req.Priority)))
 	}
 	
 	if req.CreatedAfter != nil || req.CreatedBefore != nil {
-		filters = append(filters, &entity.DateRangeFilter{
-			After:  req.CreatedAfter,
-			Before: req.CreatedBefore,
-		})
+		filters = append(filters, newDateRangeFilterAdapter(req.CreatedAfter, req.CreatedBefore))
 	}
 	
 	// Combine filters
 	var filter model.Filter
 	if len(filters) > 1 {
-		filter = &entity.MultiFilter{Filters: filters}
+		// Convert filters to []interface{} for the MultiFilter
+		var filterInterfaces []interface{}
+		for _, f := range filters {
+			filterInterfaces = append(filterInterfaces, f)
+		}
+		filter = newMultiFilterAdapter(filterInterfaces, "AND")
 	} else if len(filters) == 1 {
 		filter = filters[0]
 	}
@@ -426,7 +428,7 @@ func (s *EpicApplicationService) DeleteEpicWorkflow(ctx context.Context, req Del
 	
 	// Business validation
 	warnings := []string{}
-	if epic.Epic.Status == epic.StatusInProgress && !req.Force {
+	if string(epic.Epic.Status) == string(model.StatusInProgress) && !req.Force {
 		return nil, model.NewValidationError("cannot delete epic in progress").
 			WithContext(req.ID).
 			WithSuggestions([]string{
@@ -512,14 +514,14 @@ func (s *EpicApplicationService) generateNextActions(epic *entity.EpicEntity) []
 		fmt.Sprintf("epic show %s", epic.GetID()),
 	}
 	
-	switch epic.Epic.Status {
-	case epic.StatusPlanned:
+	switch string(epic.Epic.Status) {
+	case string(model.StatusPlanned):
 		actions = append(actions, fmt.Sprintf("epic start %s", epic.GetID()))
 		actions = append(actions, fmt.Sprintf("story create --epic %s", epic.GetID()))
-	case epic.StatusInProgress:
+	case string(model.StatusInProgress):
 		actions = append(actions, fmt.Sprintf("story list --epic %s", epic.GetID()))
 		actions = append(actions, fmt.Sprintf("epic progress %s", epic.GetID()))
-	case epic.StatusCompleted:
+	case string(model.StatusCompleted):
 		actions = append(actions, fmt.Sprintf("epic archive %s", epic.GetID()))
 	}
 	
@@ -603,16 +605,16 @@ func (s *EpicApplicationService) generateListSuggestions(epics []*entity.EpicEnt
 	}
 	
 	// Count by status
-	statusCount := make(map[epic.Status]int)
+	statusCount := make(map[string]int)
 	for _, epic := range epics {
-		statusCount[epic.Epic.Status]++
+		statusCount[string(epic.Epic.Status)]++
 	}
 	
-	if statusCount[epic.StatusPlanned] > statusCount[epic.StatusInProgress] {
+	if statusCount[string(model.StatusPlanned)] > statusCount[string(model.StatusInProgress)] {
 		suggestions = append(suggestions, "Consider starting some planned epics")
 	}
 	
-	if statusCount[epic.StatusInProgress] > 5 {
+	if statusCount[string(model.StatusInProgress)] > 5 {
 		suggestions = append(suggestions, "You have many epics in progress. Consider focusing on fewer at once")
 	}
 	
@@ -623,7 +625,7 @@ func (s *EpicApplicationService) generateListSuggestions(epics []*entity.EpicEnt
 
 func validateEpicBusinessRules(ctx context.Context, epic *entity.EpicEntity) error {
 	// Business rule: Critical epics should have descriptions > 100 chars
-	if epic.Epic.Priority == epic.PriorityCritical && len(epic.Epic.Description) < 100 {
+	if string(epic.Epic.Priority) == string(model.PriorityP0) && len(epic.Epic.Description) < 100 {
 		return model.NewValidationError("critical epics require detailed descriptions").
 			WithContext(fmt.Sprintf("current: %d chars, required: 100+", len(epic.Epic.Description))).
 			WithSuggestion("Provide more details for critical epics")

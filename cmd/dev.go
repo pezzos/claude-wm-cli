@@ -16,7 +16,8 @@ This command group provides development-focused utilities for testing,
 debugging, and experimenting with the claude-wm-cli system.
 
 Available subcommands:
-  sandbox    Create a testing sandbox from Upstream system files`,
+  sandbox      Create a testing sandbox from Upstream system files
+  import-local Import changes from .claude/ to internal/config/system/`,
 }
 
 func init() {
@@ -24,4 +25,5 @@ func init() {
 	
 	// Add dev subcommands
 	devCmd.AddCommand(cmd.DevSandboxCmd)
+	devCmd.AddCommand(cmd.DevImportLocalCmd)
 }

@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -143,6 +145,19 @@ func runConfigInstall(cmd *cobra.Command, args []string) error {
 	metaData := wmmeta.Default("claude-wm-cli", meta.Version)
 	if err := wmmeta.Save(metaPath, metaData); err != nil {
 		return fmt.Errorf("failed to create meta.json: %w", err)
+	}
+
+	// Generate .claude/settings.json if not exists (using canonical settings.json)
+	settingsPath := filepath.Join(claudePath, "settings.json")
+	if _, err := os.Stat(settingsPath); os.IsNotExist(err) {
+		fmt.Printf("   → Generating %s\n", settingsPath)
+		
+		// Copy canonical settings.json from system
+		if err := copyEmbedFileToLocal(config.EmbeddedFS, "system/settings.json", settingsPath); err != nil {
+			return fmt.Errorf("failed to copy canonical settings.json: %w", err)
+		}
+	} else {
+		fmt.Printf("   ✓ %s already exists (skipping)\n", settingsPath)
 	}
 
 	fmt.Println("✅ System configuration installed successfully!")
@@ -455,4 +470,33 @@ func showDirStatus(name, path string) {
 	}
 
 	fmt.Printf("   %s: ✅ %d items\n", name, len(entries))
+}
+
+// copyEmbedFileToLocal copies a single file from embedded FS to local file system
+func copyEmbedFileToLocal(src fs.FS, srcPath, dstPath string) error {
+	// Ensure destination directory exists
+	if err := fsutil.EnsureDir(filepath.Dir(dstPath)); err != nil {
+		return err
+	}
+
+	// Open source file
+	srcFile, err := src.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file %s: %w", srcPath, err)
+	}
+	defer srcFile.Close()
+
+	// Create destination file
+	dstFile, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file %s: %w", dstPath, err)
+	}
+	defer dstFile.Close()
+
+	// Copy content
+	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		return fmt.Errorf("failed to copy content from %s to %s: %w", srcPath, dstPath, err)
+	}
+
+	return nil
 }

@@ -289,7 +289,7 @@ func (r *ApplicationServiceRegistry) PerformHealthCheck(ctx context.Context) ([]
 		Timestamp: time.Now(),
 	}
 	
-	if err := r.epicService.entityManager.Count(ctx, nil); err != nil {
+	if _, err := r.epicService.entityManager.Count(ctx, nil); err != nil {
 		epicHealth.Healthy = false
 		epicHealth.Message = err.Error()
 	} else {
