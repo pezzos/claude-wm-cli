@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // EnsureDir creates a directory and all parent directories with 0755 permissions
@@ -17,29 +16,36 @@ func EnsureDir(path string) error {
 	return nil
 }
 
-// CopyTreeFS recursively copies files from an embedded filesystem to disk
+// CopyTreeFS recursively copies files from an fs.FS to disk
 func CopyTreeFS(src fs.FS, srcRoot string, dst string) error {
+	return copyTree(src, srcRoot, dst)
+}
+
+// copyTree recursively copies files and directories from an fs.FS to disk
+func copyTree(src fs.FS, srcRoot, dst string) error {
 	return fs.WalkDir(src, srcRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Calculate relative path from srcRoot
-		relPath := strings.TrimPrefix(path, srcRoot)
-		relPath = strings.TrimPrefix(relPath, "/")
-		if relPath == "" {
+		relPath, err := filepath.Rel(srcRoot, path)
+		if err != nil {
+			return err
+		}
+		if relPath == "." {
 			return nil // Skip the root directory itself
 		}
 
-		// Calculate destination path
 		dstPath := filepath.Join(dst, relPath)
 
 		if d.IsDir() {
-			// Create directory
-			return EnsureDir(dstPath)
+			return os.MkdirAll(dstPath, 0o755)
 		}
 
-		// Copy file
+		if d.Type()&fs.ModeSymlink != 0 {
+			return nil
+		}
+
 		return copyFile(src, path, dstPath)
 	})
 }

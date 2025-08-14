@@ -5,6 +5,26 @@
     "sha256": "41f8055814b162c9f49927520b0e183f98377dff9b06348d7e4e24bfad4b75fc"
   },
   {
+    "path": "system/agents/claude-wm-planner.md",
+    "size": 8413,
+    "sha256": "4e9d1e6496b52735bb246a409a7c383fd6519c4970858b391f19c02fed8c30d4"
+  },
+  {
+    "path": "system/agents/claude-wm-reviewer.md",
+    "size": 5705,
+    "sha256": "b6d37b242e005447e04f57652cf10265cfb1ee0e825c4e2d70d628d4959c1fdd"
+  },
+  {
+    "path": "system/agents/claude-wm-status.md",
+    "size": 7378,
+    "sha256": "5256b3af594a0c426b8582330d1bd71a4a49d866f7c08287b68c44ab2726799c"
+  },
+  {
+    "path": "system/agents/claude-wm-templates.md",
+    "size": 6205,
+    "sha256": "dc9b44a7ccbe3ae8b279ed2c061771419e8264d1fcffd53b341207762dd9860a"
+  },
+  {
     "path": "system/commands/1-project/2-update/1-Import-feedback.md",
     "size": 469,
     "sha256": "565ca42ecf2469f8fdeb102967ba88bc28c3efe3b7055592fa071a6e60c2cf4d"
@@ -180,11 +200,6 @@
     "sha256": "d987fbadea077b06daffee4d58397e6670111b8b0a49e9028e88c90d35a44bcf"
   },
   {
-    "path": "system/commands/templates/.gitignore",
-    "size": 286,
-    "sha256": "7aec4e16e6d7e8365c82ddb3035a6068b50753500f5d53aa3b45d618bc360d29"
-  },
-  {
     "path": "system/commands/templates/ARCHITECTURE.md",
     "size": 1450,
     "sha256": "e7e07be186e45e36de0d8dc944b106217d770ea031322a88291878bb779f0864"
@@ -313,6 +328,176 @@
     "path": "system/commands/validation/1-Architecture-Review.md",
     "size": 5317,
     "sha256": "48668e5958746a0e617fa737a7aad924b6a585e891a4acbf8465896e951464ce"
+  },
+  {
+    "path": "system/hooks/HOOK_MATCHER_FIX.md",
+    "size": 3237,
+    "sha256": "8f720cefe05507bf9f9e831098d7c96ca348311d2a0be68a104a1ae8f98afa4c"
+  },
+  {
+    "path": "system/hooks/README.md",
+    "size": 1885,
+    "sha256": "cbb0ad0c774ba631edf9528c5ef3d0e44cd90ebdab59a37aeb2ba3fa42098fa1"
+  },
+  {
+    "path": "system/hooks/agile/post-iterate.sh",
+    "size": 1641,
+    "sha256": "be005f941ef5177feb9d837f2fa5d6ac504483f0994445a6d4209e7c7c42e5aa"
+  },
+  {
+    "path": "system/hooks/agile/pre-start.sh",
+    "size": 1189,
+    "sha256": "6de4b65b5ddd0e5bf5a53463a57d5845d264dee9166d5f7240ac686455aa9f65"
+  },
+  {
+    "path": "system/hooks/background-worker",
+    "size": 6829522,
+    "sha256": "f9494fe9e61f6be6b899250cefcf313037d533c426cb77f6609a2f55c37590ef"
+  },
+  {
+    "path": "system/hooks/background-worker.go",
+    "size": 12550,
+    "sha256": "b575e19a32a9bb6f77f6e8c66006964451e2e5d71e94dd4bf659b37b39c8ee83"
+  },
+  {
+    "path": "system/hooks/cache-keys",
+    "size": 2548738,
+    "sha256": "4c3c93973ee033126f0f64701137028b1a8eddd98902d7a10e41567ad4761d8c"
+  },
+  {
+    "path": "system/hooks/code-quality-validator",
+    "size": 3338834,
+    "sha256": "96e915511f3e26909a14ea2adfd446d3b1bc09938023810aaa35a5bd9823f008"
+  },
+  {
+    "path": "system/hooks/common/backup-state.sh",
+    "size": 1067,
+    "sha256": "c2b393a4a5499f0c2eec5d08e645e71efb700a09307434841ba6a1cd3c6178bd"
+  },
+  {
+    "path": "system/hooks/common/run-tests.sh",
+    "size": 1681,
+    "sha256": "fc1c358635a3e999a6fcf1f7ca66719942d949f64c100147a05c8086205d83bc"
+  },
+  {
+    "path": "system/hooks/config/hook-triggers.json",
+    "size": 6822,
+    "sha256": "6697b42bbbf91a99fd67b0653c639eb5c2c3947ad33a161a855c8bf48063d2c8"
+  },
+  {
+    "path": "system/hooks/config/parallel-groups.json",
+    "size": 4109,
+    "sha256": "6f7e6a12995470e04df74f8cedb59e61af0b029d629c6ad442d5589aaf033055"
+  },
+  {
+    "path": "system/hooks/documentation-standards.sh",
+    "size": 4797,
+    "sha256": "f4d095f446c1cd93c190ef4fd9b3042c541f5b7e069cd591b29497ba65a0ebfb"
+  },
+  {
+    "path": "system/hooks/duplicate-detector-go",
+    "size": 3270930,
+    "sha256": "d74172dc6a43b6f85ba0c8c506a801a5de3813037e741d3465092069e72b2b8a"
+  },
+  {
+    "path": "system/hooks/enhanced-error-logger.py",
+    "size": 12030,
+    "sha256": "73b3bb370c38144bf3868795fe77e005f51cdac45bda8be1721966da331268a2"
+  },
+  {
+    "path": "system/hooks/env-sync-validator",
+    "size": 3515890,
+    "sha256": "7b16054818a4a2309d44817bae682cb56d5b9918e030d8012c68cd9050a2ad5c"
+  },
+  {
+    "path": "system/hooks/filter/smart-filter",
+    "size": 3516786,
+    "sha256": "d047f6c32ab740b6ab48bff7ebe6d88cfe42ae344987e5634d84ae6924890fdd"
+  },
+  {
+    "path": "system/hooks/git-validator",
+    "size": 9510082,
+    "sha256": "14a248531006d1e5888db2bc890da3170123d0d24ea43e7a8972d2a2617d9250"
+  },
+  {
+    "path": "system/hooks/logs/mcp-tool-reliability-stats.json",
+    "size": 393,
+    "sha256": "0e3e2f77ba6ea88a9f6860c88bc2c8aadc971cb30c1850a05e5002e75c8c5685"
+  },
+  {
+    "path": "system/hooks/logs/tool-adaptive-recommendations.json",
+    "size": 145,
+    "sha256": "a9f76c25f5791c526d6be12de299d09b4351a74e91577968a311a516f9231b9c"
+  },
+  {
+    "path": "system/hooks/logs/tool-reliability-combined-analysis.json",
+    "size": 4643,
+    "sha256": "5b31d7fbca1c78449d09dcb4bc945edd05f172be2f4f177fb50032c8ec8e58d1"
+  },
+  {
+    "path": "system/hooks/logs/tool-reliability-stats.json",
+    "size": 688,
+    "sha256": "9efef3c8d7415ebfc51961ce7768b3b43ec09ae01a2e13d95575a64535ee1239"
+  },
+  {
+    "path": "system/hooks/mcp-tool-enforcer",
+    "size": 3813314,
+    "sha256": "89a0dd5d1f71d30f4194f12b6ea6f81365f0d3e2fde08994f626be670797fd71"
+  },
+  {
+    "path": "system/hooks/metrics/performance-metrics.json",
+    "size": 103599,
+    "sha256": "474fea58d4963bbbe3170c889fd67cb751a4ae913d7483fc47c8326fb6a17fd1"
+  },
+  {
+    "path": "system/hooks/orchestrator",
+    "size": 3237090,
+    "sha256": "bcb29840ac064dccec0d4660f241c7405bf5c8316a78d7654f15497d868fac01"
+  },
+  {
+    "path": "system/hooks/post-write-json-validator-enhanced.sh",
+    "size": 7105,
+    "sha256": "17d753c206b510ed1b6d37fa439b06721ea610195ef903eb4a254605d54a3e52"
+  },
+  {
+    "path": "system/hooks/post-write-json-validator-simple.sh",
+    "size": 9821,
+    "sha256": "0ba814cb75cffd3c96cfa634f39345d04bfa60fb16ed5fb8cae198f9f0943cb5"
+  },
+  {
+    "path": "system/hooks/pre-implement-context7.sh",
+    "size": 3062,
+    "sha256": "2fcf012c32a82da3bfc54e034191c1c475a30802c8af11a67755cadf472984cd"
+  },
+  {
+    "path": "system/hooks/protocol-before-fixed.sh",
+    "size": 4687,
+    "sha256": "99ccca586a3184b54bfe210eb30d40c80d8c2ee6122e2f1f2151aa48b3bb57df"
+  },
+  {
+    "path": "system/hooks/rules/quality-rules.json",
+    "size": 2700,
+    "sha256": "c9049fe0819e20367385574cb4e698d33f4af2a11959c52f0f0589cd93c7a4a2"
+  },
+  {
+    "path": "system/hooks/security-validator",
+    "size": 3533266,
+    "sha256": "52126f24b0a08a6700a578c46126f5f32afe9e69757eb4baae554282b64b8d22"
+  },
+  {
+    "path": "system/hooks/security-validator.go",
+    "size": 23912,
+    "sha256": "3efb9de0556aab0502bc7b1fdabc066a38473c78227ca33c0249556fa124f2a2"
+  },
+  {
+    "path": "system/hooks/shared-cache",
+    "size": 3377954,
+    "sha256": "1d0b42e9bb94cd3a1560fc8a1653783847d7db17445aa05aa60d6e03da882635"
+  },
+  {
+    "path": "system/hooks/test_input.json",
+    "size": 43,
+    "sha256": "53f7ef0b2029d7c7623b3ee6c63d4a5ee71e9a4ad76d070f8dc960e00aac55e6"
   },
   {
     "path": "system/settings.json",

@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -50,15 +52,15 @@ type GitignorePatterns struct {
 
 // Issue represents a security issue found
 type Issue struct {
-	Type        string `json:"type"`
-	Category    string `json:"category"`
-	File        string `json:"file,omitempty"`
-	Line        int    `json:"line,omitempty"`
-	Message     string `json:"message"`
-	Severity    string `json:"severity"`
-	Pattern     string `json:"pattern,omitempty"`
-	Value       string `json:"value,omitempty"`
-	Suggestion  string `json:"suggestion,omitempty"`
+	Type       string `json:"type"`
+	Category   string `json:"category"`
+	File       string `json:"file,omitempty"`
+	Line       int    `json:"line,omitempty"`
+	Message    string `json:"message"`
+	Severity   string `json:"severity"`
+	Pattern    string `json:"pattern,omitempty"`
+	Value      string `json:"value,omitempty"`
+	Suggestion string `json:"suggestion,omitempty"`
 }
 
 // SecurityValidator handles all security validation
@@ -415,10 +417,10 @@ func (sv *SecurityValidator) extractAPIEndpoints(content, filePath string) []map
 	if strings.Contains(filePath, "route.ts") || strings.Contains(filePath, "route.js") {
 		methodPattern := patterns.GetPatterns().APINextJS
 		methods := methodPattern.FindAllStringSubmatch(content, -1)
-		
+
 		routePattern := patterns.GetPatterns().APIRoute
 		routeMatch := routePattern.FindStringSubmatch(filePath)
-		
+
 		if routeMatch != nil && len(methods) > 0 {
 			route := strings.Replace(routeMatch[1], "/route.ts", "", 1)
 			route = strings.Replace(route, "/route.js", "", 1)
@@ -572,10 +574,10 @@ func (sv *SecurityValidator) checkEnvFilesCommit(files []string) []Issue {
 
 	if len(envFiles) > 0 {
 		issues = append(issues, Issue{
-			Type:     "env_file_commit",
-			Category: "critical",
-			Message:  fmt.Sprintf("Attempting to commit .env files: %s", strings.Join(envFiles, ", ")),
-			Severity: "critical",
+			Type:       "env_file_commit",
+			Category:   "critical",
+			Message:    fmt.Sprintf("Attempting to commit .env files: %s", strings.Join(envFiles, ", ")),
+			Severity:   "critical",
 			Suggestion: "Add these files to .gitignore immediately",
 		})
 	}
@@ -714,17 +716,17 @@ func (sv *SecurityValidator) printIssue(issue Issue) {
 	} else if issue.File != "" {
 		fmt.Fprintf(os.Stderr, "   📄 %s\n", issue.File)
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "      %s\n", issue.Message)
-	
+
 	if issue.Value != "" {
 		fmt.Fprintf(os.Stderr, "      Found: %s\n", issue.Value)
 	}
-	
+
 	if issue.Suggestion != "" {
 		fmt.Fprintf(os.Stderr, "      💡 %s\n", issue.Suggestion)
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
@@ -733,10 +735,10 @@ func (sv *SecurityValidator) isSecurityRelevantFile(filePath string) bool {
 	if filePath == "" {
 		return false
 	}
-	
+
 	ext := strings.ToLower(filepath.Ext(filePath))
 	filename := strings.ToLower(filepath.Base(filePath))
-	
+
 	// Security-relevant file extensions
 	securityExtensions := []string{
 		".py", ".js", ".ts", ".tsx", ".jsx", ".go", ".java", ".php", ".rb", ".cs", ".cpp", ".c", ".h",
@@ -745,7 +747,7 @@ func (sv *SecurityValidator) isSecurityRelevantFile(filePath string) bool {
 		".tf", ".tfvars", ".hcl", ".dockerfile", ".dockerignore", ".gitignore", ".gitattributes",
 		".pem", ".key", ".crt", ".cert", ".p12", ".pfx", ".jks", ".keystore", ".properties",
 	}
-	
+
 	// Security-relevant filenames
 	securityFilenames := []string{
 		"dockerfile", "makefile", "cmakelists.txt", "package.json", "requirements.txt",
@@ -753,21 +755,21 @@ func (sv *SecurityValidator) isSecurityRelevantFile(filePath string) bool {
 		"secrets", "config", "settings", "database", "schema", "migration", "seed",
 		"auth", "login", "password", "token", "key", "cert", "ssl", "tls", "security",
 	}
-	
+
 	// Check extension
 	for _, secExt := range securityExtensions {
 		if ext == secExt {
 			return true
 		}
 	}
-	
+
 	// Check filename contains security-relevant keywords
 	for _, secName := range securityFilenames {
 		if strings.Contains(filename, secName) {
 			return true
 		}
 	}
-	
+
 	// Check if path contains security-relevant directories
 	lowerPath := strings.ToLower(filePath)
 	securityDirs := []string{
@@ -775,13 +777,13 @@ func (sv *SecurityValidator) isSecurityRelevantFile(filePath string) bool {
 		"database", "db", "migration", "seed", "sql", "prisma", "graphql", "api",
 		"middleware", "guard", "filter", "interceptor", "validation", "sanitization",
 	}
-	
+
 	for _, secDir := range securityDirs {
 		if strings.Contains(lowerPath, "/"+secDir+"/") || strings.Contains(lowerPath, "\\"+secDir+"\\") {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -828,17 +830,17 @@ func main() {
 
 	case "Write", "Edit", "MultiEdit":
 		filePath, _ := input.ToolInput["file_path"].(string)
-		
+
 		// Early exit: Skip if no file path
 		if filePath == "" {
 			os.Exit(0)
 		}
-		
+
 		// Early exit: Skip if not a security-relevant file type
 		if !validator.isSecurityRelevantFile(filePath) {
 			os.Exit(0)
 		}
-		
+
 		var content string
 
 		switch input.ToolName {
