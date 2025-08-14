@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -18,18 +20,18 @@ import (
 
 // Job represents a background hook job
 type Job struct {
-	ID          int64     `json:"id"`
-	HookName    string    `json:"hook_name"`
-	Args        string    `json:"args"`
-	Priority    int       `json:"priority"`
-	Status      string    `json:"status"` // pending, running, completed, failed
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int64      `json:"id"`
+	HookName    string     `json:"hook_name"`
+	Args        string     `json:"args"`
+	Priority    int        `json:"priority"`
+	Status      string     `json:"status"` // pending, running, completed, failed
+	CreatedAt   time.Time  `json:"created_at"`
 	StartedAt   *time.Time `json:"started_at,omitempty"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Output      string    `json:"output,omitempty"`
-	Error       string    `json:"error,omitempty"`
-	Retries     int       `json:"retries"`
-	MaxRetries  int       `json:"max_retries"`
+	Output      string     `json:"output,omitempty"`
+	Error       string     `json:"error,omitempty"`
+	Retries     int        `json:"retries"`
+	MaxRetries  int        `json:"max_retries"`
 }
 
 // BackgroundWorker manages background hook execution
@@ -244,7 +246,7 @@ func (bw *BackgroundWorker) processJob(ctx context.Context, job Job, workerID in
 
 	// Execute the hook
 	hookPath := filepath.Join(bw.hooksDir, job.HookName)
-	
+
 	// Create command with timeout
 	jobCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -324,9 +326,9 @@ func (bw *BackgroundWorker) updateJobOutput(jobID int64, output, errorMsg string
 // handleJobFailure handles a failed job
 func (bw *BackgroundWorker) handleJobFailure(jobID int64, output, errorMsg string, retries int) error {
 	query := `UPDATE jobs SET status = ?, retries = ?, output = ?, error = ? WHERE id = ?`
-	
+
 	status := "pending" // Retry
-	if retries >= 3 {    // Max retries reached
+	if retries >= 3 {   // Max retries reached
 		status = "failed"
 	}
 
@@ -344,7 +346,7 @@ func (bw *BackgroundWorker) cleanupOldJobs(ctx context.Context) {
 		case <-ticker.C:
 			cutoff := time.Now().Add(-24 * time.Hour) // Keep jobs for 24 hours
 			query := `DELETE FROM jobs WHERE status IN ('completed', 'failed') AND completed_at < ?`
-			
+
 			result, err := bw.db.Exec(query, cutoff)
 			if err != nil {
 				log.Printf("❌ Error cleaning up old jobs: %v", err)
@@ -395,7 +397,7 @@ func (bw *BackgroundWorker) GetJobStats() (map[string]int, error) {
 func (bw *BackgroundWorker) Shutdown() {
 	log.Printf("🛑 Shutting down background worker...")
 	close(bw.shutdown)
-	
+
 	// Wait a bit for workers to finish current jobs
 	select {
 	case <-time.After(5 * time.Second):
@@ -465,7 +467,7 @@ func main() {
 		if err := EnqueueHookAPI(dbPath, hookName, args, priority); err != nil {
 			log.Fatalf("Failed to enqueue job: %v", err)
 		}
-		
+
 		fmt.Printf("✅ Enqueued background job: %s\n", hookName)
 
 	case "stats":

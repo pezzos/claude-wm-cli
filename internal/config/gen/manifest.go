@@ -26,19 +26,19 @@ func main() {
 		if err != nil {
 			return err
 		}
-		
+
 		// Skip directories
 		if d.IsDir() {
 			return nil
 		}
-		
-		// Skip hooks directory (different Go module)
-		if strings.Contains(path, "/hooks/") {
-			return nil
-		}
-		
+
 		// Skip manifest.json itself to avoid circular dependency
 		if strings.HasSuffix(path, "manifest.json") {
+			return nil
+		}
+
+		// Skip files starting with dot or underscore to mirror go:embed rules
+		if base := filepath.Base(path); strings.HasPrefix(base, ".") || strings.HasPrefix(base, "_") {
 			return nil
 		}
 
