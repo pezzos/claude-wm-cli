@@ -75,3 +75,6 @@ coverage/
 .serena/cache/go/*
 # Serena indexing runtime data
 .serena/
+# WM runtime data
+.wm/*
+!.wm/serena.yaml
