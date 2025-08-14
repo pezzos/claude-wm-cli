@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -363,8 +364,8 @@ var serenaStatusCmd = &cobra.Command{
 			configPath = cfgFile
 		}
 
-		manager := config.NewManager(configPath)
-		serenaConfig, err := config.NewSerenaConfigManager(manager.GetConfigDir())
+		serenaConfigDir := filepath.Join(filepath.Dir(configPath), ".wm")
+		serenaConfig, err := config.NewSerenaConfigManager(serenaConfigDir)
 		if err != nil {
 			fmt.Printf("❌ Failed to load Serena configuration: %v\n", err)
 			return
@@ -422,8 +423,8 @@ var serenaEnableCmd = &cobra.Command{
 			configPath = cfgFile
 		}
 
-		manager := config.NewManager(configPath)
-		serenaConfig, err := config.NewSerenaConfigManager(manager.GetConfigDir())
+		serenaConfigDir := filepath.Join(filepath.Dir(configPath), ".wm")
+		serenaConfig, err := config.NewSerenaConfigManager(serenaConfigDir)
 		if err != nil {
 			fmt.Printf("❌ Failed to load Serena configuration: %v\n", err)
 			return
@@ -454,8 +455,8 @@ var serenaDisableCmd = &cobra.Command{
 			configPath = cfgFile
 		}
 
-		manager := config.NewManager(configPath)
-		serenaConfig, err := config.NewSerenaConfigManager(manager.GetConfigDir())
+		serenaConfigDir := filepath.Join(filepath.Dir(configPath), ".wm")
+		serenaConfig, err := config.NewSerenaConfigManager(serenaConfigDir)
 		if err != nil {
 			fmt.Printf("❌ Failed to load Serena configuration: %v\n", err)
 			return

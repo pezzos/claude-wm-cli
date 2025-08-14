@@ -116,7 +116,7 @@ sémantique  pertinente   contexte   intelligent spécialisé préservée
 
 ## 📊 Configuration avancée
 
-### Configuration Serena (`~/.claude-wm-cli/serena.yaml`)
+### Configuration Serena (`~/.wm/serena.yaml`)
 ```yaml
 enabled: true
 mcp_server_path: "serena-mcp-server"
