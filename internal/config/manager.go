@@ -1,7 +1,6 @@
 package config
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -12,8 +11,7 @@ import (
 	"claude-wm-cli/internal/fsutil"
 )
 
-//go:embed system
-var embeddedSystem embed.FS
+// Note: Using shared EmbeddedFS from embed.go instead of duplicate embedding
 
 // Manager handles the package manager style configuration system
 type Manager struct {
@@ -346,7 +344,7 @@ func (m *Manager) syncSubagentsToClaudeDir(claudeDir string) error {
 
 // copyEmbeddedSystem copies the embedded system files to the target directory
 func (m *Manager) copyEmbeddedSystem() error {
-	return fs.WalkDir(embeddedSystem, "system", func(path string, d fs.DirEntry, err error) error {
+	return fs.WalkDir(EmbeddedFS, "system", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -369,7 +367,7 @@ func (m *Manager) copyEmbeddedSystem() error {
 		}
 
 		// Read file from embedded filesystem
-		data, err := embeddedSystem.ReadFile(path)
+		data, err := EmbeddedFS.ReadFile(path)
 		if err != nil {
 			return err
 		}

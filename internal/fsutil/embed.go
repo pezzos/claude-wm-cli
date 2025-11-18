@@ -10,7 +10,7 @@ import (
 
 // EnsureDir creates a directory and all parent directories with 0755 permissions
 func EnsureDir(path string) error {
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", path, err)
 	}
 	return nil
@@ -23,6 +23,11 @@ func CopyTreeFS(src fs.FS, srcRoot string, dst string) error {
 
 // copyTree recursively copies files and directories from an fs.FS to disk
 func copyTree(src fs.FS, srcRoot, dst string) error {
+	// Ensure destination root directory exists
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		return fmt.Errorf("failed to create destination root %s: %w", dst, err)
+	}
+
 	return fs.WalkDir(src, srcRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -43,7 +48,7 @@ func copyTree(src fs.FS, srcRoot, dst string) error {
 		}
 
 		if d.Type()&fs.ModeSymlink != 0 {
-			return nil
+			return nil // Skip symlinks gracefully
 		}
 
 		return copyFile(src, path, dstPath)
@@ -65,7 +70,7 @@ func copyFile(src fs.FS, srcPath, dstPath string) error {
 	defer srcFile.Close()
 
 	// Create destination file
-	dstFile, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	dstFile, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", dstPath, err)
 	}

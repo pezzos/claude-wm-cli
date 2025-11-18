@@ -1,14 +1,12 @@
 package subagents
 
 import (
-	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
-)
 
-//go:embed agents/*.md
-var embeddedAgents embed.FS
+	"claude-wm-cli/internal/config"
+)
 
 // AgentInstaller handles installation of subagents to target projects
 type AgentInstaller struct {
@@ -40,7 +38,7 @@ func (ai *AgentInstaller) InstallAgents(projectPath string) error {
 
 // installEmbeddedAgents installs agents from embedded filesystem
 func (ai *AgentInstaller) installEmbeddedAgents(targetDir string) error {
-	agentFiles, err := embeddedAgents.ReadDir("agents")
+	agentFiles, err := config.EmbeddedFS.ReadDir("system/agents")
 	if err != nil {
 		return fmt.Errorf("failed to read embedded agents: %w", err)
 	}
@@ -49,14 +47,14 @@ func (ai *AgentInstaller) installEmbeddedAgents(targetDir string) error {
 	for _, file := range agentFiles {
 		if !file.IsDir() && filepath.Ext(file.Name()) == ".md" {
 			// Read embedded file
-			content, err := embeddedAgents.ReadFile(filepath.Join("agents", file.Name()))
+			content, err := config.EmbeddedFS.ReadFile(filepath.Join("system/agents", file.Name()))
 			if err != nil {
 				continue // Skip this file and try others
 			}
 
 			// Write to target directory
 			targetFile := filepath.Join(targetDir, file.Name())
-			if err := os.WriteFile(targetFile, content, 0644); err != nil {
+			if err := os.WriteFile(targetFile, content, 0o644); err != nil {
 				continue // Skip this file and try others
 			}
 

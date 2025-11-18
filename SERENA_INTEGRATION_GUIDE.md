@@ -49,7 +49,7 @@ claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena-
 23:38> uvx --from git+https://github.com/oraios/serena serena config edit
 
 23:39> uvx --from git+https://github.com/oraios/serena serena project generate-yml
-Generated project.yml with language go at /Users/a.pezzotta/repos/claude-wm-cli/.serena/project.yml.
+
 
 
 $HOME/go/bin in the PATH environment variable
